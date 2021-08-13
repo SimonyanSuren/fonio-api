@@ -1,0 +1,39 @@
+{
+  "name": "fonio",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "clean": "rimraf dist/*",
+    "lint": "tslint -c tslint.json -p tsconfig.json --fix",
+    "tsc": "tsc",
+    "build": "npm-run-all clean lint tsc",
+    "dev:start": "npm-run-all build start",
+    "dev": "nodemon --watch src -e ts --exec npm run dev:start",
+    "start": "node .",
+    "initdb": "ts-node tools/initdb",
+    "docs": "jsdoc -c jsdoc.json",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "version": "echo $npm_package_version"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/express": "^4.17.2",
+    "@types/dotenv": "^8.2.0",
+    "@types/pg": "^7.14.1",
+    "nodemon": "^2.0.2",
+    "npm-run-all": "^4.1.5",
+    "rimraf": "^3.0.0",
+    "tslint": "^6.0.0",
+    "typescript": "^3.7.5"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "typeorm": "^0.2.22",
+    "dotenv": "^8.2.0",
+    "reflect-metadata": "^0.1.13",
+    "pg": "^7.17.1"
+  }
+}

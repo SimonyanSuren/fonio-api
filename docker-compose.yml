@@ -1,0 +1,60 @@
+version: "3"
+
+services:
+  api:
+    container_name: fonio-api
+    depends_on:
+      - postgres
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    working_dir: /app
+    command: npm run dev
+    volumes:
+      - /app/node_modules
+      - ./api:/app
+      - content:/data
+    env_file: api/.env
+    ports:
+      - 8080:3000
+    networks:
+      - fonio
+
+  postgres:
+    container_name: fonio-postgres
+    image: "postgres:11.11-alpine"
+    ports:
+      - 5434:5432
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DATABASE: foniodb
+    networks:
+      - fonio
+
+  pgadmin:
+    links:
+      - postgres:postgres
+    container_name: fonio-pgadmin
+    image: dpage/pgadmin4
+    ports:
+      - "8082:80"
+    volumes:
+      - /data/pgadmin:/root/.pgadmin
+    env_file:
+      - docker.env
+    logging:
+      driver: none
+    networks:
+      - fonio
+
+volumes:
+  postgres:
+  data:
+  content:
+
+networks:
+  fonio:
+    driver: bridge
