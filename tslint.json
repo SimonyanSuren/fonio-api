@@ -1,0 +1,20 @@
+{
+  "extends": "tslint-config-standard",
+  "rules": {
+    "await-promise": false,
+    "ter-indent": [true, 4],
+    "semicolon": [true, "always"],
+    "quotemark": false,
+    "whitespace": [
+      false,
+      "check-branch",
+      "check-decl",
+      "check-operator",
+      "check-separator",
+      "check-type"
+    ],
+    "radix" : false,
+    "space-before-function-paren": ["error", "never"],
+    "no-trailing-whitespace": [true, "ignore-comments"]
+  }
+}

@@ -1,0 +1,12 @@
+###
+POST {{base_url}}/auth/login
+accept: application/json
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+###
+
