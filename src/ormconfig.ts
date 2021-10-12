@@ -11,7 +11,7 @@ const config: ConnectionOptions = {
     database: Config.string("DB_NAME", `${process.env.DB_NAME}`),
     entities: ['build/models/*.js'],
     synchronize: false,
-    name:'callify'
+    name:'fonio'
 }
 
 export = config

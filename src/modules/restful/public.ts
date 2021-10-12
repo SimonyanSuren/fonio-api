@@ -100,7 +100,7 @@ export class PublicApi {
     }
 
     @Get("assets/:image")
-    public async getCallifyLogo(@Req() req, @Res() res: Response, @Param('image') image) {
+    public async getFonioLogo(@Req() req, @Res() res: Response, @Param('image') image) {
         try {
             res.contentType('content-type: image/png').sendFile(join(process.cwd(), `/assets/${image}`), function (err) {
                 if (err) {

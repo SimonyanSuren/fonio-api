@@ -65,9 +65,9 @@ export class PaymentsController {
                 this.emailService.sendMail("auth:signup", result.user['user'].email, {
                     FIRST_NAME: result.user['user'].firstName,
                     LAST_NAME: result.user['user'].lastName,
-                    BUTTON: `${process.env.BASE_URL||process.env.CALLIFY_URL}/auth/activate?uuid=${result.user['user'].uuid}`,
-                    LINK: `${process.env.BASE_URL||process.env.CALLIFY_URL}/auth/activate?uuid=${result.user['user'].uuid}`,
-                    LOGO: `${process.env.BASE_URL||process.env.CALLIFY_URL}/public/assets/logo.png`
+                    BUTTON: `${process.env.BASE_URL||process.env.FONIO_URL}/auth/activate?uuid=${result.user['user'].uuid}`,
+                    LINK: `${process.env.BASE_URL||process.env.FONIO_URL}/auth/activate?uuid=${result.user['user'].uuid}`,
+                    LOGO: `${process.env.BASE_URL||process.env.FONIO_URL}/public/assets/logo.png`
                 });
             }
             if (result.user['account']) {

@@ -112,9 +112,9 @@ export class AdminApi {
             await this.emailService.sendMail("auth:signup", user.email, {
                 FIRST_NAME: user.firstName,
                 LAST_NAME: user.lastName,
-                BUTTON: `${process.env.BASE_URL||process.env.CALLIFY_URL}/auth/activate?uuid=${user.uuid}`,
-                LINK: `${process.env.BASE_URL||process.env.CALLIFY_URL}/auth/activate?uuid=${user.uuid}`,
-                LOGO: `${process.env.BASE_URL||process.env.CALLIFY_URL}/public/assets/logo.png`
+                BUTTON: `${process.env.BASE_URL||process.env.FONIO_URL}/auth/activate?uuid=${user.uuid}`,
+                LINK: `${process.env.BASE_URL||process.env.FONIO_URL}/auth/activate?uuid=${user.uuid}`,
+                LOGO: `${process.env.BASE_URL||process.env.FONIO_URL}/public/assets/logo.png`
             });
             return res.status(HttpStatus.OK).json({response: true});
         } catch (err) {

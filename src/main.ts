@@ -59,8 +59,8 @@ let bootstrap = async () => {
         }
         await instance.disable('x-powered-by');
         const swaggerOptions = new DocumentBuilder()
-            .setTitle('Callify Backend')
-            .setDescription('Endpoints used by callify frontend')
+            .setTitle('Fonio Backend')
+            .setDescription('Endpoints should used by fonio frontend')
             .setVersion('1.0.0')
             .addBearerAuth(
                 { type: 'http', scheme: 'bearer', name: "Authorization", bearerFormat: 'JWT', in: "header", },

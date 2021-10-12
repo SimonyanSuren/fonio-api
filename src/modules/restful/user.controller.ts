@@ -261,7 +261,7 @@ export class UserController {
             await this.emailService.sendMail("user:invite", body.email, {
                 FIRST_NAME: body.firstName,
                 LAST_NAME: body.lastName,
-                LINK: `${process.env.CALLIFY_URL}/signup`
+                LINK: `${process.env.FONIO_URL}/signup`
             });
             res.status(HttpStatus.OK).json({ response: 'ok' });
         } catch (err) {

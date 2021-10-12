@@ -100,7 +100,7 @@ export class AccountFacade extends BaseService {
         user.uuid = v4();
         user.plaintText = true;
         user.invoiceEmail = false;
-        const login = `callify${Date.now()}`;
+        const login = `${user.firstName}_${user.lastName}_${Date.now()}`;
         user.sipUsername = login;
         const userEntity = await user.save();
         if (us.password) {

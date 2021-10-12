@@ -93,7 +93,7 @@ export class PaymentsService extends BaseService {
             }
             if (!user) await HelperClass.throwErrorHelper('auth:BadRequest');
             //TODO check unique login fro sipUser
-            const login = `${register.email}_${Date.now()}`;
+            const login = `${register.firstName}_${register.lastName}_${Date.now()}`;
             const sipUser = await this.opentactService.createSipUser({
                 login,
                 password: register.password,

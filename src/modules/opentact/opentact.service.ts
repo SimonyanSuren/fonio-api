@@ -327,7 +327,7 @@ export class OpentactService extends BaseService {
     }
 
     async nonce() {
-        this.axios.get(`/auth/nonce/${process.env.CALLIFY_APP}`)
+        this.axios.get(`/auth/nonce/${process.env.FONIO_APP}`)
             .then(response => console.log(response))
             .catch(error => console.log(error.message))
         return { nonce: 'test' }
@@ -348,7 +348,7 @@ export class OpentactService extends BaseService {
     }
 
     async createIdentity(token: string, user) {
-        return await this.axios.post(`/identities/app/${process.env.CALLIFY_APP}`, user, { headers: { "Authorization": "Bearer " + token } })
+        return await this.axios.post(`/identities/app/${process.env.FONIO_APP}`, user, { headers: { "Authorization": "Bearer " + token } })
             .then((res) => {
                 return res.data;
             })
@@ -389,7 +389,7 @@ export class OpentactService extends BaseService {
     }
 
     async buyDid(token: string, didId: string) {
-        return await fetch(`${process.env.OPENTACT_API}/dids/buyDid/${process.env.CALLIFY_APP}/${didId}`, {
+        return await fetch(`${process.env.OPENTACT_API}/dids/buyDid/${process.env.FONIO_APP}/${didId}`, {
             method: 'POST',
             headers: { "Authorization": "Bearer " + token },
         })
@@ -576,13 +576,13 @@ export class OpentactService extends BaseService {
     }
 
     async getIdentity(token: string, userId: string) {
-        return (await this.axios.get(`/identities/byUserIdApp/${userId}/${process.env.CALLIFY_APP}`, {
+        return (await this.axios.get(`/identities/byUserIdApp/${userId}/${process.env.FONIO_APP}`, {
             headers: { "Authorization": "Bearer " + token }
         })).data;
     }
 
     async getActiveCalls(token: string) {
-        return (await this.axios.get(`/app_hooks/app/${process.env.CALLIFY_APP}`, {
+        return (await this.axios.get(`/app_hooks/app/${process.env.FONIO_APP}`, {
             headers: { "Authorization": "Bearer " + token }
         })).data;
     }
@@ -600,7 +600,7 @@ export class OpentactService extends BaseService {
     }
 
     async releaseAppDid(token: string, apdiId: number) {
-        return await fetch(`${process.env.OPENTACT_API}/dids/releaseAppDid/${process.env.CALLIFY_APP}/${apdiId}`, {
+        return await fetch(`${process.env.OPENTACT_API}/dids/releaseAppDid/${process.env.FONIO_APP}/${apdiId}`, {
             method: 'POST',
             headers: { "Authorization": "Bearer " + token },
         })
@@ -619,7 +619,7 @@ export class OpentactService extends BaseService {
     }
 
     async getIncomingCalls(token: string, startDate, endDate) {
-        return (await this.axios.get(`/calls/report/inbound/app/${process.env.CALLIFY_APP}`, {
+        return (await this.axios.get(`/calls/report/inbound/app/${process.env.FONIO_APP}`, {
             headers: { "Authorization": "Bearer " + token },
             params: {
                 startDate: startDate,
@@ -629,7 +629,7 @@ export class OpentactService extends BaseService {
     }
 
     async getOutcomingCalls(token: string, startDate, endDate) {
-        return (await this.axios.get(`/calls/report/outbound/app/${process.env.CALLIFY_APP}`, {
+        return (await this.axios.get(`/calls/report/outbound/app/${process.env.FONIO_APP}`, {
             headers: { "Authorization": "Bearer " + token },
             params: {
                 startDate: startDate,

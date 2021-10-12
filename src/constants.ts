@@ -17,7 +17,7 @@ const constants = {
 
     OPENTACT_WSS: process.env.OPENTACT_WSS || "wss://api.opentact.org",
 
-    CALLIFY_URL: process.env.CALLIFY_URL || "http://148.251.91.143:8083",
+    FONIO_URL: process.env.FONIO_URL || "http://148.251.91.143:8083",
 
     //PAYMENTS
     PAYMENT_SUCCESS_URL: process.env.PAYMENT_SUCCESS_URL || 'http://148.251.91.143:8083/u/b/numbers/create/finish',

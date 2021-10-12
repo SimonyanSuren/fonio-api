@@ -52,9 +52,9 @@ export class AuthController {
                 await this.emailService.sendMail("auth:signup", userSign.user.email, {
                     FIRST_NAME: userSign.user.firstName,
                     LAST_NAME: userSign.user.lastName,
-                    BUTTON: `${process.env.BASE_URL||process.env.CALLIFY_URL}/auth/activate?uuid=${userSign.user.uuid}`,
-                    LINK: `${process.env.BASE_URL||process.env.CALLIFY_URL}/auth/activate?uuid=${userSign.user.uuid}`,
-                    LOGO: `${process.env.BASE_URL||process.env.CALLIFY_URL}/public/assets/logo.png`
+                    BUTTON: `${process.env.BASE_URL||process.env.FONIO_URL}/auth/activate?uuid=${userSign.user.uuid}`,
+                    LINK: `${process.env.BASE_URL||process.env.FONIO_URL}/auth/activate?uuid=${userSign.user.uuid}`,
+                    LOGO: `${process.env.BASE_URL||process.env.FONIO_URL}/public/assets/logo.png`
                 });
             }
 

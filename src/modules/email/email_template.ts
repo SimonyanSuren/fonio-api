@@ -157,7 +157,7 @@ export const EmailTemplate: { [messageCode: string]: EmailOptions } = {
                                     <p>
                                         This link will expire in 15 minutes and can only used once
                                     </p>
-                                    <a href="{BUTTON}" onClick="callifyVerify()" style="display: inline-block; padding: 11px 30px 6px; margin: 20px 0px 30px; font-size: 15px; color: #fff; background: #01a8fe; border-radius: 5px">
+                                    <a href="{BUTTON}" onClick="fonioVerify()" style="display: inline-block; padding: 11px 30px 6px; margin: 20px 0px 30px; font-size: 15px; color: #fff; background: #01a8fe; border-radius: 5px">
                                         Verify Email
                                     </a>
                                     <p>
