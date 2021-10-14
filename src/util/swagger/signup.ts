@@ -16,9 +16,26 @@ export class SignupReq {
     @ApiProperty()
     companyName: string;
     @ApiProperty()
-    planID: number;
-    @ApiProperty({
-        type: [OrderDid],
-      })
-    did_numbers?: OrderDid[];
+    subdomain: string;
+}
+
+export class CreatePaymentReq {
+  @ApiProperty()
+  email: string;
+  @ApiProperty()
+  password: string;
+  @ApiProperty()
+  rePassword: string;
+  @ApiProperty()
+  firstName: string;
+  @ApiProperty()
+  lastName: string;
+  @ApiProperty()
+  companyName: string;
+  @ApiProperty()
+  planID: number;
+  @ApiProperty({
+      type: [OrderDid],
+    })
+  did_numbers?: OrderDid[];
 }

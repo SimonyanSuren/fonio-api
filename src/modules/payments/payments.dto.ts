@@ -1,5 +1,5 @@
 import { PaymentSystems } from "../../models/payment.entity";
-import { SignupReq } from "../../util/swagger";
+import { CreatePaymentReq } from "../../util/swagger";
 import { OrderDid } from "../../util/swagger/order_did";
 
 
@@ -8,7 +8,7 @@ export abstract class CreatePayment {
     amount?: number;
     type: PaymentSystems;
     // planId?: number;
-    register: SignupReq;
+    register: CreatePaymentReq;
 };
 
 export abstract class BuyDidNumbers {

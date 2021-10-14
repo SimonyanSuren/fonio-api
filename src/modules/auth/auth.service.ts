@@ -85,6 +85,7 @@ export class AuthService extends BaseService {
             user.password = body.password;
             user.rePassword = body.rePassword;
             user.companyName = body.companyName;
+            user.subdomain = body.subdomain;
             user.planID = (body.planID) ? body.planID : null;
             if (user.planID) {
                 let plan = await this.planFacade.getPlanByPlanId(user.planID);
