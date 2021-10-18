@@ -9,6 +9,7 @@ import { OpentactService } from '../opentact';
 import { HelperClass } from "../../filters/Helper";
 import { BaseService } from '../services/base.service';
 import { OpentactAuth } from '../opentact';
+import constants from '../../constants';
 
 @Injectable()
 export class AuthService extends BaseService {
@@ -85,7 +86,7 @@ export class AuthService extends BaseService {
             user.password = body.password;
             user.rePassword = body.rePassword;
             user.companyName = body.companyName;
-            user.subdomain = body.subdomain;
+            user.subdomain = constants.FONIO_DOMAIN.replace('https://', `https://${body.subdomain}.`);
             user.planID = (body.planID) ? body.planID : null;
             if (user.planID) {
                 let plan = await this.planFacade.getPlanByPlanId(user.planID);
