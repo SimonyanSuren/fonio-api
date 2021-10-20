@@ -54,7 +54,7 @@ export class User extends BaseEntity {
     @Column({name: "user_salt"})
     salt?: string;
 
-    @CreateDateColumn({ name: "subdomain", nullable: true })
+    @Column({ name: "subdomain", nullable: true })
     @ApiProperty()
     subdomain?: string;
 
