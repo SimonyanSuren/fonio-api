@@ -9,7 +9,6 @@ import { OpentactService } from '../opentact';
 import { HelperClass } from "../../filters/Helper";
 import { BaseService } from '../services/base.service';
 import { OpentactAuth } from '../opentact';
-import constants from '../../constants';
 
 @Injectable()
 export class AuthService extends BaseService {
@@ -53,9 +52,7 @@ export class AuthService extends BaseService {
         };
     }
 
-
-
-    public async signIn(credentials: any, remoteAddress: string, userAgent): Promise<SignInResponse> {
+    public async signIn(credentials: any, remoteAddress: string, userAgent, onSignUp: boolean = false): Promise<SignInResponse> {
         const user: any = await this.userFacade.findByEmail(credentials.email);
         if (!user) throw new Error('user:userDoNotExist');
         const account: any = await this.userFacade.findAccountByAccountId(user.accountID);
@@ -65,7 +62,7 @@ export class AuthService extends BaseService {
         if (!account.status) throw new Error('account:planIsNotPaid');
         if (!user.emailConfirmed) throw new Error('user:emailIsNotConfirmed');
         const equals = await comparePassword(credentials.password, user.password ? user.password : '');
-        if (!equals) throw new Error('user:incorrectPassword');
+        if (!equals && !onSignUp) throw new Error('user:incorrectPassword');
         let isAdmin = (user.isAdmin) ? user.isAdmin : false;
         let opentactToken = (isAdmin) ? 'admintoken123456789' : 'usertoken123456789';
         user.token = await AuthService.generateToken(user, remoteAddress, userAgent, user.salt || '', isAdmin, account, opentactToken, user.uuid, user.active);
@@ -92,10 +89,13 @@ export class AuthService extends BaseService {
                 if (!plan) await HelperClass.throwErrorHelper('auth:planByThisIdIsNotExist');
             }
             const response = await this.userFacade.signupUser(user);
+            /* Don't need email confirmation now
+            **
             if (response.user) {
                 response.user.password = undefined;
                 response.user.salt = undefined;
-            }
+            } 
+            */
             return response
         } catch (err) {
             console.log(err)

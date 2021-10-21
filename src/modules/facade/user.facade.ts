@@ -134,7 +134,6 @@ export class UserFacade {
     }
 
     async signupUser(user: User) {
-        //console.log(user);
         try {
             if (!user) throw new Error(errorMessagesConfig['auth:signup:missingInformation'].errorMessage);
             if (!user.firstName) throw new Error(errorMessagesConfig['auth:signup:missingFirstName'].errorMessage);
@@ -156,18 +155,20 @@ export class UserFacade {
                 account.status = false;
                 account.planID = user.planID;
                 account.allowOutbound = true;
+                account.status = true; // Email confirmed is not being used now
                 // account = await tEM.save(account);
                 account = await account.save();
                 user.uuid = v4();
                 user.plaintText = true;
                 user.accountID = account.id;
                 user.invoiceEmail = false;
+                user.active = true; // Email confirmed is not being used now;
                 user.type = UserTypes.COMPANY_ADMIN;
                 // user.creation = new Date();
                 // user.updated = new Date();
                 const salt = genSaltSync(Config.number("BCRYPT_SALT_ROUNDS", 10));
                 user.password = await hashSync(user.password, salt);
-                user.emailConfirmed = false;
+                user.emailConfirmed = true; // Email confirmed is not being used now
                 user.salt = salt;
                 user.userIdentityOpenTact = false;
 

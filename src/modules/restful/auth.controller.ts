@@ -48,6 +48,8 @@ export class AuthController {
             const userSign = await this.authService.signUp(req.body);
             if (!userSign) await HelperClass.throwErrorHelper('auth:BadRequest');
 
+            /* Don't need email confirmation now
+            **
             if (userSign.user) {
                 await this.emailService.sendMail("auth:signup", userSign.user.email, {
                     FIRST_NAME: userSign.user.firstName,
@@ -57,8 +59,23 @@ export class AuthController {
                     LOGO: `${process.env.BASE_URL||process.env.FONIO_URL}/public/assets/logo.png`
                 });
             }
+            */
 
-            res.status(HttpStatus.OK).json(userSign);
+            /* Email confirmation is not being used */
+            let userAgent = req.headers['user-agent'];
+            let remoteAddress = req.headers["X-Forwarded-For"]
+                || req.headers["x-forwarded-for"]
+                || req.client.remoteAddress;
+
+            const user: any = await this.authService.signIn(userSign.user, remoteAddress, userAgent, true);
+            if (user.user.avatar) {
+                user.user.avatar = Config.string("CDN_HOST", "") + user.avatar;
+            }
+            res.status(HttpStatus.OK).json(user);
+            /* */
+
+            /* Don't need email confirmation now
+            res.status(HttpStatus.OK).json(userSign); */
         } catch (err) {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
         }
