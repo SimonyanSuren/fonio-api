@@ -15,8 +15,6 @@ export class SignupReq {
     lastName: string;
     @ApiProperty()
     companyName: string;
-    @ApiProperty()
-    subdomain: string;
 }
 
 export class CreatePaymentReq {

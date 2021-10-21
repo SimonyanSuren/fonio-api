@@ -86,7 +86,6 @@ export class AuthService extends BaseService {
             user.password = body.password;
             user.rePassword = body.rePassword;
             user.companyName = body.companyName;
-            user.subdomain = constants.FONIO_DOMAIN.replace('https://', `https://${body.subdomain}.`);
             user.planID = (body.planID) ? body.planID : null;
             if (user.planID) {
                 let plan = await this.planFacade.getPlanByPlanId(user.planID);
