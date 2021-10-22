@@ -119,7 +119,7 @@ export class UserFacade {
             FIRST_NAME: user.firstName,
             LAST_NAME: user.lastName,
             TOKEN: token,
-            LINK: `${constants.FONIO_URL}/ResetPassword/${token}`
+            LINK: `${constants.FONIO_DOMAIN}/#/login?token=${token}`
         });
     }
 
