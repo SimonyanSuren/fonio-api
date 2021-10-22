@@ -40,6 +40,10 @@ export class User extends BaseEntity {
     @ApiProperty()
     companyName?: string;
 
+    @Column({name: "user_phone", nullable: true})
+    @ApiProperty()
+    userPhone?: string;
+
     @IsEmail()
     @Column({name: "user_email"})
     @ApiProperty()

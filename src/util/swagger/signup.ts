@@ -15,6 +15,8 @@ export class SignupReq {
     lastName: string;
     @ApiProperty()
     companyName: string;
+    @ApiProperty()
+    userPhone: string;
 }
 
 export class CreatePaymentReq {
