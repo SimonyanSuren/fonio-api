@@ -48,18 +48,16 @@ export class AuthController {
             const userSign = await this.authService.signUp(req.body);
             if (!userSign) await HelperClass.throwErrorHelper('auth:BadRequest');
 
-            /* Don't need email confirmation now
-            **
+            // /* Don't need email confirmation now
+            // **
             if (userSign.user) {
-                await this.emailService.sendMail("auth:signup", userSign.user.email, {
+                await this.emailService.sendMail("auth:success", userSign.user.email, {
                     FIRST_NAME: userSign.user.firstName,
                     LAST_NAME: userSign.user.lastName,
-                    BUTTON: `${process.env.BASE_URL||process.env.FONIO_URL}/auth/activate?uuid=${userSign.user.uuid}`,
-                    LINK: `${process.env.BASE_URL||process.env.FONIO_URL}/auth/activate?uuid=${userSign.user.uuid}`,
                     LOGO: `${process.env.BASE_URL||process.env.FONIO_URL}/public/assets/logo.png`
                 });
             }
-            */
+            // */
 
             /* Email confirmation is not being used */
             let userAgent = req.headers['user-agent'];
