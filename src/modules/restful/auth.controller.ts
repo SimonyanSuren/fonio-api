@@ -48,6 +48,9 @@ export class AuthController {
             const userSign = await this.authService.signUp(req.body);
             if (!userSign) await HelperClass.throwErrorHelper('auth:BadRequest');
 
+            if (userSign.error) {
+                return res.status(HttpStatus.BAD_REQUEST).json(userSign);
+            }
             // /* Don't need email confirmation now
             // **
             if (userSign.user) {
@@ -69,7 +72,7 @@ export class AuthController {
             if (user.user.avatar) {
                 user.user.avatar = Config.string("CDN_HOST", "") + user.avatar;
             }
-            res.status(HttpStatus.OK).json(user);
+            return res.status(HttpStatus.OK).json(user);
             /* */
 
             /* Don't need email confirmation now
