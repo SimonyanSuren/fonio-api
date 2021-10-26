@@ -151,11 +151,10 @@ export class AuthController {
     @Patch('change/password')
     public async setPassword(@Req() req, @Res() res: Response) {
         try {
-            const { password, token } = req.body;
-            if (!token) await HelperClass.throwErrorHelper('auth:youShouldPassToken');
+            const { password, key } = req.body;
+            if (!key) await HelperClass.throwErrorHelper('auth:youShouldPassHash');
             if (!password) await HelperClass.throwErrorHelper('auth:youShouldPassPassword');
-            let decodetToken: string | any = await getCompaignIdFromAdminToken(token);
-            let user: object | any = await this.userFacade.findByEmail(decodetToken.email);
+            let user: object | any = await this.userFacade.findByHash(key);
             if (!user) await HelperClass.throwErrorHelper('auth:thisUserDoesNotExist');
             const equals = await await comparePassword(password, user.password ? user.password : '');
             if (equals) await HelperClass.throwErrorHelper('user:youCanNotUseTheSamePasswordTryNewOne');

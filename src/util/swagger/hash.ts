@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class ChangePassword {
     @ApiProperty()
-    token: string;
+    key: string;
     @ApiProperty()
     password: string;
 }

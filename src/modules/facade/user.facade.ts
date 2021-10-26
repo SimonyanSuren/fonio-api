@@ -33,6 +33,19 @@ export class UserFacade {
         }, secret, { expiresIn: '1h' });
     }
 
+    async getHashForResetPassword(email) {
+        let hash = Math.floor(1000 + Math.random() * 9000);
+        await this.entityManager.createQueryBuilder()
+            .update(User)
+            .set({
+                resetPasswordHash: `${hash}`
+            })
+            .where('email=:email', { email })
+            .execute();
+        
+        return hash;
+    }
+
     async deleteUserByUserUuid(userUuid) {
         return this.entityManager.createQueryBuilder()
             .delete()
@@ -68,6 +81,14 @@ export class UserFacade {
             .getOne();
     }
 
+    async findByHash(hash: string) {
+        let manager = await this.entityManager;
+        return manager.createQueryBuilder(User, "user")
+            .where("user.reset_password_hash = :hash ")
+            .setParameters({ hash })
+            .getOne();
+    }
+
     async findById(id) {
         let manager = await this.entityManager;
         return manager.createQueryBuilder(User, "user")
@@ -80,7 +101,8 @@ export class UserFacade {
         return this.entityManager.createQueryBuilder()
             .update(User)
             .set({
-                password: password
+                password: password,
+                resetPasswordHash: ''
             })
             .where('uuid=:userUuid', { userUuid: userUuid })
             .execute();
@@ -114,12 +136,12 @@ export class UserFacade {
     async resetPassword(email: string) {
         let user: any = await this.findByEmail(email);
         if (!user) throw new Error('auth:thisUserDoesNotExist');
-        let token = await UserFacade.getTokenForResetPassword(email);
+        let hash = await this.getHashForResetPassword(email);
         this.emailService.sendMail("auth:resetPassword", user.email, {
             FIRST_NAME: user.firstName,
             LAST_NAME: user.lastName,
-            TOKEN: token,
-            LINK: `${constants.FONIO_DOMAIN}/#/login?token=${token}`
+            HASH: hash,
+            LINK: `${constants.FONIO_DOMAIN}/#/login?hash=${hash}`
         });
     }
 
@@ -146,7 +168,7 @@ export class UserFacade {
             await PasswordHelper.validatePassword(user.password);
             const found = await this.findByEmail(user.email);
             if (found) throw new Error(errorMessagesConfig['user:alreadyExists'].errorMessage);
-            let manager = await this.entityManager;
+            // let manager = await this.entityManager;
             // return await manager.transaction(async tEM => {
                 let company = new Company();
                 let account = new Account();

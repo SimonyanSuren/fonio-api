@@ -1,4 +1,4 @@
-import {Entity, Column, PrimaryGeneratedColumn, BaseEntity, OneToMany, ManyToOne, JoinColumn, UpdateDateColumn, CreateDateColumn} from "typeorm";
+import {Entity, Column, PrimaryGeneratedColumn, BaseEntity, OneToMany, ManyToOne, JoinColumn, UpdateDateColumn, CreateDateColumn, Unique} from "typeorm";
 import {Plan} from "./plan.constant.entity";
 import {Account} from "./account.entity";
 import {ApiProperty} from '@nestjs/swagger';
@@ -66,7 +66,10 @@ export class User extends BaseEntity {
     @ApiProperty()
     uuid?: string;
 
-    @Column({name: "user_activation_hash" , nullable: true})
+    @Column({name: "reset_password_hash", default: ''})
+    resetPasswordHash?: string;
+
+    @Column({name: "user_activation_hash", nullable: true})
     activationHash?: string;
 
     @CreateDateColumn({name: "user_creation", type: "timestamp"})
