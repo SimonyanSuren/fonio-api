@@ -39,7 +39,7 @@ instance.use(bodyParser.json({
 }));
 // instance.use(bodyParser.json());
 instance.use(bodyParser.urlencoded({ extended: false }));
-instance.use(cors());
+// instance.use(cors());
 instance.use('/image', express.static(path.join(__dirname, '../../photo')));
 instance.use('/audio', express.static(path.join(__dirname, '../../audio')));
 instance.use('/xmls', express.static(path.join(__dirname, '../../xmls')));
