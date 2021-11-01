@@ -50,7 +50,7 @@ if (process.env.NODE_ENV !== 'development') {
 
 let bootstrap = async () => {
     try {
-        const app = await NestFactory.create(ApplicationModule, new ExpressAdapter(instance));
+        const app = await NestFactory.create(ApplicationModule, new ExpressAdapter(instance), { cors: true });
         app.useGlobalFilters(new DispatchError());
         app.useGlobalPipes(new ValidationPipe());
         // app.useGlobalPipes(new ValidationPipe({whitelist: true,forbidNonWhitelisted:true}));
@@ -74,7 +74,6 @@ let bootstrap = async () => {
             res.send(document);
         });
         await instance.use('/swagger', swaggerUI.serve, swaggerUI.setup(document));
-        app.enableCors();
         await app.listen(Config.number("HTTP_PORT", 9090),
             Config.string("LISTEN_INTERFACE", "0.0.0.0"),
             () => console.log('Application is listening on port ' + Config.number("HTTP_PORT", 9090)));
