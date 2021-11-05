@@ -11,7 +11,17 @@ import { JWTHelper } from '../../util/jwt';
 
 
 
-@WebSocketGateway()
+@WebSocketGateway({
+    handlePreflightRequest: function (req, res) {
+        var headers = {
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Credentials': true
+        };
+        res.writeHead(200, headers);
+        res.end();
+    }
+})
 export class WSGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
     usersMap = new Map;
     usersArray:object[] = [];
