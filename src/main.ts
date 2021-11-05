@@ -16,7 +16,6 @@ import { DispatchError } from './filters/DispatchError';
 import { ApplicationModule } from './modules/app.module';
 import { Config } from './util/config';
 import * as swaggerUI from 'swagger-ui-express';
-import * as cors from 'cors';
 import * as path from 'path';
 import * as raven from 'raven';
 const cloneBuffer = require('clone-buffer');
@@ -39,7 +38,6 @@ instance.use(bodyParser.json({
 }));
 // instance.use(bodyParser.json());
 instance.use(bodyParser.urlencoded({ extended: false }));
-// instance.use(cors());
 instance.use('/image', express.static(path.join(__dirname, '../../photo')));
 instance.use('/audio', express.static(path.join(__dirname, '../../audio')));
 instance.use('/xmls', express.static(path.join(__dirname, '../../xmls')));
@@ -50,7 +48,12 @@ if (process.env.NODE_ENV !== 'development') {
 
 let bootstrap = async () => {
     try {
-        const app = await NestFactory.create(ApplicationModule, new ExpressAdapter(instance), { cors: true });
+        const app = await NestFactory.create(ApplicationModule, new ExpressAdapter(instance));
+        app.enableCors({
+        // Can be moved to the environment later
+            origin: 'https://fonio.app',
+            credentials: true
+        });
         app.useGlobalFilters(new DispatchError());
         app.useGlobalPipes(new ValidationPipe());
         // app.useGlobalPipes(new ValidationPipe({whitelist: true,forbidNonWhitelisted:true}));
