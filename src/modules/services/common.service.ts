@@ -19,7 +19,7 @@ export class CommonService extends BaseService {
 
 
     public async sendSms(currentUser, to: string, msg: string, from?: string,) {
-        const tn = from || (await this.getEntity(this.Repositories.DID, { accountID: currentUser.accountId })).number
+        const tn = from || (await this.getEntity(this.Repositories.DID, { companyID: currentUser.companyId })).number
         return await this.opentactService.createSMS({
             to,
             tn: +tn,
@@ -29,7 +29,7 @@ export class CommonService extends BaseService {
     }
 
     public async getIncommingSms(currentUser, limit, offset) {
-        let where: any = { accountID: currentUser.accountId }
+        let where: any = { companyID: currentUser.companyId }
 
         const tnResponse = (await this.getEntities(this.Repositories.DID, where))
         if (tnResponse?.items) {
@@ -62,7 +62,7 @@ export class CommonService extends BaseService {
     }
 
     public async getAllSms(currentUser, limit, offset, startDate, endDate, direction, number) {
-        let where: any = { accountID: currentUser.accountId }
+        let where: any = { companyID: currentUser.companyId }
 
         if (!!number) {
             where.number = number
@@ -122,7 +122,7 @@ export class CommonService extends BaseService {
 
     public async getAllLogs(currentUser, startDate = dayjs().startOf("date").toISOString(), endDate = dayjs().startOf("date").toISOString()) {
         const logs = await this.opentactService.getSipAppCalls({});
-        let where: any = { accountID: currentUser.accountId }
+        let where: any = { companyID: currentUser.companyId }
         const tnResponse = (await this.getEntities(this.Repositories.DID, where))
         const numbers = tnResponse.items.map(item => item.number)
 

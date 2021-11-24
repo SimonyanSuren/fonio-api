@@ -2,7 +2,7 @@
 
 import {Controller, Get, Post, HttpStatus, Req, Res, Delete, Patch, Param} from '@nestjs/common';
 import {Response} from 'express';
-import {BlackListFacade, CompanyFacade} from '../facade';
+import {BlackListFacade} from '../facade';
 import {AccountBlacklist} from '../../models';
 import {AccountBlacklistSwagger, AccountBlacklistStatus} from '../../util/swagger/acoountBlacklist';
 import {ApiResponse, ApiBearerAuth, ApiBody, ApiTags, ApiParam} from '@nestjs/swagger';
@@ -13,20 +13,18 @@ import {HelperClass} from "../../filters/Helper";
 @ApiTags("BL")
 @ApiBearerAuth()
 export class BlackListController {
-    constructor(private blackListFacade: BlackListFacade, private companyFacade: CompanyFacade) {
+    constructor(private blackListFacade: BlackListFacade) {
     }
 
-    @Delete(':uuid/:companyUuid')
+    @Delete(':uuid')
     @ApiParam({name: "uuid", description: "uuid", required: true, type: String})
-    @ApiParam({name: "companyUuid", description: "companyUuid", required: true, type: String})
     @ApiResponse({status: 200, description: "black list removed"})
-    public async deleteEntity(@Req() req, @Res() res: Response, @Param("uuid") uuid: string, @Param("companyUuid") companyUuid: string) {
+    public async deleteEntity(@Req() req, @Res() res: Response, @Param("uuid") uuid: string) {
         try {
             if (!uuid) await HelperClass.throwErrorHelper('blacklist:youShouldPassUuidField');
-            if (!companyUuid) await HelperClass.throwErrorHelper('blacklist:youShouldPassCompanyUuidField');
-            let bl = await this.blackListFacade.isBlackListExist(req.user.accountId, uuid, companyUuid);
+            let bl = await this.blackListFacade.isBlackListExist(req.user.companyId, uuid);
             if (!bl) await HelperClass.throwErrorHelper('blacklist:thisBlDoesNotExist');
-            let response = await this.blackListFacade.deletePhone(req.user.accountId, uuid, companyUuid);
+            let response = await this.blackListFacade.deletePhone(req.user.companyId, uuid);
             return res.status(HttpStatus.OK).json({response: response});
         } catch (err) {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
@@ -37,8 +35,8 @@ export class BlackListController {
     @ApiResponse({status: 200, description: "black list OK", type: AccountBlacklist, isArray: true})
     public async all(@Req() req, @Res() res: Response) {
         try {
-            let {accountId} = req.user;
-            let response = await this.blackListFacade.getAllBlackListsByAccountId(accountId);
+            let {companyId} = req.user;
+            let response = await this.blackListFacade.getAllBlackListsByCompanyId(companyId);
             res.status(HttpStatus.OK).json(response);
         } catch (err) {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
@@ -46,8 +44,7 @@ export class BlackListController {
     }
 
     @Post()
-    @ApiBody({required: true, type: AccountBlacklistSwagger, 
-    })
+    @ApiBody({required: true, type: AccountBlacklistSwagger})
     @ApiResponse({status: 200, description: "black list OK", type: AccountBlacklist})
     public async create(@Req() req, @Res() res: Response) {
         try {
@@ -63,8 +60,7 @@ export class BlackListController {
 
     @Patch('/:id/status')
     @ApiParam({name: "id", description: "black list id", required: true, type: Number})
-    @ApiBody({required: true, type: AccountBlacklistStatus, 
-    })
+    @ApiBody({required: true, type: AccountBlacklistStatus})
     @ApiResponse({status: 200, description: "black list OK", type: AccountBlacklist})
     public async edit(@Req() req, @Param("id") id: number, @Res() res: Response) {
         try {

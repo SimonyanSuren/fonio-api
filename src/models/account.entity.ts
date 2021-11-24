@@ -1,7 +1,7 @@
-import { Entity, Column, PrimaryGeneratedColumn, BaseEntity, CreateDateColumn, OneToMany, UpdateDateColumn } from "typeorm";
+import { Entity, Column, PrimaryGeneratedColumn, BaseEntity, CreateDateColumn, UpdateDateColumn } from "typeorm";
 import { ApiProperty } from '@nestjs/swagger';
-import { Did } from "./did.entity";
-import { AccountBlacklist } from "./account_blacklist.entity";
+// import { Did } from "./did.entity";
+// import { AccountBlacklist } from "./account_blacklist.entity";
 
 @Entity()
 export class Account extends BaseEntity {
@@ -49,13 +49,13 @@ export class Account extends BaseEntity {
     @Column("jsonb", { name: "acco_json", nullable: true  })
     metadata?: any;
 
-    @ApiProperty({ type: () => Did })
-    @OneToMany(type => Did, did => did.account)
-    did?: Did[];
+    // @ApiProperty({ type: () => Did })
+    // @OneToMany(type => Did, did => did.account)
+    // did?: Did[];
 
-    @ApiProperty({ type: () => AccountBlacklist })
-    @OneToMany(type => AccountBlacklist, blacklists => blacklists.account)
-    blacklists?: AccountBlacklist[];
+    // @ApiProperty({ type: () => AccountBlacklist })
+    // @OneToMany(type => AccountBlacklist, blacklists => blacklists.account)
+    // blacklists?: AccountBlacklist[];
 
     static withId(id: number): Account {
         let ac = new Account();

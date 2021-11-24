@@ -2,20 +2,18 @@ import { ApiProperty } from "@nestjs/swagger";
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, UpdateDateColumn, JoinColumn } from "typeorm";
 import { Country } from "./countries.entity";
 
-
-
 export interface IProvinceCreateProps {
     countryUuid: string;
     shortName: string;
     fullName: string;
 }
 
-
 export interface IProvince extends IProvinceCreateProps {
     provinceUuid: string;
     updated_on: Date;
     created_on: Date;
 }
+
 @Entity("provinces")
 export class Province implements IProvinceCreateProps {
 

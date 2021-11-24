@@ -30,7 +30,7 @@ export class WSGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
     server: Server;
 
     private getByValue(array, value) {
-        return array.filter(object => object.accountId === value);
+        return array.filter(object => object.companyId === value);
     }
 
     private removeByValue(array, value) {
@@ -58,15 +58,15 @@ export class WSGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
             throw new Error('authentication error')
         }
         const newObject = {
-            accountId: user.accountId,
+            companyId: user.companyId,
             client
         }
         this.usersArray.push(newObject)
     }
 
-    async sendMessage(accountId, data) {
+    async sendMessage(companyId, data) {
 
-        const clientArray = this.getByValue(this.usersArray, accountId)
+        const clientArray = this.getByValue(this.usersArray, companyId)
         if (clientArray?.length>0){
             clientArray.forEach( client =>{
                 const response = client.client.emit('sms_incoming', data)

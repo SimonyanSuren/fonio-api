@@ -1,10 +1,10 @@
 'use strict';
 
 import { join } from 'path';
-import { Inject, Controller, Get, HttpStatus, Req, Res, Post, Patch, Param, Query, Put, Delete, Body } from '@nestjs/common';
+import { Inject, Controller, Get, HttpStatus, Req, Res, Post, Patch, Param, Put, Delete, Body } from '@nestjs/common';
 import { Response } from 'express';
 import { UserFacade, CompanyFacade } from '../facade';
-import { ApiOperation, ApiBearerAuth, ApiTags, ApiBody, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger';
+import { ApiOperation, ApiBearerAuth, ApiTags, ApiBody, ApiParam, ApiResponse } from '@nestjs/swagger';
 import { errorResponse } from "../../filters/errorRespone";
 import { HelperClass } from "../../filters/Helper";
 import { UserPatchMethod } from "../../util/swagger/user";
@@ -42,35 +42,35 @@ export class UserController {
     ) {
     }
 
-    @Get('/list/byAccount')
-    @ApiOperation({ description: "Get user list of account.", summary: "Get user list of account" })
-    @ApiQuery({ name: "company", description: "company name", required: false, type: String })
-    public async getUserListByAccId(@Req() req, @Query("company") company: string, @Res() res: Response) {
-        try {
-            let { accountId } = req.user;
-            let users: any = await this.userFacade.getUserListByAccId(accountId, company);
-            return res.status(HttpStatus.OK).json({
-                response: users
-            });
-        } catch (err) {
-            errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
-        }
-    }
+    // @Get('/list/byAccount')
+    // @ApiOperation({ description: "Get user list of account.", summary: "Get user list of account" })
+    // @ApiQuery({ name: "company", description: "company name", required: false, type: String })
+    // public async getUserListByAccId(@Req() req, @Query("company") company: string, @Res() res: Response) {
+    //     try {
+    //         let { accountId } = req.user;
+    //         let users: any = await this.userFacade.getUserListByAccId(accountId, company);
+    //         return res.status(HttpStatus.OK).json({
+    //             response: users
+    //         });
+    //     } catch (err) {
+    //         errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
+    //     }
+    // }
 
     @Get('/list/byCompany/:id')
     @ApiParam({ name: "id", description: "company id", required: true, type: Number })
-    @ApiOperation({ description: "Get user list of account.", summary: "Get user list of account" })
+    @ApiOperation({ description: "Get user list of company.", summary: "Get user list of company" })
     public async getUserListByCompId(@Req() req, @Param("id") id: number, @Res() res: Response) {
         try {
-            let name;
+            let uuid;
             const company = await this.companyFacade.getCompanyById(id);
             if (!company) {
                 await HelperClass.throwErrorHelper('company:notFound');
             }
             else
-                name = company.companyName;
+                uuid = company.companyUuid;
 
-            let users: any = await this.userFacade.getUserListByCompName(req.user, name);
+            let users: any = await this.userFacade.getUserListByCompUuid(uuid);
             return res.status(HttpStatus.OK).json({
                 response: users
             });
@@ -80,11 +80,11 @@ export class UserController {
     }
 
     @Get()
-    @ApiOperation({ description: "Get current account.", summary: "Get user infotmation" })
+    @ApiOperation({ description: "Get current company.", summary: "Get user infotmation" })
     public async getUserInformation(@Req() req, @Res() res: Response) {
         try {
-            let { userId, accountId } = req.user;
-            let user: any = await this.userFacade.getUserById(userId, accountId);
+            let { userId, companyId } = req.user;
+            let user: any = await this.userFacade.getUserById(userId, companyId);
             if (!user) await HelperClass.throwErrorHelper('user:thisUserDoNotExist');
             return res.status(HttpStatus.OK).json({
                 response: {
@@ -108,9 +108,8 @@ export class UserController {
     @ApiOperation({ description: "Edit user account", summary: "Put account" })
     public async putUserInformation(@Req() req, @Res() res: Response, @Param("id") id) {
         try {
-            let { userId, accountId } = req.user;
             let { email, firstName, lastName, twoFA, password, rePassword, machineDetection, forwardSoftphone, logoUuid, companyName } = req.body;
-            let user: any = await this.userFacade.getUserById(id, accountId);
+            let user: any = await this.userFacade.getUserById(id, req.user.companyId);
             if (!user) await HelperClass.throwErrorHelper('user:thisUserDoNotExist');
             let emailField = email ? email : user.email;
             let firstNameField = firstName ? firstName : user.firstName;
@@ -127,7 +126,7 @@ export class UserController {
                 forwardSoftphoneField = forwardSoftphone;
             if (password !== rePassword) throw new MessageCodeError('rePassword:NotMatch');
 
-            let response = await this.userFacade.updateUserFieldsEntity(id, accountId, emailField, firstNameField, lastNameField, twoFaField, password, machineDetectionField, forwardSoftphoneField, companyNameField);
+            let response = await this.userFacade.updateUserFieldsEntity(id, emailField, firstNameField, lastNameField, twoFaField, password, machineDetectionField, forwardSoftphoneField, companyNameField);
             return res.status(HttpStatus.OK).json({ response: response });
         } catch (err) {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
@@ -141,9 +140,9 @@ export class UserController {
     @ApiOperation({ description: "Edit user account", summary: "Patch account" })
     public async patchUserInformation(@Req() req, @Res() res: Response) {
         try {
-            let { userId, accountId } = req.user;
+            let { userId, companyId } = req.user;
             let { email, firstName, lastName, twoFA, password, rePassword, machineDetection, forwardSoftphone, logoUuid, companyName } = req.body;
-            let user: any = await this.userFacade.getUserById(userId, accountId);
+            let user: any = await this.userFacade.getUserById(userId, companyId);
             if (!user) await HelperClass.throwErrorHelper('user:thisUserDoNotExist');
             let emailField = email ? email : user.email;
             let firstNameField = firstName ? firstName : user.firstName;
@@ -160,7 +159,7 @@ export class UserController {
                 forwardSoftphoneField = forwardSoftphone;
             if (password !== rePassword) throw new MessageCodeError('rePassword:NotMatch');
 
-            let response = await this.userFacade.updateUserFieldsEntity(userId, accountId, emailField, firstNameField, lastNameField, twoFaField, password, machineDetectionField, forwardSoftphoneField, companyNameField);
+            let response = await this.userFacade.updateUserFieldsEntity(userId, emailField, firstNameField, lastNameField, twoFaField, password, machineDetectionField, forwardSoftphoneField, companyNameField);
             return res.status(HttpStatus.OK).json({ response: response });
         } catch (err) {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
@@ -172,14 +171,11 @@ export class UserController {
     @ApiOperation({ description: "Get company informations.", operationId: "getCompanies", summary: "Get company infotmations" })
     public async getCompanies(@Req() req, @Param("uuid") uuid: string, @Res() res: Response) {
         try {
-            let accountId;
             const user = await this.userFacade.getUserByUuid(uuid);
             if (!user) {
                 await HelperClass.throwErrorHelper('user:userWithThisUuidIsNotExist');
             }
-            else
-                accountId = user.accountID;
-            const companies = await this.companyFacade.getAllCompaniesByAccountId(accountId);
+            const companies = await this.companyFacade.getAllCompaniesByUserCreator(user?.id);
             return res.status(HttpStatus.OK).json(companies);
         } catch (err) {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
@@ -203,7 +199,7 @@ export class UserController {
     public async suspendUser(@Req() req, @Res() res: Response) {
         try {
             let token = await this.opentactAuth.adminLoginGettignToken();
-            let tracking_numbers = (await this.accountNumberFacade.getTrackingNumbers(req.user.userId, req.user.accountId, undefined))[0];
+            let tracking_numbers = (await this.accountNumberFacade.getTrackingNumbers(req.user.userId, req.user.companyId, undefined))[0];
             for (let i = 0; i < tracking_numbers.length; i++) {
                 let did = tracking_numbers[i].did;
                 if (did != undefined) {
@@ -223,7 +219,7 @@ export class UserController {
     public async closeUser(@Req() req, @Res() res: Response) {
         try {
             let token = await this.opentactAuth.adminLoginGettignToken();
-            let tracking_numbers = (await this.accountNumberFacade.getTrackingNumbers(req.user.userId, req.user.accountId, undefined))[0];
+            let tracking_numbers = (await this.accountNumberFacade.getTrackingNumbers(req.user.userId, req.user.companyId, undefined))[0];
             for (let i = 0; i < tracking_numbers.length; i++) {
                 let did = tracking_numbers[i].did;
                 if (did != undefined) {
@@ -239,16 +235,16 @@ export class UserController {
         }
     }
 
-    @Post('/account/cancel')
-    @ApiOperation({ description: "Cancel user.", operationId: "cancelUser", summary: "Cancel user" })
-    public async cancelUser(@Req() req, @Res() res: Response) {
-        try {
-            let result = await this.userFacade.cancelAccount(req.user.accountId);
-            res.status(HttpStatus.OK).json({ response: result });
-        } catch (err) {
-            errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
-        }
-    }
+    // @Post('/account/cancel')
+    // @ApiOperation({ description: "Cancel user.", operationId: "cancelUser", summary: "Cancel user" })
+    // public async cancelUser(@Req() req, @Res() res: Response) {
+    //     try {
+    //         let result = await this.userFacade.cancelAccount(req.user.accountId);
+    //         res.status(HttpStatus.OK).json({ response: result });
+    //     } catch (err) {
+    //         errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
+    //     }
+    // }
 
     @ApiBody({
         required: true, type: InvitationReq,
@@ -317,7 +313,7 @@ export class UserController {
             const { type, amount, additionalNumbers } = body;
 
             let userID = req.user?.userId,
-                accountID = req.user?.accountId,
+                companyID = req.user?.companyId,
                 numbers = additionalNumbers,
                 didNumbers,
                 userNumbers,
@@ -337,21 +333,21 @@ export class UserController {
                 }
             }
 
-            let response = await this.paymentsService.createPayment({ type, amount, accountID, planID });
+            let response = await this.paymentsService.createPayment({ type, amount, companyID, planID });
             if (response.error) {
                 return res.status(HttpStatus.BAD_REQUEST).send({ message: (response.error === '404') ? `Payment responde with status ${response.error}`: response.error });
             }
             
-            company = await this.userFacade.getCompanyByUserIdAndAccountId(userID, accountID);
+            company = await this.userFacade.getCompanyByUserId(userID);
 
             if (numbers) {
-                userNumbers = await this.accountNumberFacade.addDidNumbers(userID, accountID, true, didNumbers.payload.request.items, company, planID);
+                userNumbers = await this.accountNumberFacade.addDidNumbers(userID, companyID, true, didNumbers.payload.request.items, company, planID);
                 if (userNumbers.error) {
                     return res.status(HttpStatus.BAD_REQUEST).json(userNumbers.error);
                 }
             }
 
-            return res.status(HttpStatus.OK).json({ ...response, ...{numbers: userNumbers}, ...{userID, accountID, planID, companyUuid: company.companyUuid} });
+            return res.status(HttpStatus.OK).json({ ...response, ...{numbers: userNumbers}, ...{userID, companyID, planID, companyUuid: company.companyUuid} });
         } catch (err) {
             throw new Error(err.message)
         }
@@ -368,7 +364,7 @@ export class UserController {
             const { from, to, message } = body;
             const { token } = (await this.opentactAuth.getToken()).payload;
 
-            let own_number = await this.accountNumberFacade.ownNumber(req.user.userId, req.user.accountId, body.from);
+            let own_number = await this.accountNumberFacade.ownNumber(req.user.userId, req.user.companyId, body.from);
             if (!own_number) return res.status(401).send('From number does not belong to you.');
 
             const sms = await this.opentactService.sendSms(token, from, to, message);

@@ -10,7 +10,7 @@ import { HelperClass } from "../../filters/Helper";
 import { AuthService } from '../auth';
 import { Transactional } from "typeorm-transactional-cls-hooked"
 import * as dayjs from "dayjs";
-import { AccountFacade } from '../facade';
+import { CompanyFacade } from '../facade';
 import { Repositories } from '../db/repositories';
 
 @Injectable()
@@ -22,7 +22,7 @@ export class PaymentsService extends BaseService {
         @Inject('PaymentsRepository')
         private readonly paymentsRepository: PaymentsRepository,
         private readonly didRepository: DidsRepository,
-        private readonly accountFacade: AccountFacade,
+        private readonly companyFacade: CompanyFacade,
         private readonly opentactService: OpentactService,
         private authService: AuthService,
 
@@ -69,18 +69,18 @@ export class PaymentsService extends BaseService {
     }
 
     private async paymentSucceed({ transactionId }) {
-        const updatedPayment = await this.updateEntity(this.Repositories.PAYMENTS, { transactionId }, { success: true })
-        const updatedUser = await this.updateEntity(this.Repositories.USERS, { id: updatedPayment.userId }, { status: true })
-        const updatedAccount = await this.updateEntity(this.Repositories.ACCOUNTS, { id: updatedUser.accountID }, { status: true })
-        const duration = await this.getDurationFromAmount(updatedPayment.amount, updatedUser.accountID,)
+        const updatedPayment = await this.updateEntity(this.Repositories.PAYMENTS, { transactionId }, { success: true });
+        const updatedUser = await this.updateEntity(this.Repositories.USERS, { id: updatedPayment.userId }, { status: true });
+        // const updatedAccount = await this.updateEntity(this.Repositories.ACCOUNTS, { id: updatedUser.accountID }, { status: true })
+        const duration = await this.getDurationFromAmount(updatedPayment.amount, updatedUser.companyID);
         const didArray = await this.createDidNumbers({
             numbers: updatedPayment.numbers,
-            accountID: updatedUser.accountID,
+            companyID: updatedUser.companyID,
             userID: updatedPayment.userId,
             duration
-        })
+        });
 
-        return updatedAccount
+        return updatedUser;
     }
 
     @Transactional()
@@ -99,10 +99,10 @@ export class PaymentsService extends BaseService {
                 password: register.password,
             })
             if (user.user) {
-                const updatedAccount = await this.updateEntity(this.Repositories.USERS, { id: user.user.id }, { sipUsername: login })
+                const updatedUser = await this.updateEntity(this.Repositories.USERS, { id: user.user.id }, { sipUsername: login })
             }
-            if (user.account && user.user) {
-                const createdTokens = await this.accountFacade.saveToken(login, register.password, user.user)
+            if (user.company && user.user) {
+                const createdTokens = await this.companyFacade.saveToken(login, register.password, user.user)
             }
             return { user }
         } catch (e) {
@@ -110,11 +110,11 @@ export class PaymentsService extends BaseService {
         }
     }
 
-    private async getDurationFromAmount(amount, accountId, planID?) {
+    private async getDurationFromAmount(amount, companyID, planID?) {
         let planId = planID;
-        if (accountId) {
-            const account = await this.getEntity(this.Repositories.ACCOUNTS, { id: accountId });
-            planId = account.planID;
+        if (companyID) {
+            const company = await this.getEntity(this.Repositories.COMPANY, { id: companyID });
+            planId = company.planID;
         }
         if (!planId) {
             throw new Error("Missing plan id")
@@ -137,7 +137,7 @@ export class PaymentsService extends BaseService {
     }
 
 
-    private async createDidNumbers({ numbers, accountID, userID, duration }) {
+    private async createDidNumbers({ numbers, companyID, userID, duration }) {
         if (numbers.length > 2) {
             throw new Error("Too many numbers")
         }
@@ -154,7 +154,7 @@ export class PaymentsService extends BaseService {
             const didPromise = this.didRepository.create({
                 number: number,
                 status: true,
-                accountID,
+                companyID,
                 userID,
                 expireOn,
             })
@@ -168,7 +168,7 @@ export class PaymentsService extends BaseService {
     public async createPayment(data) {
         try {
             let paymentId;
-            await this.getDurationFromAmount(data.amount, data.accountID, data.planID);
+            await this.getDurationFromAmount(data.amount, data.companyID, data.planID);
             if (data.type === 'paypal') {
                 const { items, total_amount } = await this.prepareDataPaypal(data.amount)
                 paymentId = await this.createPaypalPayment({ total_amount, items })
@@ -192,7 +192,7 @@ export class PaymentsService extends BaseService {
             transactionId: paymentId,
             payWith: data.type,
             userId: data.userID,
-            accountId: data.accountID,
+            companyId: data.companyID,
             amount: data.amount,
             numbers: data.numbers,
         }

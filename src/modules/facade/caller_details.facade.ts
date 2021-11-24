@@ -25,7 +25,7 @@ export class CallerDetailsFacade {
     }
 
     async get(currentUser, caller_number) {
-        let user: any = await this.userFacade.getUserById(currentUser.userId, currentUser.accountId);
+        let user: any = await this.userFacade.getUserById(currentUser.userId, currentUser.companyId);
         if (!user) await HelperClass.throwErrorHelper('user:thisUserDoNotExist');
         if (!user.companyName) await HelperClass.throwErrorHelper('user:thisUSerDoNotAssinedToCompany');
         let company = await this.companyFacade.getCompanyByName(user.companyName);
@@ -60,7 +60,7 @@ export class CallerDetailsFacade {
     }
 
     async update(currentUser, caller_number, req_contact) {
-        let user: any = await this.userFacade.getUserById(currentUser.userId, currentUser.accountId);
+        let user: any = await this.userFacade.getUserById(currentUser.userId, currentUser.companyId);
         if (!user) await HelperClass.throwErrorHelper('user:thisUserDoNotExist');
         if (!user.companyName) await HelperClass.throwErrorHelper('user:thisUSerDoNotAssinedToCompany');
         let company = await this.companyFacade.getCompanyByName(user.companyName);

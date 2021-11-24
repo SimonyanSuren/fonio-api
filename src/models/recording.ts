@@ -1,12 +1,12 @@
 import { Entity, Column, PrimaryGeneratedColumn, JoinColumn, ManyToOne } from "typeorm";
 import { Data } from "./data";
-import { Account } from './account.entity';
+// import { Account } from './account.entity';
+import { Company } from './company';
 import { ApiProperty } from '@nestjs/swagger';
 
 import { IsEmail } from "class-validator";
 import { User } from "./user.entity";
 
-@Entity()
 @Entity("recordings")
 export class Recording {
     @PrimaryGeneratedColumn({ name: "reco_id" })
@@ -38,10 +38,15 @@ export class Recording {
     @JoinColumn({ name: "data_id", referencedColumnName: "id" })
     type: Data;
 
-    @ApiProperty({ type: () => Account, description: "ACCOUNT USER" })
-    @ManyToOne(type => Account)
-    @JoinColumn({ name: "acco_id" })
-    account: Account;
+    // @ApiProperty({ type: () => Account, description: "ACCOUNT USER" })
+    // @ManyToOne(type => Account)
+    // @JoinColumn({ name: "acco_id" })
+    // account: Account;
+
+    @ApiProperty({ type: () => Company, description: "ACCOUNT USER" })
+    @ManyToOne(type => Company)
+    @JoinColumn({ name: "company_id" })
+    company: Company;
 
     @ApiProperty({ type: () => User, description: "USER" })
     @ManyToOne(type => User)

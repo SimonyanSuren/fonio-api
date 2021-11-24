@@ -8,8 +8,6 @@ import { OpentactService } from '../opentact';
 import { AccountNumberFacade } from '../facade';
 import { OpentactAuth } from '../opentact';
 
-
-
 @Controller('payments')
 @ApiBearerAuth()
 @ApiTags("Payments")
@@ -30,7 +28,7 @@ export class PaymentsController {
             const { register, ...rest } = body;
 
             let userID,
-                accountID,
+                companyID,
                 didNumbers,
                 userNumbers,
                 company,
@@ -50,7 +48,7 @@ export class PaymentsController {
                 }
             }
 
-            let response = await this.paymentsService.createPayment({ ...rest, accountID, planID });
+            let response = await this.paymentsService.createPayment({ ...rest, companyID, planID });
             if (response.error) {
                 return res.status(HttpStatus.BAD_REQUEST).send({ message: (response.error === '404') ? `Payment responde with status ${response.error}`: response.error });
             }
@@ -70,22 +68,20 @@ export class PaymentsController {
                     LOGO: `${process.env.BASE_URL||process.env.FONIO_URL}/public/assets/logo.png`
                 });
             }
-            if (result.user['account']) {
-                accountID = result.user['account'].id;
-            }
             if (result.user['company']) {
                 company = result.user['company'];
+                companyID = company.companyId;
             }
 
-            await this.paymentsService.storePaymentData(response.paymentID, { ...rest, userID, accountID, numbers });
+            await this.paymentsService.storePaymentData(response.paymentID, { ...rest, userID, companyID, numbers });
 
             if (numbers) {
-                userNumbers = await this.accountNumberFacade.addDidNumbers(userID, accountID, true, didNumbers.payload.request.items, company, planID);
+                userNumbers = await this.accountNumberFacade.addDidNumbers(userID, companyID, true, didNumbers.payload.request.items, company, planID);
                 if (userNumbers.error) {
                     return res.status(HttpStatus.BAD_REQUEST).json(userNumbers.error);
                 }
             }
-            return res.status(HttpStatus.OK).json({ ...response, ...{numbers: userNumbers}, ...{userID, accountID, planID, companyUuid: company.companyUuid} });
+            return res.status(HttpStatus.OK).json({ ...response, ...{numbers: userNumbers}, ...{userID, companyID, planID, companyUuid: company.companyUuid} });
         } catch (err) {
             throw new Error(err.message)
         }

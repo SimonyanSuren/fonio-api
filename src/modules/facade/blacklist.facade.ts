@@ -3,6 +3,7 @@ import {Injectable} from '@nestjs/common';
 import {v4} from 'uuid';
 import {EntityRepository, EntityManager} from "typeorm";
 import { MessageCodeError } from '../../util/error';
+import { StringLiteralLike } from "typescript";
 
 @EntityRepository()
 @Injectable()
@@ -19,33 +20,31 @@ export class BlackListFacade {
             .getMany();
     }
 
-    async getAllBlackListsByAccountId(accountId) {
+    async getAllBlackListsByCompanyId(companyId) {
         let manager = await this.entityManager;
         return manager.createQueryBuilder(AccountBlacklist, 'bl')
-            .where('bl.accountId=:accountId', {accountId})
+            .where('bl.companyId=:companyId', {companyId})
             .getMany();
     }
 
-    async deletePhone(accountId: number, uuid: string, companyUuid: string) {
+    async deletePhone(companyId: number, uuid: string) {
         let manager = await this.entityManager;
-        await manager.query("delete from account_blacklist where account_id = $1 and acbl_uuid = $2 and company_uuid=$3 returning *", [accountId, uuid, companyUuid]);
+        await manager.query("delete from account_blacklist where company_id = $1 and acbl_uuid = $2 returning *", [companyId, uuid]);
         return true;
     }
 
-    async isBlackListExist(accountId, uuid, companyUuid) {
+    async isBlackListExist(companyId, uuid) {
         let manager = await this.entityManager;
         return manager.createQueryBuilder(AccountBlacklist, 'abl')
-            .where('abl.account=:accountId', {accountId})
+            .where('abl.company=:companyId', {companyId})
             .andWhere('abl.uuid=:uuid', {uuid})
-            .andWhere('abl.companyUuid=:companyUuid', {companyUuid})
             .getOne();
     }
 
-    async getCompanyByAccountIdAndUserId(userId, accountId, companyUuid) {
+    async getCompanyByAccountIdAndUserId(userId, companyId) {
         return this.entityManager.createQueryBuilder(Company, 'c')
-            .where('c.accountID=:accountId', {accountId})
+            .where('c.companyID=:companyId', {companyId})
             .andWhere('c.userCreatorID=:userId', {userId})
-            .andWhere('c.companyUuid=:companyUuid',{companyUuid})
             .getOne();
     }
 
@@ -63,7 +62,7 @@ export class BlackListFacade {
                 .into(AccountBlacklist)
                 .values({
                     uuid: await v4(),
-                    accountId: currentUser.accountId,
+                    companyId: currentUser.companyId,
                     companyUuid: body.companyUuid,
                     number: body.number,
                     user: currentUser.userId,

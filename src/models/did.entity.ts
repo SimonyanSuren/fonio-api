@@ -1,8 +1,9 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, UpdateDateColumn, CreateDateColumn } from "typeorm";
-import { Account } from "./account.entity";
+// import { Account } from "./account.entity";
 import { User } from "./user.entity";
 import { CallFlow } from "./call_flow.entity";
 import { ApiProperty } from "@nestjs/swagger";
+import { Company } from "./company";
 
 @Entity()
 export class Did {
@@ -22,8 +23,10 @@ export class Did {
     @Column({ name: "did_opentact_id", nullable: true })
     didOpentactID?: string;
     @ApiProperty()
-    @Column({ name: "acco_id" })
-    accountID: number;
+    // @Column({ name: "acco_id" })
+    // accountID: number;
+    @Column({ name: "company_id" })
+    companyID: number;
     @ApiProperty()
     @Column({ name: "user_id" })
     userID: number;
@@ -41,10 +44,15 @@ export class Did {
     @Column({ name: "expire_on", type: "timestamp", nullable: true })
     expireOn?: Date;
 
-    @ApiProperty({ type: () => Account })
-    @ManyToOne(type => Account, account => account.did)
-    @JoinColumn({ name: "acco_id" })
-    account: Account;
+    // @ApiProperty({ type: () => Account })
+    // @ManyToOne(type => Account, account => account.did)
+    // @JoinColumn({ name: "acco_id" })
+    // account: Account;
+
+    @ApiProperty({ type: () => Company })
+    @ManyToOne(type => Company, company => company.did)
+    @JoinColumn({ name: "company_id" })
+    company: Company;
 
     @ApiProperty()
     @Column({ name: "cf_id" , nullable: true})

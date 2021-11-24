@@ -5,7 +5,7 @@ import {AccountNumberFacade} from './accountnumber.facade';
 import {UserFacade} from './user.facade';
 // import {GreetingFacade} from "./greeting.facade";
 import {CompanyFacade} from './company.facade';
-import {AccountFacade} from './account.facade';
+// import {AccountFacade} from './account.facade';
 import {AdminFacade} from "./admin.facade";
 import {PlanFacade} from './plan.facade';
 // import {HangupFacade} from "./hangup";
@@ -39,8 +39,8 @@ import {BullModule} from '@nestjs/bull';
 
 const FACADES = [
     UserFacade, CompanyFacade,
-    AccountFacade, CallFlowFacade, BlackListFacade,
-    PlanFacade, //CreditCardFacade, GreetingFacade,
+    CallFlowFacade, BlackListFacade, PlanFacade,
+    // AccountFacade, CreditCardFacade, GreetingFacade,
     AdminFacade, //DialsFacade, SimulcallFacade,
     DidFacade, //HangupFacade, MenuFacade,
     AccountNumberFacade, //KeywordsFacade,
@@ -71,7 +71,7 @@ export class FacadeModule {
 
 export {UserFacade} from './user.facade';
 export {CompanyFacade} from './company.facade';
-export {AccountFacade} from './account.facade';
+// export {AccountFacade} from './account.facade';
 export {AdminFacade} from './admin.facade';
 export {PlanFacade} from './plan.facade';
 export {BlackListFacade} from './blacklist.facade';

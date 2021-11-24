@@ -59,7 +59,7 @@ export class CallFlowController {
         @Query('offset') offset: number,
         @Query('limit') limit: number,
         @Query("isAll") isAll: boolean) {
-        let response = await this.callFlowFacade.findAllAccount(req.user.accountId, filter, orderBy, orderType, offset, limit, isAll, didId)
+        let response = await this.callFlowFacade.findAllCompany(req.user.companyId, filter, orderBy, orderType, offset, limit, isAll, didId)
         res.status(HttpStatus.OK).json({ response: response[0], entries: response[1] });
     }
 
@@ -67,7 +67,7 @@ export class CallFlowController {
     @ApiOperation({ description: "returns call flow by Id.", operationId: "callFlowById", summary: "Call Flow by Id" })
     @ApiResponse({ status: 200, description: "callflow by id", type: CallFlow, isArray: true })
     public async callFlowById(@Req() req, @Res() res: Response, @Param("id") id: number) {
-        let callFlow = await this.callFlowFacade.findById(req.user.accountId, id);
+        let callFlow = await this.callFlowFacade.findById(req.user.companyId, id);
         if (!callFlow) {
             throw new MessageCodeError("callFlow:NotFound");
         }
@@ -98,9 +98,9 @@ export class CallFlowController {
         const callFlowEntity = await this.callFlowFacade.create(req.user, callFlowReq, apdi_id, acnu_id)
        
         if (callFlowReq.didNumbers) {
-            const { userId, accountId } = req.user;
+            const { userId, companyId } = req.user;
             for (let i = 0; i < callFlowReq.didNumbers?.length; i++) {
-                const did = await this.didFacade.isDidCreatedByThisUserByNumber(userId, accountId, callFlowReq.didNumbers[i]);
+                const did = await this.didFacade.isDidCreatedByThisUserByNumber(userId, companyId, callFlowReq.didNumbers[i]);
                 if (!did) await HelperClass.throwErrorHelper('did:thisDidDoesNotExist');
                 const result = await this.didFacade.assignCallFlow(did?.id, callFlowEntity.id);
             }
@@ -197,7 +197,7 @@ export class CallFlowController {
         @Query('endDate') endDate: string,
         @Query('offset') offset: number = 0,
         @Query('limit') limit: number = 10 ) {
-        let { userId, accountId } = req.user;
+        let { userId, companyId } = req.user;
         let adminToken = await this.opentactAuth.adminLoginGettignToken();
         if (startDate == undefined) {
             startDate = '1970-01-02T00:00:00';
@@ -220,7 +220,7 @@ export class CallFlowController {
         result.sort((a, b) => (a.start_time_of_date > b.start_time_of_date) ? -1 : ((b.start_time_of_date > a.start_time_of_date) ? 1 : 0));
         if (result.length > limit)
             result = result.slice(0, limit)
-        let trackingNumbers = (await this.accountNumberFacade.getTrackingNumbers(userId, accountId, undefined))[0];
+        let trackingNumbers = (await this.accountNumberFacade.getTrackingNumbers(userId, companyId, undefined))[0];
         for (let i = 0; i < result.length; i++) {
             let index = await lodash.findIndex(trackingNumbers, elem => elem.number == result[i].routing_digits)
             if (~index) {

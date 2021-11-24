@@ -42,8 +42,8 @@ export class Payment {
     userId: number;
 
     @ApiProperty()
-    @Column({ name: "account_id", nullable: true })
-    accountId: number;
+    @Column({ name: "company_id", nullable: true })
+    companyId: number;
 
     @ApiProperty()
     @Column({ name: "current_balance", nullable: true })

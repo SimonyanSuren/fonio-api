@@ -1,12 +1,13 @@
-import {Entity, Column, PrimaryGeneratedColumn, BaseEntity, OneToMany, ManyToOne, JoinColumn, UpdateDateColumn, CreateDateColumn, Unique} from "typeorm";
+import {Entity, Column, PrimaryGeneratedColumn, BaseEntity, OneToMany, ManyToOne, JoinColumn, UpdateDateColumn, CreateDateColumn} from "typeorm";
 import {Plan} from "./plan.constant.entity";
-import {Account} from "./account.entity";
+// import {Account} from "./account.entity";
 import {ApiProperty} from '@nestjs/swagger';
 
 import {IsEmail} from "class-validator";
 import { Payment } from "./payment.entity";
 import { Did } from "./did.entity";
 import { AccountBlacklist } from "./account_blacklist.entity";
+import { Company } from "./company";
 
 export enum UserTypes {
     COMPANY_ADMIN = "company_admin",
@@ -116,9 +117,17 @@ export class User extends BaseEntity {
     @ApiProperty()
     invoiceEmail?: boolean;
 
-    @Column({ name: "account_id" })
+    @Column({type:'uuid', name: "company_uuid", nullable: true})
     @ApiProperty()
-    accountID: number;
+    companyUuid: string;
+
+    // @Column({ name: "account_id" })
+    // @ApiProperty()
+    // accountID: number;
+
+    @Column({ name: "company_id", nullable: true })
+    @ApiProperty()
+    companyID: number;
 
     @Column({name: "user_machine_detection", nullable: true})
     @ApiProperty()
@@ -130,10 +139,15 @@ export class User extends BaseEntity {
     @OneToMany(type => Payment, payments => payments.user)
     payments?: Payment[];
 
-    @ApiProperty({ type: () => Account })
-    @ManyToOne(type => Account,{ onDelete: 'CASCADE' })
-    @JoinColumn({name: 'account_id'})
-    account?: Account;
+    // @ApiProperty({ type: () => Account })
+    // @ManyToOne(type => Account,{ onDelete: 'CASCADE' })
+    // @JoinColumn({name: 'account_id'})
+    // account?: Account;
+
+    @ApiProperty({ type: () => Company })
+    @ManyToOne(type => Company,{ onDelete: 'CASCADE' })
+    @JoinColumn({name: 'company_id'})
+    company?: Company;
 
     @ApiProperty({ type: () => Did })
     @OneToMany(() => Did, did => did.user)

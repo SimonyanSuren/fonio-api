@@ -3,12 +3,13 @@
 import {Controller, Get, Post, Patch, HttpStatus, Req, Res, Query, Param} from '@nestjs/common';
 import {Response} from 'express';
 import {CompanyFacade} from '../facade';
-import {Company} from '../../models';
+import {Company, User} from '../../models';
 import {ApiBody, ApiResponse, ApiOperation, ApiBearerAuth, ApiTags, ApiQuery, ApiParam} from '@nestjs/swagger';
 import {errorResponse} from "../../filters/errorRespone";
 import {CompanyPost, CompanyUsers, CompanyInfo, CompanyStatus} from '../../util/swagger/company_id';
 import {OpentactAuth} from "../opentact";
 import {HelperClass} from "../../filters/Helper";
+import { SignupReq } from '../../util/swagger';
 
 @Controller("company")
 @ApiBearerAuth()
@@ -23,7 +24,7 @@ export class CompanyController {
     @Get('all')
     @ApiQuery({name: 'companyUuid', description: 'company uuid', required: false})
     @ApiResponse({status: 200, description: "companies OK", type: Company, isArray: true})
-    @ApiOperation({description: "get All companies", operationId: "get", summary: "Companies Account"})
+    @ApiOperation({description: "get All companies", operationId: "get", summary: "All Companies"})
     public async findAll(@Req() req, @Res() res: Response, @Query("companyUuid") companyUuid: string) {
         try {
             let user = req.user;
@@ -37,11 +38,11 @@ export class CompanyController {
     @Get('list')
     @ApiQuery({name: 'companyUuid', description: 'company uuid', required: false})
     @ApiResponse({status: 200, description: "companies OK", type: Company, isArray: true})
-    @ApiOperation({description: "get All companies from account", operationId: "get", summary: "Companies Account"})
-    public async findByAccount(@Req() req, @Res() res: Response, @Query("companyUuid") companyUuid: string) {
+    @ApiOperation({description: "get All companies from creator", operationId: "get", summary: "Companies Creator"})
+    public async findByCreator(@Req() req, @Res() res: Response, @Query("companyUuid") companyUuid: string) {
         try {
             let user = req.user;
-            const companies = await this.companyFacade.getAllCompaniesByUserCreatorAndAccountId(user.userId, user.accountId, companyUuid);
+            const companies = await this.companyFacade.getAllCompaniesByUserCreator(user.userId, companyUuid);
             res.status(HttpStatus.OK).json(companies);
         } catch (err) {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
@@ -49,7 +50,7 @@ export class CompanyController {
     }
 
     @Post()
-    @ApiOperation({description: "Create company to current account", operationId: "create", summary: "Create Company"})
+    @ApiOperation({description: "Create company", operationId: "create", summary: "Create Company"})
     @ApiBody({
         // name: "user", 
         required: true, type: CompanyPost})
@@ -63,7 +64,7 @@ export class CompanyController {
             let isCompanyExistWithTheSameName = await this.companyFacade.isCompanyExistByCompanyName(companyName, userId);
             if (isCompanyExistWithTheSameName) await HelperClass.throwErrorHelper('company:companyWithTheSameNameExist');
            
-            let adminToken = await this.opentactAuth.adminLoginGettignToken();
+            // let adminToken = await this.opentactAuth.adminLoginGettignToken();
             let helper = new HelperClass();
             
             let timezones: any = await helper.callbackGetJson();
@@ -80,6 +81,35 @@ export class CompanyController {
             
             const companies = await this.companyFacade.createCompany(req.user, req.body, '778fe85b-ec0a-44f1-af5e-3be274fc7957', userUuid);
             res.status(HttpStatus.OK).json(companies);
+        } catch (err) {
+            errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @Post('user')
+    @ApiBody({
+        // name: "user", 
+        required: true, type: SignupReq})
+    @ApiOperation({description: "Create user.", operationId: "createUser", summary: "Create user"})
+    public async createSelfUser(@Req() req, @Res() res: Response) {
+        try {
+            const body = req.body;
+            const user = new User();
+            user.email = body.email;
+            user.firstName = body.firstName;
+            user.lastName = body.lastName;
+            user.password = body.password;
+            user.companyName = body.companyName;
+            user.type = body.type;
+            // user.userLastLogin = body.userLastLogin;
+            await this.companyFacade.createUser(user, req.user.companyUuid);
+            const us = await this.companyFacade.getUserListByCompanyUuid(user.companyUuid);
+            us.forEach(function(item, i) {
+                item.password = undefined;
+                item.salt = undefined;
+            })
+            
+            res.status(HttpStatus.OK).json(us);
         } catch (err) {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
         }

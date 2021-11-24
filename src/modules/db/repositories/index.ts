@@ -1,5 +1,6 @@
 import { UsersRepository } from './users.repository'
-import { AccountsRepository } from './accounts.repository'
+// import { AccountsRepository } from './accounts.repository'
+import { CompaniesRepository } from './companies.repository'
 import { CallFlowsRepository } from './callFlow.repository'
 import { CountrysRepository } from './contries.repository'
 import { DidsRepository } from './did.repository'
@@ -8,7 +9,6 @@ import { PlansRepository } from './plan.repository'
 import { ProvincesRepository } from './provinces.repository'
 import { TokensRepository } from './tokens.repository'
 import { BlacklistsRepository } from './blacklists.repository'
-
 import { Injectable, Inject } from '@nestjs/common';
 
 @Injectable()
@@ -22,7 +22,8 @@ export class Repositories {
         public readonly PROVINCE: ProvincesRepository,
         public readonly BLACKLISTS: BlacklistsRepository,
         public readonly CALL_FLOW: CallFlowsRepository,
-        public readonly ACCOUNTS: AccountsRepository,
+        // public readonly ACCOUNTS: AccountsRepository,
+        public readonly COMPANY: CompaniesRepository,
         public readonly PAYMENTS: PaymentsRepository,
         public readonly USERS: UsersRepository,
         public readonly TOKEN: TokensRepository,
@@ -30,16 +31,9 @@ export class Repositories {
 
 }
 
-
-
-
-
-
-
-
-
 export { UsersRepository } from './users.repository'
-export { AccountsRepository } from './accounts.repository'
+// export { AccountsRepository } from './accounts.repository'
+export { CompaniesRepository } from './companies.repository'
 export { CallFlowsRepository } from './callFlow.repository'
 export { CountrysRepository } from './contries.repository'
 export { DidsRepository } from './did.repository'

@@ -37,7 +37,7 @@ export class DidFacade {
         return await manager.save(did);
     }
 
-    async addDidAfterBuy(userID, accountID, didOpentactID, didStatus, didNumber, didOpentactIdentityID) {
+    async addDidAfterBuy(userID, companyID, didOpentactID, didStatus, didNumber, didOpentactIdentityID) {
         return this.entityManager.createQueryBuilder()
             .insert()
             .into(Did)
@@ -46,18 +46,18 @@ export class DidFacade {
                 status: didStatus,
                 didOpentactID: didOpentactID,
                 userID: userID,
-                accountID: accountID,
+                companyID: companyID,
                 didOpentactIdentityID: didOpentactIdentityID
             })
             .returning('*')
             .execute();
     }
 
-    async addDidAfterBuying(userID, accountID, didStatus, didNumber) {
+    async addDidAfterBuying(userID, companyID, didStatus, didNumber) {
         let did = new Did();
             did.number = didNumber;
             did.status = didStatus;
-            did.accountID = accountID;
+            did.companyID = companyID;
             did.userID = userID;
 
         return await this.entityManager.createQueryBuilder()
@@ -68,19 +68,19 @@ export class DidFacade {
             .execute();
     }
 
-    async isDidCreatedByThisUser(userID, accountID, id) {
+    async isDidCreatedByThisUser(userID, companyID, id) {
         return this.entityManager.createQueryBuilder(Did, 'did')
             .where('did.userID=:userID', {userID: userID})
-            .andWhere('did.accountID=:accountID', {accountID: accountID})
+            .andWhere('did.companyID=:companyID', {companyID: companyID})
             .andWhere('did.id=:id', {id: id})
             .getOne();
     }
 
 
-    async isDidCreatedByThisUserByNumber(userID, accountID, number) {
+    async isDidCreatedByThisUserByNumber(userID, companyID, number) {
         return this.entityManager.createQueryBuilder(Did, 'did')
             .where('did.userID=:userID', {userID: userID})
-            .andWhere('did.accountID=:accountID', {accountID: accountID})
+            .andWhere('did.companyID=:companyID', {companyID: companyID})
             .andWhere('did.did_number=:number', {number: number})
             .getOne();
     }
@@ -129,13 +129,13 @@ export class DidFacade {
         return await query.getManyAndCount();
     }
 
-    async deleteDid(id, userID, accountID) {
+    async deleteDid(id, userID, compnayID) {
         return this.entityManager.createQueryBuilder()
             .delete()
             .from(Did)
             .where('id=:id', { id: id })
             .andWhere('userID=:userID', { userID: userID })
-            .andWhere('accountID=:accountID', { accountID: accountID })
+            .andWhere('compnayID=:compnayID', { compnayID: compnayID })
             .returning('*')
             .execute();
     }
@@ -144,7 +144,7 @@ export class DidFacade {
         let manager = await this.entityManager;
         return manager.createQueryBuilder(Did, "did")
             .leftJoinAndSelect('did.user', 'user')
-            .leftJoinAndSelect('did.account', 'account')
+            .leftJoinAndSelect('did.company', 'company')
             .where("did.number = :number ")
             .setParameters({number})
             .getOne();

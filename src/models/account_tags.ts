@@ -1,19 +1,25 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn } from "typeorm";
+import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, ManyToOne } from "typeorm";
 
 import { User } from './user.entity'
-import { Account } from './account.entity'
+// import { Account } from './account.entity'
 import { ApiProperty } from '@nestjs/swagger';
 import { Length } from 'class-validator';
+import { Company } from "./company";
 
 @Entity()
 export class AccountTags {
     @PrimaryGeneratedColumn({ name: "acta_id" })
     id: number;
 
-    @ApiProperty({ type: () => Account })
-    @OneToOne(type => Account)
-    @JoinColumn({ name: "acco_id" })
-    account: Account;
+    // @ApiProperty({ type: () => Account })
+    // @OneToOne(type => Account)
+    // @JoinColumn({ name: "acco_id" })
+    // account: Account;
+
+    @ApiProperty({ type: () => Company })
+    @ManyToOne(type => Company)
+    @JoinColumn({ name: "company_id" })
+    company: Company;
 
     @ApiProperty({ type: () => User })
     @OneToOne(type => User)

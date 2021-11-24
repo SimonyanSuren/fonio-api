@@ -2,7 +2,7 @@ export {Company} from "./company";
 // export {Greeting} from "./greeting";
 export {User} from "./user.entity";
 // export {PlanFeature} from "./feature";
-export {Account} from "./account.entity";
+// export {Account} from "./account.entity";
 export {AccountBlacklist} from "./account_blacklist.entity";
 // export {AccountCreditCard} from "./account_credit_card";
 export {Did} from "./did.entity";

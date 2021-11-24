@@ -73,7 +73,7 @@ export class DidController {
         @Query('order_by') order_by = order_by_enum[0],
         @Query('order_dir') order_dir = order_dir_enum[0],
     ) {
-        const where = { accountID: req.user.accountId }
+        const where = { companyID: req.user.companyId }
         if(filterByNumber) where['number'] = filterByNumber
         console.log('where',where)
         const response = await this.commonService.getEntities(this.Repositories.DID, {
@@ -101,11 +101,11 @@ export class DidController {
         if (!did_id) {
             return HelperClass.throwErrorHelper('did:youShouldPassDidId');
         }
-        const accountID = req.user.accountId
+        const companyID = req.user.companyId
         
         const response = await this.commonService.getEntity(this.Repositories.DID, {
             id:did_id,
-            accountID,
+            companyID,
         })
 
         if(!response) {
@@ -133,8 +133,8 @@ export class DidController {
     public async disableOrEnableDid(@Req() req, @Res() res: Response) {
         try {
             let { id, enable } = req.body;
-            let { userId, accountId } = req.user;
-            let did = await this.didFacade.isDidCreatedByThisUser(userId, accountId, id);
+            let { userId, companyId } = req.user;
+            let did = await this.didFacade.isDidCreatedByThisUser(userId, companyId, id);
             if (!did) await HelperClass.throwErrorHelper('did:thisDidIsNotExist');
             let response = await this.didFacade.disableEnableDid(id, enable);
             return res.status(HttpStatus.OK).json({ response });
@@ -149,11 +149,11 @@ export class DidController {
     public async UpdateDid(@Req() req, 
     @Param("didId") didId, @Res() res: Response, @Body() body:IUpdateDid ) {
         try {
-            const { userId, accountId } = req.user;
-            const where={accountID:accountId, id:didId}
-            const {  cfId } = req.body;
+            const { companyId } = req.user;
+            const where={companyID:companyId, id:didId}
+            const { cfId } = req.body;
             if(cfId){
-            const cf= await this.commonService.getEntity(this.Repositories.CALL_FLOW,{accountId,id:cfId })
+            const cf= await this.commonService.getEntity(this.Repositories.CALL_FLOW,{companyId,id:cfId })
             if(!cf)await HelperClass.throwErrorHelper('cf:thisCfIsNotExist');
             }
             const response = await this.commonService.updateEntity(this.Repositories.DID, where, body)

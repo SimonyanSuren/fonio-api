@@ -1,10 +1,11 @@
 import {Entity, PrimaryGeneratedColumn, Unique, ManyToOne, Column, JoinColumn} from "typeorm";
 import {ApiProperty} from "@nestjs/swagger";
-import { Account } from "./account.entity";
+// import { Account } from "./account.entity";
+import { Company } from "./company";
 import { User } from "./user.entity";
 
 @Entity()
-@Unique(["accountId", "number"])
+@Unique(["number"])
 export class AccountBlacklist {
     @ApiProperty()
     @PrimaryGeneratedColumn({name: 'acbl_id'})
@@ -13,8 +14,10 @@ export class AccountBlacklist {
     @Column({name: "acbl_uuid", nullable: true})
     uuid: string;
     @ApiProperty()
-    @Column({name: "account_id"})
-    accountId: number;
+    // @Column({name: "account_id"})
+    // accountId: number;
+    @Column({name: "company_id"})
+    companyId: number;
     @ApiProperty()
     @Column({name: "user_id", nullable: true})
     userId: number;
@@ -34,10 +37,15 @@ export class AccountBlacklist {
     @Column({name: "other_detail", nullable: true})
     otherDetail: string;
 
-    @ApiProperty({ type: () => Account })
-    @ManyToOne(type => Account, account => account.blacklists)
-    @JoinColumn({ name: "account_id" })
-    account: Account;
+    // @ApiProperty({ type: () => Account })
+    // @ManyToOne(type => Account, account => account.blacklists)
+    // @JoinColumn({ name: "account_id" })
+    // account: Account;
+
+    @ApiProperty({ type: () => Company })
+    @ManyToOne(type => Company, company => company.blacklists)
+    @JoinColumn({ name: "company_id" })
+    company: Company;
 
     @ApiProperty({ type: () => User })
     @ManyToOne(type => User, user => user.blacklists)

@@ -1,9 +1,8 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn } from "typeorm";
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from "typeorm";
 import { ApiProperty } from '@nestjs/swagger';
 import { Company } from "./company";
 import { User } from "./user.entity";
 
-@Entity()
 @Entity("contacts")
 export class Contact {
     @PrimaryGeneratedColumn({ name: "cont_id" })
@@ -34,12 +33,12 @@ export class Contact {
     active: boolean;
 
     @ApiProperty({ type: () => User, description: "USER" })
-    @OneToOne(type => User)
+    @ManyToOne(type => User)
     @JoinColumn({ name: "modified_by" })
     modifiedBy: User;
 
     @ApiProperty({ type: () => Company, description: "COMPANY" })
-    @OneToOne(type => Company)
+    @ManyToOne(type => Company)
     @JoinColumn({ name: "comp_id" })
     company: Company;
 

@@ -8,7 +8,7 @@ import { AuthMiddleware } from "../../filters/auth.middleware";
 import { AuthController } from './auth.controller';
 import { CompanyController } from './company.controller';
 // import { UploadGreetingController } from './greeting_patch_upload';
-import { AccountController } from './account.controller';
+// import { AccountController } from './account.controller';
 // import { GreetingController } from "./greeting.controller";
 import { CallFlowController } from './call_flow.controller';
 // import { PlanController } from './plan.controller';
@@ -56,7 +56,7 @@ import { Repositories} from '../db/repositories';
     controllers: [
         AuthController,
         // OpentactController,
-        AccountController,
+        // AccountController,
         TrackingNumberController,
         PaymentsController,
         // AreaCodeController,

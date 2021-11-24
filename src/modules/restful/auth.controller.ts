@@ -9,12 +9,12 @@ import { EmailService } from '../email';
 import { UserFacade, AdminFacade } from '../facade';
 import { ApiBody, ApiResponse, ApiTags, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { errorResponse } from "../../filters/errorRespone";
-import { Account } from "../../models";
+// import { Account } from "../../models";
 import { compare as comparePassword, genSaltSync, hashSync } from "bcrypt";
-import { getCompaignIdFromAdminToken } from '../../filters/isUserAdminByToken';
 import { HelperClass } from "../../filters/Helper";
 import { Repositories } from '../db/repositories';
 import { PasswordHelper } from '../../util/helper';
+import constants from '../../constants';
 
 
 @Controller("auth")
@@ -46,11 +46,11 @@ export class AuthController {
     public async signup(@Req() req, @Res() res: Response) {
         try {
             const userSign = await this.authService.signUp(req.body);
-            if (!userSign) await HelperClass.throwErrorHelper('auth:BadRequest');
+            console.log('here here here here here')
+            console.log(userSign)
+            if (!userSign) return res.status(HttpStatus.BAD_REQUEST).json(userSign);
 
-            if (userSign.error) {
-                return res.status(HttpStatus.BAD_REQUEST).json(userSign);
-            }
+            if (userSign.error) return res.status(HttpStatus.BAD_REQUEST).json(userSign);
             // /* Don't need email confirmation now
             // **
             if (userSign.user) {
@@ -117,12 +117,12 @@ export class AuthController {
             let { uuid } = req.query;
             let user: User | any = await this.adminFacade.isUserWithTheSameUserUuidExist(uuid);
             if (!user) await HelperClass.throwErrorHelper('admin:userIsNotExistByThisUuid');
-            let account: Account | any = await this.adminFacade.isAccountExistByAccountID(user.accountID);
-            if (!account) await HelperClass.throwErrorHelper('admin:accountIsNotExistForThisUser');
+            // let account: Account | any = await this.adminFacade.isAccountExistByAccountID(user.accountID);
+            // if (!account) await HelperClass.throwErrorHelper('admin:accountIsNotExistForThisUser');
             // This change may be temporary
-            await this.adminFacade.updateUserActivationStatus(account.id, user.uuid, true);
+            await this.adminFacade.updateUserActivationStatus(user.uuid, true);
 
-            return res.redirect(301, `http://148.251.91.143:8083/login`);
+            return res.redirect(301, `${constants.FONIO_DOMAIN}/#/login`);
         } catch (err) {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
         }
@@ -159,9 +159,9 @@ export class AuthController {
             const equals = await await comparePassword(password, user.password ? user.password : '');
             if (equals) await HelperClass.throwErrorHelper('user:youCanNotUseTheSamePasswordTryNewOne');
             await PasswordHelper.validatePassword(password);
-            const account: any = await this.userFacade.findAccountByAccountId(user.accountID);
+            // const account: any = await this.userFacade.findAccountByAccountId(user.accountID);
             if (!user.emailConfirmed) await HelperClass.throwErrorHelper('user:disabled');
-            if (!account.status) await HelperClass.throwErrorHelper('account:disabled');
+            // if (!account.status) await HelperClass.throwErrorHelper('account:disabled');
             const salt = genSaltSync(Config.number("BCRYPT_SALT_ROUNDS", 10));
             let hash = hashSync(password, salt);
             await this.userFacade.updatePassword(hash, user.uuid);
@@ -170,15 +170,15 @@ export class AuthController {
                 || req.headers["x-forwarded-for"]
                 || req.client.remoteAddress;
             let isAdmin = (user.isAdmin) ? user.isAdmin : false;
-            let userToken = await AuthService.generateToken(user, remoteAddress, userAgent, user.salt || '', isAdmin, account, undefined, user.uuid, user.active);
+            let userToken = await AuthService.generateToken(user, remoteAddress, userAgent, user.salt || '', isAdmin, undefined, user.uuid, user.active);
             user.password = undefined;
             user.salt = undefined;
             user.token = userToken;
-            let company = await this.userFacade.getAllCompaniesByUserIdAndAccountId(user.id, account.id);
+            let company = await this.userFacade.getAllCompaniesByUserId(user.id);
             return res.status(200).json({
                 response: {
                     user: user,
-                    account: account,
+                    // account: account,
                     company: company
                 }
             });

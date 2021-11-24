@@ -1,9 +1,9 @@
-import { CallFlowStep, Account, User, CallFlow, Did } from "../../models";
+import { CallFlowStep, Company, User, CallFlow, Did } from "../../models";
 import { Injectable } from '@nestjs/common';
 import { EntityRepository, EntityManager } from "typeorm";
 import { CallFlowReq } from "../../util/swagger/call_flow_req";
 import { MessageCodeError } from '../../util/error';
-import { Constants } from '../../util/constants';
+// import { Constants } from '../../util/constants';
 import { v4 } from 'uuid';
 import { RecordingFacade } from "./recording.facade";
 import { OpentactService } from "../opentact";
@@ -26,27 +26,27 @@ export class CallFlowFacade {
 
 
 
-    async findById(accountId: number, caflId: number) {
+    async findById(companyId: number, caflId: number) {
         let manager = await this.entityManager;
         return manager.createQueryBuilder(CallFlow, "cf")
-            .where("account.id = :accountId ")
+            .leftJoinAndSelect("cf.company", "company")
+            .where("company.comp_id = :companyId ")
             .where("cf.id = :caflId ")
-            .leftJoinAndSelect("cf.account", "account")
-            .setParameters({ accountId, caflId })
+            .setParameters({ companyId, caflId })
             .getOne();
     }
 
-    async findByName(accountId: number, caflName: string) {
+    async findByName(companyId: number, caflName: string) {
         let manager = await this.entityManager;
         return manager.createQueryBuilder(CallFlow, "cf")
-            .leftJoinAndSelect("cf.account", "account")
-            .where("account.acco_id = :accountId ")
+            .leftJoinAndSelect("cf.company", "company")
+            .where("company.acco_id = :companyId ")
             .andWhere("lower(cf.name) = lower(:caflName) ")
-            .setParameters({ accountId, caflName: caflName.trim() })
+            .setParameters({ companyId, caflName: caflName.trim() })
             .getOne();
     }
 
-    async persistSteps(steps: Array<CallFlowStep>, tEM: EntityManager, user: User, account: Account, callFlow: CallFlow, currentUser, callFlowBody) {
+    async persistSteps(steps: Array<CallFlowStep>, tEM: EntityManager, user: User, company: Company, callFlow: CallFlow, currentUser, callFlowBody) {
         if (!steps) {
             return;
         }
@@ -76,7 +76,7 @@ export class CallFlowFacade {
         if (!callFlowBody.hasOwnProperty('record')) {
             callFlowBody["record"] = false;
         }
-        let nameFound = await this.findByName(currentUser.accountId, callFlowBody.name);
+        let nameFound = await this.findByName(currentUser.companyId, callFlowBody.name);
         if (nameFound) {
             throw new MessageCodeError("name:AlreadyExists");
         }
@@ -85,9 +85,9 @@ export class CallFlowFacade {
         let callFlow = new CallFlow();
         await manager.transaction(async tEM => {
             // let callFlow = new CallFlow();
-            let account = new Account();
-            account.id = currentUser.accountId;
-            callFlow.account = account;
+            let company = new Company();
+            company.companyID = currentUser.companyId;
+            callFlow.company = company;
 
             let user = new User();
             user.id = currentUser.userId;
@@ -111,7 +111,7 @@ export class CallFlowFacade {
                 step.uniqueId = v4();
             }
             try {
-                await this.persistSteps(callFlowBody.steps, tEM, user, account, callFlow, currentUser, callFlowBody);
+                await this.persistSteps(callFlowBody.steps, tEM, user, company, callFlow, currentUser, callFlowBody);
             }
             catch (error) {
                 console.log("error: ", error);
@@ -129,19 +129,19 @@ export class CallFlowFacade {
         return callFlow;
     }
 
-    async isCallFlowWithTheSameNameAlreadyExist(userId, accountId, callFlowName) {
+    async isCallFlowWithTheSameNameAlreadyExist(userId, companyId, callFlowName) {
         return this.entityManager.createQueryBuilder(CallFlow, 'cf')
             .where('cf.userID=:userID', { userID: userId })
-            .andWhere('cf.accountID=:accountID', { accountID: accountId })
+            .andWhere('cf.companyID=:companyID', { companyID: companyId })
             .andWhere('cf.callFlowName=:callFlowName', { callFlowName: callFlowName })
             .getOne();
     }
-    async findAllAccount(accountId: number, filter: string, orderBy = 'creation', orderType = 'descending', offset = 0, limit = 10, isAll = false, didId?) {
+    async findAllCompany(companyId: number, filter: string, orderBy = 'creation', orderType = 'descending', offset = 0, limit = 10, isAll = false, didId?) {
         let manager = await this.entityManager;
         let query = manager.createQueryBuilder(CallFlow, "cf")
             .addSelect("(SELECT count(*) FROM did where cf_id=cf.cafl_id)", "countnumbers")
-            .where("account.id = :accountId ", { accountId: accountId })
-            .leftJoinAndSelect("cf.account", "account")
+            .where("company.comp_id = :companyId ", { companyId: companyId })
+            .leftJoinAndSelect("cf.company", "company")
         if (didId) {
             query.innerJoinAndSelect(Did, "did", `cf.cafl_id=did.cf_id and did.id=${didId}`)
         } else {
@@ -180,17 +180,27 @@ export class CallFlowFacade {
                 creation: null,
                 metadata: null,
                 record: null,
-                account: {
-                    allowOutbound: null,
-                    creation: null,
-                    dnlId: null,
-                    id: null,
-                    metadata: null,
-                    name: null,
-                    number: null,
-                    planUuid: null,
+                // account: {
+                //     allowOutbound: null,
+                //     creation: null,
+                //     dnlId: null,
+                //     id: null,
+                //     metadata: null,
+                //     name: null,
+                //     number: null,
+                //     planUuid: null,
+                //     status: null,
+                //     techPrefix: null
+                // },
+                company: {
+                    companyID: null,
+                    userCreatorID: null,
+                    companyName: null,
                     status: null,
-                    techPrefix: null
+                    balance: null,
+                    created: null,
+                    timezone: null,
+                    planID: null,
                 },
                 did: {
                     didNumber: null,
@@ -204,16 +214,24 @@ export class CallFlowFacade {
             temp.creation = item.cf_cafl_creation;
             temp.metadata = item.cf_cafl_json;
             temp.record = item.cf_cafl_record;
-            temp.account.allowOutbound = item.account_acco_allow_outbound;
-            temp.account.creation = item.account_acco_creation;
-            temp.account.dnlId = item.account_acco_dnl_id;
-            temp.account.id = item.account_acco_id;
-            temp.account.metadata = item.account_acco_json;
-            temp.account.name = item.account_acco_name;
-            temp.account.number = item.account_acco_number;
-            temp.account.planUuid = item.account_plan_uuid;
-            temp.account.status = item.account_acco_status;
-            temp.account.techPrefix = item.account_acco_tech_prefix;
+            // temp.account.allowOutbound = item.account_acco_allow_outbound;
+            // temp.account.creation = item.account_acco_creation;
+            // temp.account.dnlId = item.account_acco_dnl_id;
+            // temp.account.id = item.account_acco_id;
+            // temp.account.metadata = item.account_acco_json;
+            // temp.account.name = item.account_acco_name;
+            // temp.account.number = item.account_acco_number;
+            // temp.account.planUuid = item.account_plan_uuid;
+            // temp.account.status = item.account_acco_status;
+            // temp.account.techPrefix = item.account_acco_tech_prefix;
+            temp.company.companyID = item.comp_id;
+            temp.company.userCreatorID = item.user_creator;
+            temp.company.companyName = item.comp_name;
+            temp.company.status = item.status;
+            temp.company.balance = item.balance;
+            temp.company.created = item.created;
+            temp.company.timezone = item.timezone;
+            temp.company.planID = item.plan_id;
             temp.did.didId = item.did_did_id;
             temp.did.didNumber = item.did_did_number;
             new_result.push(temp);
@@ -225,7 +243,7 @@ export class CallFlowFacade {
         if (!callFlowId) {
             throw new MessageCodeError('id:NotFound');
         }
-        let callFlow = await this.findById(currentUser.accountId, callFlowId);
+        let callFlow = await this.findById(currentUser.companyId, callFlowId);
         if (!callFlow) {
             throw new MessageCodeError("id:invalid");
         }
@@ -243,7 +261,7 @@ export class CallFlowFacade {
 
     public async changeStatus(currentUser, caflId: number, status: any) {
         let manager = await this.entityManager;
-        let callFlow = await this.findById(currentUser.accountId, caflId);
+        let callFlow = await this.findById(currentUser.companyId, caflId);
         return await manager.transaction(async tEM => {
             if (!callFlow) {
                 throw new MessageCodeError('callFlow:NotFound');
@@ -266,7 +284,7 @@ export class CallFlowFacade {
 
         console.log("CREATE CALL FLOW", callFlowBody);
         let manager = await this.entityManager;
-        let callFlow = await this.findById(currentUser.accountId, caflId);
+        let callFlow = await this.findById(currentUser.companyId, caflId);
 
         return await manager.transaction(async tEM => {
             if (!callFlow) {
@@ -296,7 +314,7 @@ export class CallFlowFacade {
                 step.uniqueId = v4();
             }
 
-            await this.persistSteps(callFlowBody.steps, tEM, user, callFlow.account, callFlow, currentUser, callFlowBody);
+            await this.persistSteps(callFlowBody.steps, tEM, user, callFlow.company, callFlow, currentUser, callFlowBody);
             return callFlow;
         });
     }

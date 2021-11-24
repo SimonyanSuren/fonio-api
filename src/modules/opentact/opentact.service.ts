@@ -188,7 +188,7 @@ export class OpentactService extends BaseService {
             if (didEntity) {
                 if (from) {
                     const blackList = await this.Repositories.BLACKLISTS.findOne({
-                        where: { accountId: didEntity.accountID, number: from, status: true },
+                        where: { companyId: didEntity.companyID, number: from, status: true },
                     });
                     if (blackList) {
                         const blacklistXml = await fsPromises.readFile('blacklist.xml')
@@ -198,13 +198,13 @@ export class OpentactService extends BaseService {
                 let cfEntity
                 if (didEntity.cfId) {
                     cfEntity = await this.Repositories.CALL_FLOW.findOne({
-                        where: { accountId: didEntity.accountID, id: didEntity.cfId },
+                        where: { companyId: didEntity.companyID, id: didEntity.cfId },
                     });
                     console.log('cfEntity', cfEntity)
 
                } else {
                     cfEntity = await this.Repositories.CALL_FLOW.findOne({
-                        where: { account: didEntity.accountID },
+                        where: { companyId: didEntity.companyID },
                     });
                 }
                 if (cfEntity) { return cfEntity.xml }
@@ -228,7 +228,7 @@ export class OpentactService extends BaseService {
             console.log('get new sms')
             const didEntity = await this.getEntity(this.Repositories.DID, { number: body.to })
             if (didEntity) {
-                const response = await this.wsGateway.sendMessage(didEntity.accountID, body)
+                const response = await this.wsGateway.sendMessage(didEntity.companyID, body)
             }
         } else {
             console.log('get new sms, state not success')

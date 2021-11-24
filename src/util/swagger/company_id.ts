@@ -40,9 +40,6 @@ export class CompanyInfo {
     @ApiProperty()
     userCreatorID: number;
 
-    @ApiProperty()    
-    accountID: number;
-
     @ApiProperty()
     uuid: string;
 

@@ -16,9 +16,12 @@ export class AccountNumber {
     @ApiProperty()
     @Column({name: "user_id"})
     userID: number;
+    // @ApiProperty()
+    // @Column({name: "acco_id"})
+    // accountID: number;
     @ApiProperty()
-    @Column({name: "acco_id"})
-    accountID: number;
+    @Column({name: "company_id"})
+    companyID: number;
     @ApiProperty()
     @Column({name: "plan_id"})
     planID: number;
@@ -85,9 +88,9 @@ export class AccountNumber {
     @ApiProperty()
     @Column({name: "status"})
     status: boolean;
-    @ApiProperty()
-    @Column({name: "company_uuid"})
-    companyUuid: string;
+    // @ApiProperty()
+    // @Column({name: "company_uuid"})
+    // companyUuid: string;
     @ApiProperty()
     @Column({ name: "comp_name" })
     companyName: string;

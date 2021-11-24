@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import * as ormconfig from '../../../ormconfig';
-import { Payment, User, Account, Did, Token, CallFlow, Plan, Province, Country, AccountBlacklist } from '../../models';
+import { Payment, User, Did, Token, CallFlow, Plan, Province, Country, AccountBlacklist, Company } from '../../models';
 import { PaymentsRepository } from './repositories/payments.repository'
 import { UsersRepository } from './repositories/users.repository'
-import { AccountsRepository } from './repositories/accounts.repository'
+import { CompaniesRepository } from './repositories/companies.repository'
+// import { AccountsRepository } from './repositories/accounts.repository'
 
 import { DidsRepository } from './repositories/did.repository';
 import { TokensRepository } from './repositories/tokens.repository';
@@ -19,11 +20,11 @@ import { BlacklistsRepository } from './repositories';
 @Module({
   imports: [
     TypeOrmModule.forRoot(ormconfig),
-    TypeOrmModule.forFeature([Payment, User, Account, Did, Token, CallFlow, Plan, Province, Country, AccountBlacklist]),
+    TypeOrmModule.forFeature([Payment, User, Did, Token, CallFlow, Plan, Province, Country, AccountBlacklist, Company]),
   ],
   controllers: [],
-  providers: [PaymentsRepository, AccountsRepository, UsersRepository, DidsRepository, CallFlowsRepository, TokensRepository, PlansRepository, CountrysRepository, ProvincesRepository, BlacklistsRepository],
-  exports: [PaymentsRepository, AccountsRepository, UsersRepository, DidsRepository, CallFlowsRepository, TokensRepository, PlansRepository, CountrysRepository, ProvincesRepository, BlacklistsRepository]
+  providers: [PaymentsRepository, UsersRepository, DidsRepository, CallFlowsRepository, TokensRepository, PlansRepository, CountrysRepository, ProvincesRepository, BlacklistsRepository, CompaniesRepository],
+  exports: [PaymentsRepository, UsersRepository, DidsRepository, CallFlowsRepository, TokensRepository, PlansRepository, CountrysRepository, ProvincesRepository, BlacklistsRepository, CompaniesRepository]
 
 })
 export class DBFactoryModule {

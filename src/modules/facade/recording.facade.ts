@@ -1,4 +1,4 @@
-import {Account, User, Data} from "../../models";
+import { User, Data} from "../../models";
 import { Injectable } from '@nestjs/common';
 import { MessageCodeError } from '../../util/error';
 import { Constants } from '../../util/constants';
@@ -19,30 +19,30 @@ export class RecordingFacade {
         // private googleCloudStorage: GoogleCloudStorage) { }
 
 
-    async findAllAccount(accountId: number) {
+    async findAllCompany(companyId: number) {
         let manager = await this.entityManager;
         return manager.createQueryBuilder(Recording, "reco")
-            .leftJoinAndSelect("reco.account", "account")
-            .where("account.id = :accountId ")
-            .setParameters({ accountId })
+            .leftJoinAndSelect("reco.company", "company")
+            .where("company.comp_id = :companyId ")
+            .setParameters({ companyId })
             .getMany();
     }
-    async findById(accountId: number, recoId: number) {
+    async findById(companyId: number, recoId: number) {
         let manager = await this.entityManager;
         return manager.createQueryBuilder(Recording, "reco")
-            .leftJoinAndSelect("reco.account", "account")
-            .where("account.id = :accountId ")
+            .leftJoinAndSelect("reco.company", "company")
+            .where("company.comp_id = :companyId ")
             .andWhere("reco.id = :recoId ")
-            .setParameters({ accountId, recoId })
+            .setParameters({ companyId, recoId })
             .getMany();
     }
-    async findByName(accountId: number, recoName: string) {
+    async findByName(companyId: number, recoName: string) {
         let manager = await this.entityManager;
         return manager.createQueryBuilder(Recording, "reco")
-            .leftJoinAndSelect("reco.account", "account")
-            .where("account.id = :accountId ")
+            .leftJoinAndSelect("reco.company", "company")
+            .where("company.comp_id = :companyId ")
             .andWhere("lower(reco.name) = lower(:recoName) ")
-            .setParameters({ accountId, recoName: recoName.trim() })
+            .setParameters({ companyId, recoName: recoName.trim() })
             .getMany();
     }
 
@@ -55,7 +55,7 @@ export class RecordingFacade {
         recording.name=file.originalname;
         recording.url=url;
         recording.type=type;
-        recording.account=currentUser.accountId;
+        recording.company=currentUser.companyId;
         recording.user=currentUser.userId;
         recording.creation=new Date();
         recording.updated=new Date();

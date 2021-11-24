@@ -1,17 +1,30 @@
-import {Company} from "../../models";
+import {Company, User} from "../../models";
 import {Injectable} from '@nestjs/common';
 import {Config} from '../../util/config';
 import {v4} from 'uuid';
 import {EntityRepository, EntityManager} from "typeorm";
 import {UserFacade} from "./user.facade";
 import {HelperClass} from "../../filters/Helper";
+import { Transactional } from "typeorm-transactional-cls-hooked";
+import { PasswordHelper } from "../../util/helper";
+import { genSaltSync, hashSync } from "bcrypt";
+import { OpentactService } from "../opentact";
+const CryptoJS = require("crypto-js");
+import constants from "../../constants";
+import { BaseService } from "../services/base.service";
+import { Repositories } from "../db/repositories";
 
 @EntityRepository()
 @Injectable()
-export class CompanyFacade {
+export class CompanyFacade extends BaseService {
 
-    constructor(private entityManager: EntityManager,
-                private userFacade: UserFacade) {
+    constructor(
+        private readonly Repositories: Repositories,
+        private entityManager: EntityManager,
+        private userFacade: UserFacade,
+        private readonly opentactService: OpentactService
+    ) {
+        super()
     }
 
     async getCompanyByUuid(companyUuid) {
@@ -32,38 +45,44 @@ export class CompanyFacade {
             .getOne();
     }
 
-    async findAll(accountId: number, filter: string | undefined, offset: number | undefined, limit: number | undefined) {
-        let manager = await this.entityManager;
-        let query = manager.createQueryBuilder(Company, "company")
-            .where("account.id = :accountId ")
-            .leftJoinAndSelect("company.account", "account")
-            .leftJoinAndSelect("company.type", "type")
-            .where(" 1=1 ");
+    // async findAll(accountId: number, filter: string | undefined, offset: number | undefined, limit: number | undefined) {
+    //     let manager = await this.entityManager;
+    //     let query = manager.createQueryBuilder(Company, "company")
+    //         .where("account.id = :accountId ")
+    //         .leftJoinAndSelect("company.account", "account")
+    //         .leftJoinAndSelect("company.type", "type")
+    //         .where(" 1=1 ");
 
-        if (filter) {
-            query.andWhere(" LOWER(company.name) like LOWER(:filter)");
-        }
-        if (offset && limit && limit >= 0) {
-            query.offset(offset);
-        }
+    //     if (filter) {
+    //         query.andWhere(" LOWER(company.name) like LOWER(:filter)");
+    //     }
+    //     if (offset && limit && limit >= 0) {
+    //         query.offset(offset);
+    //     }
 
-        if (!limit || limit < 1) {
-            limit = Config.number("DEFAULT_LIMIT", 20);
-        }
-        let params = {accountId};
-        if (filter) {
-            params["filter"] = "%" + filter.toLowerCase() + "%";
-        }
-        query.setParameters(params);
-        query.limit(limit);
-        return query.getMany();
+    //     if (!limit || limit < 1) {
+    //         limit = Config.number("DEFAULT_LIMIT", 20);
+    //     }
+    //     let params = {accountId};
+    //     if (filter) {
+    //         params["filter"] = "%" + filter.toLowerCase() + "%";
+    //     }
+    //     query.setParameters(params);
+    //     query.limit(limit);
+    //     return query.getMany();
+    // }
+
+    async getUserListByCompanyUuid(companyUuid) {
+        return await this.entityManager.createQueryBuilder(User, 'u')
+            .where('u.companyUuid=:companyUuid', { companyUuid: companyUuid })
+            .getMany();
     }
 
-    async getAllCompaniesByUserCreatorAndAccountId(userId, accountId, companyUuid) {
+    async getAllCompaniesByUserCreator(userId, companyUuid?) {
         let manager = await this.entityManager;
         let query1 = `SELECT count(*) FROM "public"."company" "company" 
                     LEFT JOIN "user" "user" ON "user"."user_uuid" = "company"."user_uuid"
-                    WHERE "company"."user_creator"=${userId} AND "company"."acco_id"=${accountId}`;
+                    WHERE "company"."user_creator"=${userId}`;
         if (companyUuid) {
             query1 += `company.comp_uuid=${companyUuid}`;
         }
@@ -76,7 +95,7 @@ export class CompanyFacade {
                     "company"."identity_uuid" AS "company_identity_uuid", "company"."user_uuid" AS "company_user_uuid",
                     "company"."timezone" AS "company_timezone", "user"."user_first_name", "user"."user_last_name" FROM "public"."company" "company"
                     LEFT JOIN "user" "user" ON "user"."user_uuid" = "company"."user_uuid"
-                    WHERE "company"."user_creator"=${userId} AND "company"."acco_id"=${accountId}`;
+                    WHERE "company"."user_creator"=${userId}`;
         
         if (companyUuid) {
             query2 += `company.comp_uuid=${companyUuid}`;
@@ -85,20 +104,6 @@ export class CompanyFacade {
         let result = await manager.query(query2);
         return [result, Number(count[0].count)]
     }
-
-    // async getAllCompaniesByUserCreatorAndAccountId(userId, accountId, companyUuid) {
-    //     let manager = await this.entityManager;
-    //     let query = manager.createQueryBuilder(Company, 'company')
-    //         // .addSelect("user.name")
-    //         // .leftJoin("company.userCreatorID", "user")
-    //         .where('company.userCreatorID=:userId', {userId: userId})
-    //         .andWhere('company.accountID=:accountId', {accountId: accountId});
-
-    //     if (companyUuid) {
-    //         query.andWhere('company.companyUuid=:companyUuid', {companyUuid: companyUuid});
-    //     }
-    //     return query.getMany();
-    // }
 
     async getAllCompanies(companyUuid) {
         let manager = await this.entityManager;
@@ -124,7 +129,7 @@ export class CompanyFacade {
             .into(Company)
             .values({
                 companyUuid: await v4(),
-                accountID: user.accountId,
+                // accountID: user.accountId,
                 companyName: body.companyName,
                 userCreatorID: user.userId,
                 status: status,
@@ -156,25 +161,25 @@ export class CompanyFacade {
             .getOne();
     }
 
-    async getAllCompaniesByAccountId(accountId) {
-        let manager = await this.entityManager;
-        let query = manager.createQueryBuilder(Company, 'company')
-            .where('company.accountID=:accountId', {accountId: accountId});
+    // async getAllCompaniesByAccountId(accountId) {
+    //     let manager = await this.entityManager;
+    //     let query = manager.createQueryBuilder(Company, 'company')
+    //         .where('company.accountID=:accountId', {accountId: accountId});
 
-        let companies = await query.getMany();
-        let companies_new = new Array();
-        for (const company of companies) {
-            let query_count1 = await manager.query(`select count(*) from "user" where user_company_name = '${company.companyName}' and account_id = ${accountId}`);
-            let query_count2 = await manager.query(`select count(*) from "tracking_numbers" where comp_name = '${company.companyName}' and acco_id = ${accountId}`);
-            let new_company = {
-                users: query_count1[0].count,
-                numbers: query_count2[0].count
-            };
-            Object.assign(new_company, company);
-            companies_new.push(new_company);
-        }
-        return companies_new;
-    }
+    //     let companies = await query.getMany();
+    //     let companies_new = new Array();
+    //     for (const company of companies) {
+    //         let query_count1 = await manager.query(`select count(*) from "user" where user_company_name = '${company.companyName}' and account_id = ${accountId}`);
+    //         let query_count2 = await manager.query(`select count(*) from "tracking_numbers" where comp_name = '${company.companyName}' and acco_id = ${accountId}`);
+    //         let new_company = {
+    //             users: query_count1[0].count,
+    //             numbers: query_count2[0].count
+    //         };
+    //         Object.assign(new_company, company);
+    //         companies_new.push(new_company);
+    //     }
+    //     return companies_new;
+    // }
 
     async addUsers(uuids, comp_name) {
         let manager = await this.entityManager;
@@ -212,5 +217,56 @@ export class CompanyFacade {
             .returning('*')
             .execute();
 
+    }
+
+    @Transactional()
+    async createUser(us: User, companyUuid: string) {
+        let user = new User();
+        user.email = us.email;
+        user.firstName = us.firstName;
+        user.lastName = us.lastName;
+        user.password = us.password;
+        user.companyName = us.companyName;
+        // user.isAdmin = us.isAdmin;
+        // user.userLastLogin = us.userLastLogin;
+        // user.accountID = us.accountID;
+        user.creation = new Date();
+        user.updated = new Date();
+        await PasswordHelper.validatePassword(user.password);
+        const found = await this.userFacade.findByEmail(user.email);
+        if (found) throw new Error('user:alreadyExists');
+        const salt = genSaltSync(Config.number("BCRYPT_SALT_ROUNDS", 10));
+        user.password = await hashSync(user.password, salt);
+        user.salt = salt;
+        const company = await this.getCompanyByUuid(companyUuid);
+        if (!company) throw new Error('user:companyDoesNotExist');
+        user.userIdentityOpenTact = false;
+        user.uuid = v4();
+        user.plaintText = true;
+        user.invoiceEmail = false;
+        user.company = company;
+        user.companyUuid = companyUuid;
+        const login = `${user.firstName}_${user.lastName}_${Date.now()}`;
+        user.sipUsername = login;
+        const userEntity = await user.save();
+        if (us.password) {
+            const createdTokens = await this.saveToken(login, us.password, userEntity)
+        }
+        const sipUser = await this.opentactService.createSipUser({
+            login,
+            password: us.password,
+        })
+        return userEntity
+    }
+
+    public async saveToken(login: string, password: string, user: User): Promise<unknown> {
+        const domain = constants.OPENTACT_SIP_DOMAIN
+        const ha1 = CryptoJS.MD5(
+            `${login}:${domain}:${password}`
+        ).toString();
+        const ha1b = CryptoJS.MD5(
+            `${login}@${domain}:${domain}:${password}`
+        ).toString();
+        return await this.createEntity(this.Repositories.TOKEN, { user, ha1, ha1b })
     }
 }

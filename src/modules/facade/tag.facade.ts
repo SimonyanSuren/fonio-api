@@ -1,4 +1,4 @@
-import { AccountTags, Account, User, Data } from "../../models";
+import { AccountTags, User, Data, Company } from "../../models";
 import { Injectable } from '@nestjs/common';
 import { MessageCodeError } from '../../util/error';
 
@@ -10,32 +10,32 @@ export class TagFacade {
 
     constructor(private entityManager: EntityManager) { }
 
-    async findAllAccount(accountId: number) {
+    async findAllCompany(companyId: number) {
         let manager = await this.entityManager;
         return await manager.query(` SELECT acta_id as id, acta_name as name, acta_color as color, acta_bg_color as bg_color
         FROM account_tags
-        where acco_id=$1; `, [accountId]);
+        where company_id=$1; `, [companyId]);
     }
 
-    async findById(accountId: number, actaId: number) {
+    async findById(companyId: number, actaId: number) {
         let manager = await this.entityManager;
         return manager.createQueryBuilder(AccountTags, "acta")
-            .leftJoinAndSelect("acta.account", "account")
-            .where("account.id = :accountId ")
+            .leftJoinAndSelect("acta.company", "company")
+            .where("company.comp_id = :companyId ")
             .andWhere("acta.id = :actaId ")
-            .setParameters({ accountId, actaId })
+            .setParameters({ companyId, actaId })
             .getOne();
     }
     async create(currentUser, tag: AccountTags) {
         console.log("tag", tag);
         let manager = await this.entityManager;
-        tag.account = Account.withId(currentUser.accountId);
+        tag.company = Company.withId(currentUser.companyId);
         tag.user = User.withId(currentUser.userId);
         return await manager.save(tag);
 
     }
     async edit(currentUser, tagId: number, tag: AccountTags) {
-        let tagFound = await this.findById(currentUser.accountId, tagId);
+        let tagFound = await this.findById(currentUser.companyId, tagId);
         if (!tagFound) {
             throw new MessageCodeError("tag:NotFound");
         }
@@ -48,7 +48,7 @@ export class TagFacade {
 
     }
     async delete(currentUser, tagId: number) {
-        let tagFound = await this.findById(currentUser.accountId, tagId);
+        let tagFound = await this.findById(currentUser.companyId, tagId);
         if (!tagFound) {
             throw new MessageCodeError("tag:NotFound");
         }

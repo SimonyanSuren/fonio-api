@@ -1,4 +1,4 @@
-import { User, Account, Company, ApiKey } from "../../models";
+import { User, Company, ApiKey } from "../../models";
 import { Injectable } from '@nestjs/common';
 import { EmailService } from '../email';
 import { Config } from '../../util/config';
@@ -108,28 +108,28 @@ export class UserFacade {
             .execute();
     }
 
-    async findAccountByAccountId(accountID) {
-        let manager = await this.entityManager;
-        return manager.createQueryBuilder(Account, "a")
-            .where("a.id = :accountID ")
-            .setParameters({ accountID: accountID })
-            .getOne();
-    }
+    // async findAccountByAccountId(accountID) {
+    //     let manager = await this.entityManager;
+    //     return manager.createQueryBuilder(Account, "a")
+    //         .where("a.id = :accountID ")
+    //         .setParameters({ accountID: accountID })
+    //         .getOne();
+    // }
 
-    async getAllCompaniesByUserIdAndAccountId(userCreatorID, accountID) {
+    async getAllCompaniesByUserId(userCreatorID) {
         let manager = await this.entityManager;
         return manager.createQueryBuilder(Company, "c")
             .where('c.userCreatorID=:userCreatorID', { userCreatorID: userCreatorID })
-            .andWhere('c.accountID=:accountID', { accountID: accountID })
+            // .andWhere('c.accountID=:accountID', { accountID: accountID })
             .getMany();
 
     }
 
-    async getCompanyByUserIdAndAccountId(userCreatorID, accountID) {
+    async getCompanyByUserId(userCreatorID) {
         let manager = await this.entityManager;
         return manager.createQueryBuilder(Company, "c")
             .where('c.user_creator=:userCreatorID', { userCreatorID: userCreatorID })
-            .andWhere('c.acco_id=:accountID', { accountID: accountID })
+            // .andWhere('c.acco_id=:accountID', { accountID: accountID })
             .getOne();
     }
 
@@ -171,18 +171,18 @@ export class UserFacade {
             // let manager = await this.entityManager;
             // return await manager.transaction(async tEM => {
                 let company = new Company();
-                let account = new Account();
-                account.creation = new Date();
-                account.number = v4();
-                account.status = false;
-                account.planID = user.planID;
-                account.allowOutbound = true;
-                account.status = true; // Email confirmed is not being used now
+                // let account = new Account();
+                // account.creation = new Date();
+                // account.number = v4();
+                // account.status = false;
+                // account.planID = user.planID;
+                // account.allowOutbound = true;
+                // account.status = true; // Email confirmed is not being used now
                 // account = await tEM.save(account);
-                account = await account.save();
+                // account = await account.save();
                 user.uuid = v4();
                 user.plaintText = true;
-                user.accountID = account.id;
+                // user.accountID = account.id;
                 user.invoiceEmail = false;
                 user.active = true; // Email confirmed is not being used now;
                 user.type = UserTypes.COMPANY_ADMIN;
@@ -195,24 +195,29 @@ export class UserFacade {
                 user.userIdentityOpenTact = false;
 
                 // let userEntity = await tEM.save(user);
-                let userEntity = await user.save();
-                let companyResponse
-                if (userEntity.companyName) {
-                    company.companyName = userEntity.companyName;
-                    company.companyUuid = v4();
-                    company.userUuid = userEntity.uuid
-                    company.userCreatorID = userEntity.id;
-                    company.accountID = account.id;
+                let companyResponse;
+                let company_uuid = v4();
+                user.companyUuid = company_uuid;
+                await user.save();
+                if (user.companyName) {
+                    company.companyName = user.companyName;
+                    company.companyUuid = company_uuid;
+                    company.userUuid = user.uuid
+                    company.userCreatorID = user.id;
+                    company.planID = user.planID;
+                    // company.accountID = account.id;
                     company.status = true;
                     company.balance = 0;
                     company.created = new Date();
                     // companyResponse = await tEM.save(company);
                     companyResponse = await company.save();
                 }
+                user.company = company;
+                let userEntity = await user.save();
  
                 return {
                     user: userEntity,
-                    account: account,
+                    // account: account,
                     company: companyResponse
                 };
             // });
@@ -254,30 +259,35 @@ export class UserFacade {
         return await this.deleteImageFromDisk(link, userUuid);
     }
 
-    async getUserById(userId, accountId) {
+    async getUserById(userId, companyId) {
         return await this.entityManager.createQueryBuilder(User, 'u')
             .where('u.id=:userId', { userId: userId })
-            .andWhere('u.accountID=:accountId', { accountId: accountId })
+            .andWhere('u.companyID=:companyId', { companyId: companyId })
             .getOne();
     }
 
-    async getUserListByAccId(accountId, company) {
-        let query = await this.entityManager.createQueryBuilder(User, 'u')
-            .where('u.accountID=:accountId', { accountId: accountId })
-        if (company) {
-            query.andWhere('u.companyName=:company', { company: company })
-        }
-        return query.getMany();
+    // async getUserListByAccId(accountId, company) {
+    //     let query = await this.entityManager.createQueryBuilder(User, 'u')
+    //         .where('u.accountID=:accountId', { accountId: accountId })
+    //     if (company) {
+    //         query.andWhere('u.companyName=:company', { company: company })
+    //     }
+    //     return query.getMany();
+    // }
+
+    async getUserListByCompId(companyId) {
+        return await this.entityManager.createQueryBuilder(User, 'u')
+            .where('u.companyID=:companyId', { companyId: companyId }).getMany();
     }
 
-    async getUserListByCompName(currentUser, name) {
+    async getUserListByCompUuid(companyUuid) {
         return await this.entityManager.createQueryBuilder(User, 'u')
-            .where('u.companyName=:compName', { compName: name })
-            .andWhere('u.accountID=:accountId', { accountId: currentUser.accountId })
+            .where('u.companyUuid=:companyUuid', { companyUuid: companyUuid })
+            // .andWhere('u.accountID=:accountId', { accountId: currentUser.accountId })
             .getMany();
     }
 
-    async updateUserFieldsEntity(userId, accountId, emailField, fn, ln, twoFA, password, machineDetection, forwardSoftphone, cn) {
+    async updateUserFieldsEntity(userId, emailField, fn, ln, twoFA, password, machineDetection, forwardSoftphone, cn) {
         try {
             let body = new Object();
             body = {
@@ -308,7 +318,7 @@ export class UserFacade {
                 .update(User)
                 .set(body)
                 .where('user_id=:userId', { userId })
-                .andWhere('account_id=:accountId', { accountId })
+                // .andWhere('account_id=:accountId', { accountId })
                 .returning('*')
                 .execute();
         } catch (e) {
@@ -319,16 +329,16 @@ export class UserFacade {
 
     }
 
-    async findByIdAndAccount(accountId: number, userId: number) {
-        let manager = await this.entityManager;
-        return await manager.createQueryBuilder(User, "user")
-            .where("user.id = :userId ")
-            .andWhere("account.id = :accountId ")
-            .leftJoinAndSelect("user.account", "account")
-            .leftJoinAndSelect("user.type", "data1")
-            .setParameters({ userId, accountId })
-            .getOne();
-    }
+    // async findByIdAndAccount(accountId: number, userId: number) {
+    //     let manager = await this.entityManager;
+    //     return await manager.createQueryBuilder(User, "user")
+    //         .where("user.id = :userId ")
+    //         .andWhere("account.id = :accountId ")
+    //         .leftJoinAndSelect("user.account", "account")
+    //         .leftJoinAndSelect("user.type", "data1")
+    //         .setParameters({ userId, accountId })
+    //         .getOne();
+    // }
 
     async saveApiKey(api_key) {
         let manager = await this.entityManager;
@@ -371,7 +381,7 @@ export class UserFacade {
                 await tEM.query("delete from tracking_numbers where id = $1", [trackingNumberID]);
             if (didID)
                 await tEM.query("delete from did where did_id = $1", [didID]);
-            await tEM.query(`update account set acco_status = false where acco_id = ${currentUser.accountId}`);
+            // await tEM.query(`update account set acco_status = false where acco_id = ${currentUser.accountId}`);
             await tEM.query(`update "user" set email_confirmed = false where user_id = ${currentUser.userId}`);
             if (token && apdiID)
                 await this.opentactService.releaseAppDid(token, apdiID);
@@ -385,7 +395,7 @@ export class UserFacade {
                 await tEM.query("delete from tracking_numbers where id = $1", [trackingNumberID]);
             if (didID)
                 await tEM.query("delete from did where did_id = $1", [didID]);
-            await tEM.query(`update account set acco_status = false where acco_id = ${currentUser.accountId}`);
+            // await tEM.query(`update account set acco_status = false where acco_id = ${currentUser.accountId}`);
             await tEM.query(`update "user" set email_confirmed = false where user_id = ${currentUser.userId}`);
             if (token && apdiID)
                 await this.opentactService.releaseAppDid(token, apdiID);
@@ -417,39 +427,39 @@ export class UserFacade {
 
     }
 
-    async cancelAccount(account_Id) {
-        try {
-            let removed_tn_leases: any,
-                numbers_array: Array<number> = [], 
-                user_account = await this.entityManager.createQueryBuilder()
-                    .update(Account)
-                    .set({
-                        status: false,
-                    })
-                    .where('account.acco_status = true')
-                    .andWhere('account.acco_id=:account_Id', { account_Id })
-                    .returning('*')
-                    .execute();
+    // async cancelAccount(account_Id) {
+    //     try {
+    //         let removed_tn_leases: any,
+    //             numbers_array: Array<number> = [], 
+    //             user_account = await this.entityManager.createQueryBuilder()
+    //                 .update(Account)
+    //                 .set({
+    //                     status: false,
+    //                 })
+    //                 .where('account.acco_status = true')
+    //                 .andWhere('account.acco_id=:account_Id', { account_Id })
+    //                 .returning('*')
+    //                 .execute();
     
-            if (user_account.affected) {
-                numbers_array = (await this.entityManager.query(`select array(select number from tracking_numbers where acco_id=$1)`,
-                    [account_Id]))[0].array;
+    //         if (user_account.affected) {
+    //             numbers_array = (await this.entityManager.query(`select array(select number from tracking_numbers where acco_id=$1)`,
+    //                 [account_Id]))[0].array;
 
-                if (numbers_array.length) {
-                    removed_tn_leases = await this.opentactService.removeTNLeases(numbers_array)
-                }
-            }
+    //             if (numbers_array.length) {
+    //                 removed_tn_leases = await this.opentactService.removeTNLeases(numbers_array)
+    //             }
+    //         }
 
-            return {
-                message: 'Account was canceled successfuly.',
-                user_account,
-                numbers_array,
-                removed_tn_leases
-            }
-        } catch (err) {
-            console.log(err)
-            return { error: err.message }
-        }
+    //         return {
+    //             message: 'Account was canceled successfuly.',
+    //             user_account,
+    //             numbers_array,
+    //             removed_tn_leases
+    //         }
+    //     } catch (err) {
+    //         console.log(err)
+    //         return { error: err.message }
+    //     }
 
-    }
+    // }
 }

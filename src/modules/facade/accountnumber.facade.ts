@@ -22,10 +22,10 @@ export class AccountNumberFacade {
         private companyFacade: CompanyFacade) {
     }
 
-    async getTrackingNumbers(userID, accountID, id, isAll=true, orderBy='registerDate', orderType='descending', offset=0, limit=10, filter='') {
+    async getTrackingNumbers(userID, companyID, id, isAll=true, orderBy='registerDate', orderType='descending', offset=0, limit=10, filter='') {
         let query = this.entityManager.createQueryBuilder(AccountNumber, 'an')
             .where('an.userID=:userID', { userID: userID })
-            .andWhere('an.accountID=:accountID', { accountID: accountID })
+            .andWhere('an.companyID=:companyID', { companyID: companyID })
             .leftJoinAndSelect("an.did", "did")
             .leftJoinAndSelect("an.callFlow", "callFlow")
         if (id) {
@@ -51,20 +51,20 @@ export class AccountNumberFacade {
         return query.getManyAndCount();
     }
 
-    async getTrackingNumberBy(userID, accountID, search) {
+    async getTrackingNumberBy(userID, companyID, search) {
         let s = (typeof search === 'string') ? parseInt(search) : search;
-        return this.entityManager.query(`select * from tracking_numbers where acco_id=$1 and user_id=$2 AND number::text like '${s}%' OR pool_name like '${search}%' OR destination_number::text like '${s}%'`,
-            [accountID, userID]);
+        return this.entityManager.query(`select * from tracking_numbers where company_id=$1 and user_id=$2 AND number::text like '${s}%' OR pool_name like '${search}%' OR destination_number::text like '${s}%'`,
+            [companyID, userID]);
     }
 
-    async getUserAccountTrackingNumbers(userID, accountID) {
-        return (await this.entityManager.query(`SELECT ARRAY (SELECT number FROM tracking_numbers WHERE acco_id=${accountID} AND user_id=${userID})`))[0].array;
+    async getUserAccountTrackingNumbers(userID, companyID) {
+        return (await this.entityManager.query(`SELECT ARRAY (SELECT number FROM tracking_numbers WHERE company_id=${companyID} AND user_id=${userID})`))[0].array;
     }
 
     async delete(id, currentUser) {
         let manager = await this.entityManager;
         return await manager.transaction(async tEM => {
-            let trackingNumber = await this.getTrackingNumberById(id, currentUser.userId, currentUser.accountId);
+            let trackingNumber = await this.getTrackingNumberById(id, currentUser.userId, currentUser.companyId);
             if (!trackingNumber) throw new Error('tracking_number:thisTrackingNumberDoesNotExist');
             let did = trackingNumber.did;
             if (id)
@@ -77,24 +77,24 @@ export class AccountNumberFacade {
         })
     }
 
-    async deleteTrackingNumber(id, userID, accountID) {
+    async deleteTrackingNumber(id, userID, companyID) {
         return this.entityManager.createQueryBuilder()
             .delete()
             .from(AccountNumber)
             .where('id=:id', { id: id })
             .andWhere('userID=:userID', { userID: userID })
-            .andWhere('accountID=:accountID', { accountID: accountID })
+            .andWhere('companyID=:companyID', { companyID: companyID })
             .returning('*')
             .execute();
     }
 
     async disableEnable(id, currentUser, status) {
-        let trackingNumber = await this.getTrackingNumberById(id, currentUser.userId, currentUser.accountId);
+        let trackingNumber = await this.getTrackingNumberById(id, currentUser.userId, currentUser.companyId);
         if (!trackingNumber) throw new Error('tracking_number:thisTrackingNumberDoesNotExist');
-        return await this.disableEnableDb(id, currentUser.userId, currentUser.accountId, status);
+        return await this.disableEnableDb(id, currentUser.userId, currentUser.companyId, status);
     }
 
-    async disableEnableDb(id, userID, accountID, status) {
+    async disableEnableDb(id, userID, companyID, status) {
         return this.entityManager.createQueryBuilder()
             .update(AccountNumber)
             .set({
@@ -102,16 +102,16 @@ export class AccountNumberFacade {
             })
             .where('id=:id', { id: id })
             .andWhere('userID=:userID', { userID: userID })
-            .andWhere('accountID=:accountID', { accountID: accountID })
+            .andWhere('companyID=:companyID', { companyID: companyID })
             .returning('*')
             .execute();
     }
 
-    async getTrackingNumberById(id, userID, accountID) {
+    async getTrackingNumberById(id, userID, companyID) {
         return this.entityManager.createQueryBuilder(AccountNumber, 'an')
             .where('an.id=:id', { id: id })
             .andWhere('an.userID=:userID', { userID: userID })
-            .andWhere('an.accountID=:accountID', { accountID: accountID })
+            .andWhere('an.companyID=:companyID', { companyID: companyID })
             .leftJoinAndSelect('an.did', 'did')
             .getOne();
     }
@@ -143,14 +143,14 @@ export class AccountNumberFacade {
         return arr;
     }
 
-    async getObjectForSavingTrackingNumberPatch(body, userID, accountID, trackingNumberEntityOld, numberField, isCountCorrect) {
+    async getObjectForSavingTrackingNumberPatch(body, userID, companyID, trackingNumberEntityOld, numberField, isCountCorrect) {
         let callFlow = new CallFlow();
         callFlow.id = body.callFlowID;
         return {
             id: body.id,
             didID: body.didID ? body.didID : trackingNumberEntityOld.didID,
             userID,
-            accountID,
+            companyID,
             planID: body.planID ? body.planID : trackingNumberEntityOld.planID,
             recordCalls: body.recordCalls ? body.recordCalls : trackingNumberEntityOld.recordCalls,
             recordCallsBoolean: body.recordCallsBoolean ? body.recordCallsBoolean : trackingNumberEntityOld.recordCallsBoolean,
@@ -183,7 +183,7 @@ export class AccountNumberFacade {
     async patch(currentUser, body) {
         try {
             if (!body.id) await HelperClass.throwErrorHelper('tracking_number:youShouldPassId');
-            let trackingNumber: any = await this.getTrackingNumberById(body.id, currentUser.userId, currentUser.accountId);
+            let trackingNumber: any = await this.getTrackingNumberById(body.id, currentUser.userId, currentUser.companyId);
             if (!trackingNumber) await HelperClass.throwErrorHelper('tracking_number:thisTrackingNumberDoesNotExist');
             let token = await this.opentactAuth.adminLoginGettignToken();
             let didEntitiesList = await this.opentactService.getDidList(token.token);
@@ -221,7 +221,7 @@ export class AccountNumberFacade {
             if (body.trackEachVisitor && body.trackCampaign) await HelperClass.throwErrorHelper(`did:ifYouWantToChangeOneFromThisFields[trackCampaign,trackEachVisitor]youShouldChooseOnlyOneFromThem`);
             let company: any = (body.companyUuid) ? await this.companyFacade.getCompanyByUuid(body.companyUuid) : trackingNumber.companyUuid;
             if (body.companyUuid && !company) await HelperClass.throwErrorHelper('did:thisCompanyDoesNotExist');
-            let object = await this.getObjectForSavingTrackingNumberPatch(body, currentUser.userId, currentUser.accountId, trackingNumber, body.number, booleanFields.isCountCorrect);
+            let object = await this.getObjectForSavingTrackingNumberPatch(body, currentUser.userId, currentUser.companyId, trackingNumber, body.number, booleanFields.isCountCorrect);
             return await this.updateTrackingNumber(object)
         } catch (err) {
             throw err;
@@ -230,7 +230,7 @@ export class AccountNumberFacade {
 
     async create(currentUser, accountNumber: AccountNumberReq) {
         let { didID, companyUuid } = accountNumber;
-        let { userId, accountId } = currentUser;
+        let { userId, companyId } = currentUser;
         if (!didID) await HelperClass.throwErrorHelper('did:passDidID');
         if (!companyUuid) await HelperClass.throwErrorHelper('did:passCompanyUuid');
         let plan = (accountNumber.planID) ? await this.getPlanByID(accountNumber.planID) : null;
@@ -285,19 +285,19 @@ export class AccountNumberFacade {
         let identity = await this.opentactService.getIdentity(token.token, currentUser.userUuid);	        
         let response = await this.opentactService.assignDidToIdentity(token.token, undefined, /*callStatusUrl,*/ entity.id, identity.id);
         let didNumber = response.did.number;
-        let did = await this.didFacade.addDidAfterBuy(userId, accountId, entity.did.id, true, didNumber, entity.id);
-        let object = await this.getObjectForSavingTrackingNumber(accountNumber, currentUser.userId, currentUser.accountId, didNumber, company.companyName, did[0].did_id);
+        let did = await this.didFacade.addDidAfterBuy(userId, companyId, entity.did.id, true, didNumber, entity.id);
+        let object = await this.getObjectForSavingTrackingNumber(accountNumber, currentUser.userId, currentUser.companyId, didNumber, company.companyName, did[0].did_id);
         return {
             trackingNumber: await this.addTrackingNumber(object),
             did
         };
     }
 
-    async addDidNumbers(userID, accountID, didStatus, didNumbers, company, planID) {
+    async addDidNumbers(userID, companyID, didStatus, didNumbers, company, planID) {
         try {
             for (let num of didNumbers) {
                 let didNumber = num.tn;
-                let did = await this.didFacade.addDidAfterBuying(userID, accountID, didStatus, didNumber);
+                let did = await this.didFacade.addDidAfterBuying(userID, companyID, didStatus, didNumber);
                 let accountNumber = {
                     recordCalls: '',
                     recordCallsBoolean: true,
@@ -307,7 +307,7 @@ export class AccountNumberFacade {
                     planID: planID
                 };
     
-                let object = await this.getObjectForSavingTrackingNumber(accountNumber, userID, accountID, didNumber, company.companyName, did.raw[0].did_id);
+                let object = await this.getObjectForSavingTrackingNumber(accountNumber, userID, companyID, didNumber, company.companyName, did.raw[0].did_id);
                 return {
                     trackingNumber: (await this.addTrackingNumber(object))?.raw,
                     did: did.raw
@@ -318,11 +318,11 @@ export class AccountNumberFacade {
         }
     }
 
-    getObjectForSavingTrackingNumber(accountNumber, userID, accountID, didNumber, companyName, did_id) {
+    getObjectForSavingTrackingNumber(accountNumber, userID, companyID, didNumber, companyName, did_id) {
         return {
             didID: did_id,
             userID,
-            accountID,
+            companyID,
             planID: accountNumber.planID,
             recordCalls: accountNumber.recordCalls,
             recordCallsBoolean: accountNumber.recordCallsBoolean,
@@ -357,7 +357,8 @@ export class AccountNumberFacade {
             .values({
                 did: Did.withId(object.didID),
                 userID: object.userID,
-                accountID: object.accountID,
+                // accountID: object.accountID,
+                companyID: object.companyID,
                 planID: object.planID,
                 recordCalls: object.recordCalls,
                 recordCallsBoolean: object.recordCallsBoolean,
@@ -380,8 +381,8 @@ export class AccountNumberFacade {
                 numberOnWebSite: object.numberOnWebSite,
                 numberOnline: object.numberOnline,
                 status: true,
-                companyUuid: object.companyUuid,
-                companyName: object.companyName,
+                // companyUuid: object.companyUuid,
+                // companyName: object.companyName,
                 isTextMessaging: object.isTextMessaging,
                 registerDate: new Date(),
             })
@@ -394,8 +395,9 @@ export class AccountNumberFacade {
             .update(AccountNumber)
             .set({
                 // didID: object.didID, ??????????
-                userID: object.userID,
-                accountID: object.accountID,
+                // userID: object.userID,
+                // accountID: object.accountID,
+                // companyID: object.companyID,
                 planID: object.planID,
                 recordCalls: object.recordCalls,
                 recordCallsBoolean: object.recordCallsBoolean,
@@ -423,7 +425,7 @@ export class AccountNumberFacade {
             })
             .where('id=:id', { id: object.id })
             .andWhere('userID=:userID', { userID: object.userID })
-            .andWhere('accountID=:accountID', { accountID: object.accountID })
+            .andWhere('companyID=:companyID', { companyID: object.companyID })
             .returning('*')
             .execute();
     }
@@ -455,14 +457,14 @@ export class AccountNumberFacade {
             .getOne();
     }
 
-    async findById(accountId: number, acnuId: number) {
+    async findById(companyId: number, acnuId: number) {
         let manager = await this.entityManager;
         return manager.createQueryBuilder(AccountNumber, "acnu")
-            .leftJoinAndSelect("acnu.account", "account")
-            .where("account.id = :accountId ")
+            .leftJoinAndSelect("acnu.company", "company")
+            .where("company.comp_id = :companyId ")
             .andWhere("acnu.id = :acnuId ")
             .leftJoinAndSelect("acnu.did", "did")
-            .setParameters({ accountId, acnuId })
+            .setParameters({ companyId, acnuId })
             .getOne();
     }
 
@@ -476,7 +478,7 @@ export class AccountNumberFacade {
             })
             .where('id=:id', { id: id })
             .andWhere('userID=:userID', { userID: currentUser.userId })
-            .andWhere('accountID=:accountID', { accountID: currentUser.accountId })
+            .andWhere('companyID=:companyID', { companyID: currentUser.companyId })
             .returning('*')
             .execute();
 
@@ -487,16 +489,16 @@ export class AccountNumberFacade {
             })
             .where('did_number=:number', { number: accountNumber.raw[0].number })
             .andWhere('user_id=:userID', { userID: currentUser.userId })
-            .andWhere('acco_id=:accountID', { accountID: currentUser.accountId })
+            .andWhere('company_id=:companyID', { companyID: currentUser.companyId })
             .returning('*')
             .execute();
     }
 
-    async ownNumber(userID, accountID, number) {
+    async ownNumber(userID, companyID, number) {
         return await this.entityManager.createQueryBuilder(AccountNumber, 'an')
             .leftJoinAndSelect("an.did", "did")
             .where('an.userID=:userID', { userID: userID })
-            .andWhere('an.accountID=:accountID', { accountID: accountID })
+            .andWhere('an.companyID=:companyID', { companyID: companyID })
             .andWhere('did.did_number=:number', {number: number})
             .getOne();
     }

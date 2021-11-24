@@ -78,7 +78,7 @@ export abstract class StepsAbstract {
     }
 
     protected async checkIsTagExists(tagId) {
-        return await this.tagFacade.findById(this._currentUser.accountId, tagId);
+        return await this.tagFacade.findById(this._currentUser.companyId, tagId);
     }
 
     protected async setItemToIgnore(chPosition) {

@@ -8,7 +8,7 @@ export class AccountNumberReq {
     @ApiProperty()
     userID: number;
     @ApiProperty()
-    accountID: number;
+    companyID: number;
     @ApiProperty()
     planID: number;
     @ApiProperty()

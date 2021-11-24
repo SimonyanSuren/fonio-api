@@ -1,7 +1,6 @@
 import {EntityManager, EntityRepository} from "typeorm";
 import {Injectable} from "@nestjs/common";
-import {Company, User, Account} from "../../models";
-import {type} from "os";
+import {Company, User} from "../../models";
 
 @EntityRepository()
 @Injectable()
@@ -65,24 +64,24 @@ export class AdminFacade {
             .getOne();
     }
 
-    async isAccountExistByAccountID(accountID) {
-        let manager = await this.entityManager;
-        return await manager.createQueryBuilder(Account, 'a')
-            .where('a.id=:accountID')
-            .setParameters({accountID: accountID})
-            .getOne();
-    }
+    // async isAccountExistByAccountID(accountID) {
+    //     let manager = await this.entityManager;
+    //     return await manager.createQueryBuilder(Account, 'a')
+    //         .where('a.id=:accountID')
+    //         .setParameters({accountID: accountID})
+    //         .getOne();
+    // }
 
-    async updateCompanyIdentityUuidByAccountId(accoID, identityUuid) {
-        let manager = await this.entityManager;
-        return await manager.createQueryBuilder()
-            .update(Company)
-            .set({
-                identityUuid: identityUuid
-            })
-            .where('accountID=:accountID', {accountID: accoID})
-            .execute();
-    }
+    // async updateCompanyIdentityUuidByAccountId(accoID, identityUuid) {
+    //     let manager = await this.entityManager;
+    //     return await manager.createQueryBuilder()
+    //         .update(Company)
+    //         .set({
+    //             identityUuid: identityUuid
+    //         })
+    //         .where('accountID=:accountID', {accountID: accoID})
+    //         .execute();
+    // }
 
     async isUserIdentityCreated(user) {
         if (user.userIdentityOpenTact) {
@@ -100,18 +99,18 @@ export class AdminFacade {
             .execute();
     }
 
-    async updateUserActivationStatus(accountID, userUuid, status) {
+    async updateUserActivationStatus(userUuid, status) {
         let manager = await this.entityManager;
         await manager.createQueryBuilder()
             .update(User)
             .set({emailConfirmed: status})
             .where("uuid = :userUuid", {userUuid})
             .execute();
-        await manager.createQueryBuilder()
-            .update(Account)
-            .set({status: status})
-            .where("id = :accountID", {accountID})
-            .execute();
+        // await manager.createQueryBuilder()
+        //     .update(Account)
+        //     .set({status: status})
+        //     .where("id = :accountID", {accountID})
+        //     .execute();
     }
 
     async getUsersByPlan(planID, email?, order_by?, order_type?) {

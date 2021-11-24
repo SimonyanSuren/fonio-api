@@ -28,8 +28,8 @@ export class PermissionsService {
     private checkPermissionsUser = async ({ userData, object, body }) => {
         if (userData.is_admin) {
             return
-        } else if (userData.userType === 'company_admin' && userData.accountId) {
-            object.accountID = userData.accountId;
+        } else if (userData.userType === 'company_admin' && userData.companyId) {
+            object.companyID = userData.companyId;
         } else {
             throw new Error("404")
         }

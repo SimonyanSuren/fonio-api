@@ -1,9 +1,10 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToOne, OneToMany, ManyToOne, CreateDateColumn, JoinColumn } from "typeorm";
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany, ManyToOne, CreateDateColumn, JoinColumn } from "typeorm";
 import { ApiProperty } from '@nestjs/swagger';
-import { Account } from './account.entity';
+// import { Account } from './account.entity';
 import { User } from './user.entity';
 import { CallFlowStep } from "./call_flow_step";
 import { Did } from "./did.entity";
+import { Company } from "./company";
 
 @Entity()
 export class CallFlow {
@@ -15,9 +16,13 @@ export class CallFlow {
     @Column({ name: "cafl_name" })
     name: string;
 
+    // @ApiProperty()
+    // @Column({ name: "acco_id" })
+    // accountId: string;
+
     @ApiProperty()
-    @Column({ name: "acco_id" })
-    accountId: string;
+    @Column({ name: "company_id" })
+    companyId: string;
 
     @ApiProperty()
     @CreateDateColumn({ name: "cafl_creation", type: 'timestamp' })
@@ -42,10 +47,15 @@ export class CallFlow {
     @OneToMany(() => Did, did => did.callFlow)
     did: Did[];
 
-    @ApiProperty({ type: () => Account })
-    @ManyToOne(type => Account)
-    @JoinColumn({ name: "acco_id" })
-    account: Account;
+    // @ApiProperty({ type: () => Account })
+    // @ManyToOne(type => Account)
+    // @JoinColumn({ name: "acco_id" })
+    // account: Account;
+
+    @ApiProperty({ type: () => Company })
+    @ManyToOne(type => Company)
+    @JoinColumn({ name: "company_id" })
+    company: Company;
 
     @ApiProperty({ type: () => User })
     @ManyToOne(type => User)

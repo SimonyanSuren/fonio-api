@@ -3,7 +3,7 @@
 import { Injectable } from '@nestjs/common';
 import { JWTHelper } from '../../util/jwt';
 import { UserFacade, PlanFacade } from '../facade';
-import { User, Account, ApiKey } from '../../models';
+import { User, ApiKey } from '../../models';
 import { compare as comparePassword } from 'bcrypt';
 import { OpentactService } from '../opentact';
 import { HelperClass } from "../../filters/Helper";
@@ -22,10 +22,10 @@ export class AuthService extends BaseService {
         super()
     }
 
-
-    static async generateToken(user: User, remoteAddress: string, userAgent, nonce: string, isAdmin, account: Account, opentactToken, userUuid: any, isActive: boolean) {
+    static async generateToken(user: User, remoteAddress: string, userAgent, nonce: string, isAdmin, opentactToken, userUuid: any, isActive: boolean) {
         let token = await JWTHelper.sign({
-            accountId: user.accountID,
+            // accountId: user.accountID,
+            companyId: user.companyID,
             userFirstName: user.firstName,
             userLastName: user.lastName,
             userEmail: user.email,
@@ -33,44 +33,45 @@ export class AuthService extends BaseService {
             remoteAddress: remoteAddress,
             userAgent: userAgent,
             nonce: nonce,
-            accountNumber: account.number,
+            // accountNumber: account.number,
             userId: user.id,
             opentactToken: opentactToken,
             userType: user.type,
             is_admin: isAdmin,
-            userUuid: userUuid
+            userUuid: userUuid,
+            // companyUuid: user.companyUuid,
         });
         if (!token) throw new Error('user:tokenError');
         return token;
     }
 
-    static response(user, account, company): SignInResponse {
+    static response(user, company): SignInResponse {
         return {
             user: user,
-            account: account,
+            // account: account,
             company: company
         };
     }
 
     public async signIn(credentials: any, remoteAddress: string, userAgent, onSignUp: boolean = false): Promise<SignInResponse> {
         const user: any = await this.userFacade.findByEmail(credentials.email);
-        if (!user) throw new Error('user:userDoNotExist');
-        const account: any = await this.userFacade.findAccountByAccountId(user.accountID);
-        if (!user) throw new Error('user:accountDoNotExistForThisUser');
-        if (!user) throw new Error('user:notFound');
+        if (!user) throw new Error('user:userDoesNotExist');
+        // const account: any = await this.userFacade.findAccountByAccountId(user.accountID);
+        // if (!user) throw new Error('user:accountDoNotExistForThisUser');
+        // if (!user) throw new Error('user:notFound');
         if (!user.active) throw new Error('user:userInactivated');
-        if (!account.status) throw new Error('account:planIsNotPaid');
+        // if (!account.status) throw new Error('account:planIsNotPaid');
         if (!user.emailConfirmed) throw new Error('user:emailIsNotConfirmed');
         const equals = await comparePassword(credentials.password, user.password ? user.password : '');
         if (!equals && !onSignUp) throw new Error('user:incorrectPassword');
         let isAdmin = (user.isAdmin) ? user.isAdmin : false;
         let opentactToken = (isAdmin) ? 'admintoken123456789' : 'usertoken123456789';
-        user.token = await AuthService.generateToken(user, remoteAddress, userAgent, user.salt || '', isAdmin, account, opentactToken, user.uuid, user.active);
+        let company = await this.userFacade.getAllCompaniesByUserId(user.id);
+        user.token = await AuthService.generateToken(user, remoteAddress, userAgent, user.salt || '', isAdmin, opentactToken, user.uuid, user.active);
         user.password = undefined;
         user.salt = undefined;
-        let company = await this.userFacade.getAllCompaniesByUserIdAndAccountId(user.id, account.id);
         await this.userFacade.updateUserLastLoginField(user.id);
-        return AuthService.response(user, account, company);
+        return AuthService.response(user, company);
 
     }
 
@@ -108,14 +109,14 @@ export class AuthService extends BaseService {
     async generateApiKey(currentUser, remoteAddress: string, userAgent) {
         const user: any = await this.userFacade.findById(currentUser.userId);
         if (!user) throw new Error('user:userDoNotExist');
-        const account: any = await this.userFacade.findAccountByAccountId(user.accountID);
-        if (!account.status) throw new Error('account:userIsNotApproved');
+        // const account: any = await this.userFacade.findAccountByAccountId(user.accountID);
+        // if (!account.status) throw new Error('account:userIsNotApproved');
         let isAdmin = (user.isAdmin) ? user.isAdmin : false;
         let nonce = await this.opentactService.nonce();
         let adminToken = await this.opentactAuth.adminLoginGettignToken();
         let userTokenOpentact = (!isAdmin) ? await this.opentactService.getSessionTokenByUuidAndNonce(nonce.nonce, user.uuid) : null;
         let opentactToken = (isAdmin) ? adminToken.token : userTokenOpentact.sessionToken;
-        let token = await AuthService.generateToken(user, remoteAddress, userAgent, user.salt || '', isAdmin, account, opentactToken, user.uuid, user.active);
+        let token = await AuthService.generateToken(user, remoteAddress, userAgent, user.salt || '', isAdmin, opentactToken, user.uuid, user.active);
         const token_obj: any = await JWTHelper.verify(token);
         let api_key = new ApiKey();
         api_key.createdOn = new Date(token_obj.iat * 1000);
@@ -134,7 +135,7 @@ export class AuthService extends BaseService {
 
 interface SignInResponse {
     user?: User;
-    account?: Account;
+    // account?: Account;
     company?: any;
     error?: string;
 }

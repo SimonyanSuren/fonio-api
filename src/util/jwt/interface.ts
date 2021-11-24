@@ -10,11 +10,12 @@ export interface JwtOptions {
 
 export interface JWTClaims {
     userId: number;
-    accountId: number;
+    // accountId: number;
+    companyId: number;
     companies?: number[];
     userFirstName: string;
     userLastName: string;
-    accountNumber: string;
+    // accountNumber: string;
     userAgent: string;
     nonce: string;
     userType?: UserTypes;
@@ -24,4 +25,5 @@ export interface JWTClaims {
     is_admin: boolean;
     opentactToken: string;
     userUuid: string;
+    // companyUuid: string;
 }

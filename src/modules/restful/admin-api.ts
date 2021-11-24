@@ -17,7 +17,7 @@ import {HelperClass} from '../../filters/Helper';
 import {Response} from "express";
 import {AdminFacade} from "../facade/admin.facade";
 import {PlanFacade, DidFacade, UserFacade, InvoiceFacade, PaymentFacade} from "../facade";
-import {User, Account} from '../../models/';
+import {User} from '../../models/';
 import {AdminUserActivation, ActivationResend, PaymentSettingsRequest} from "../../util/swagger/admin_restful_api";
 import {UserStatus, UserPatchByAdmin} from "../../util/swagger/user";
 import {PatchPlan, PlanPost, PatchPlanUser, DeleteUserByAdmin} from "../../util/swagger/plan_features";
@@ -87,9 +87,9 @@ export class AdminApi {
             if (typeof(req.body.status) !== 'boolean') await HelperClass.throwErrorHelper('admin:youShouldPassStatus');
             let user: User | any = await this.adminFacade.isUserWithTheSameUserUuidExist(req.body.userUuid);
             if (!user) await HelperClass.throwErrorHelper('admin:userIsNotExistByThisUuid');
-            let account: Account | any = await this.adminFacade.isAccountExistByAccountID(user.accountID);
-            if (!account) await HelperClass.throwErrorHelper('admin:accountIsNotExistForThisUser');
-            await this.adminFacade.updateUserActivationStatus(account.id, user.uuid, req.body.status);
+            // let account: Account | any = await this.adminFacade.isAccountExistByAccountID(user.accountID);
+            // if (!account) await HelperClass.throwErrorHelper('admin:accountIsNotExistForThisUser');
+            await this.adminFacade.updateUserActivationStatus(user.uuid, req.body.status);
             return res.status(HttpStatus.OK).json({response: true});
         } catch (err) {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
@@ -460,17 +460,17 @@ export class AdminApi {
     }
 
     @Roles("admin")
-    @Patch('update/email_confirmed/:id/:acco_id')
+    @Patch('update/email_confirmed/:id/:company_id')
     @ApiParam({name: "id", description: "user id", required: true, type: Number})
-    @ApiParam({name: "acco_id", description: "account id", required: true, type: Number})
+    @ApiParam({name: "company_id", description: "user company_id", required: true, type: Number})
     @ApiOperation({description: "update status", operationId: "updateStatus", summary: "Update Status"})
     @ApiBody({
         // name: "users", 
         required: true, type: UserStatus})
     @ApiResponse({status: 200, description: "Add OK"})
-    public async updateStatus(@Req() req, @Param("id") id: number, @Param("acco_id") acco_id: number, @Res() res: Response) {
+    public async updateStatus(@Req() req, @Param("id") id: number, @Param("company_id") company_id: number, @Res() res: Response) {
         try {
-            const user = await this.userFacade.getUserById(id, acco_id);
+            const user = await this.userFacade.getUserById(id, company_id);
             if (!user) {
                 await HelperClass.throwErrorHelper('user:userWithThisIdIsNotExist');
             }
@@ -482,14 +482,14 @@ export class AdminApi {
     }
 
     @Roles("admin")
-    @Get('user/:id/:acco_id')
+    @Get('user/:id/:company_id')
     @ApiParam({name: "id", description: "user id", required: true, type: Number})
-    @ApiParam({name: "acco_id", description: "account id", required: true, type: Number})
+    @ApiParam({name: "company_id", description: "user company_id", required: true, type: Number})
     @ApiOperation({description: "get user", operationId: "getUser", summary: "Get User"})
     @ApiResponse({status: 200, description: "Add OK"})
-    public async getUser(@Req() req, @Param("id") id: number, @Param("acco_id") acco_id: number, @Res() res: Response) {
+    public async getUser(@Req() req, @Param("id") id: number, @Param("company_id") company_id: number, @Res() res: Response) {
         try {
-            const user = await this.userFacade.getUserById(id, acco_id);
+            const user = await this.userFacade.getUserById(id, company_id);
             if (!user) {
                 await HelperClass.throwErrorHelper('user:userWithThisIdIsNotExist');
             }
@@ -500,16 +500,16 @@ export class AdminApi {
     }
 
     @Roles("admin")
-    @Patch('user/:id/:acco_id')
+    @Patch('user/:id/:company_id')
     @ApiParam({name: "id", description: "user id", required: true, type: Number})
-    @ApiParam({name: "acco_id", description: "account id", required: true, type: Number})
+    @ApiParam({name: "company_id", description: "user company_id", required: true, type: Number})
     @ApiOperation({description: "update user", operationId: "updateUser", summary: "Update User"})
     @ApiBody({
         required: true, type: UserPatchByAdmin})
     @ApiResponse({status: 200, description: "Add OK"})
-    public async updateUser(@Req() req, @Param("id") id: number, @Param("acco_id") acco_id: number, @Res() res: Response) {
+    public async updateUser(@Req() req, @Param("id") id: number, @Param("company_id") company_id: number, @Res() res: Response) {
         try {
-            const user = await this.userFacade.getUserById(id, acco_id);
+            const user = await this.userFacade.getUserById(id, company_id);
             if (!user) {
                 await HelperClass.throwErrorHelper('user:userWithThisIdIsNotExist');
             }
@@ -520,22 +520,22 @@ export class AdminApi {
         }
     }
 
-    @Roles("admin")
-    @Post('account/:acco_id/cancel')
-    @ApiParam({name: "acco_id", description: "account id", required: true, type: Number})
-    @ApiOperation({description: "cancel account", operationId: "cancelAccount", summary: "Cancel Account"})
-    @ApiResponse({status: 202, description: "Add Accepted"})
-    public async cancelAccount(@Req() req, @Param("acco_id") acco_id: string, @Res() res: Response) {
-        try {
-            let result = await this.userFacade.cancelAccount(acco_id);
-            if (result.error) {
-                return res.status(HttpStatus.BAD_REQUEST).json({error: result.error});
-            }
-            return res.status(HttpStatus.OK).json({response: result});
-        } catch (err) {
-            errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
-        }
-    }
+    // @Roles("admin")
+    // @Post('account/:acco_id/cancel')
+    // @ApiParam({name: "acco_id", description: "account id", required: true, type: Number})
+    // @ApiOperation({description: "cancel account", operationId: "cancelAccount", summary: "Cancel Account"})
+    // @ApiResponse({status: 202, description: "Add Accepted"})
+    // public async cancelAccount(@Req() req, @Param("acco_id") acco_id: string, @Res() res: Response) {
+    //     try {
+    //         let result = await this.userFacade.cancelAccount(acco_id);
+    //         if (result.error) {
+    //             return res.status(HttpStatus.BAD_REQUEST).json({error: result.error});
+    //         }
+    //         return res.status(HttpStatus.OK).json({response: result});
+    //     } catch (err) {
+    //         errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
+    //     }
+    // }
 
     @Roles("admin")
     @Get('invoice/list')
@@ -643,7 +643,7 @@ export enum OrderBy {
     email = 'email',
     creation = 'creation',
     userLastLogin = 'userLastLogin',
-    accountID = 'accountID'
+    // accountID = 'accountID'
 }
 
 export enum OrderType {
