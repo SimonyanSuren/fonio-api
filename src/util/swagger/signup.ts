@@ -19,6 +19,19 @@ export class SignupReq {
     userPhone: string;
 }
 
+export class CompanyMember {
+  @ApiProperty()
+  email: string;
+  @ApiProperty()
+  password: string;
+  @ApiProperty()
+  rePassword: string;
+  @ApiProperty()
+  firstName: string;
+  @ApiProperty()
+  lastName: string;
+}
+
 export class CreatePaymentReq {
   @ApiProperty()
   email: string;

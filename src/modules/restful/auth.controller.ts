@@ -155,7 +155,7 @@ export class AuthController {
             if (!key) await HelperClass.throwErrorHelper('auth:youShouldPassHash');
             if (!password) await HelperClass.throwErrorHelper('auth:youShouldPassPassword');
             let user: object | any = await this.userFacade.findByHash(key);
-            if (!user) await HelperClass.throwErrorHelper('auth:thisUserDoesNotExist');
+            if (!user) await HelperClass.throwErrorHelper('auth:invalidVerificationCode');
             const equals = await await comparePassword(password, user.password ? user.password : '');
             if (equals) await HelperClass.throwErrorHelper('user:youCanNotUseTheSamePasswordTryNewOne');
             await PasswordHelper.validatePassword(password);

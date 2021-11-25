@@ -30,6 +30,11 @@ export class CompanyStatus {
     status: boolean;
 }
 
+export class CompanyUpdate {
+    @ApiProperty()
+    name: string;
+}
+
 export class CompanyInfo {
     @ApiProperty()    
     id: number;

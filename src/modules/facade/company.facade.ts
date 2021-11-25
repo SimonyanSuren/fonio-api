@@ -80,29 +80,28 @@ export class CompanyFacade extends BaseService {
 
     async getAllCompaniesByUserCreator(userId, companyUuid?) {
         let manager = await this.entityManager;
-        let query1 = `SELECT count(*) FROM "public"."company" "company" 
-                    LEFT JOIN "user" "user" ON "user"."user_uuid" = "company"."user_uuid"
+        let query1 = `SELECT count(*) FROM "public"."company"
                     WHERE "company"."user_creator"=${userId}`;
         if (companyUuid) {
-            query1 += `company.comp_uuid=${companyUuid}`;
+            query1 += ` AND "company"."comp_uuid"='${companyUuid}'`;
         }
         let count = await manager.query(query1);
 
         let query2 = `SELECT "company"."comp_id" AS "company_comp_id", "company"."user_creator" AS "company_user_creator", 
-                    "company"."comp_name" AS "company_comp_name", "company"."acco_id" AS "company_acco_id", 
+                    "company"."comp_name" AS "company_comp_name",
                     "company"."comp_uuid" AS "company_comp_uuid", "company"."status" AS "company_status", 
                     "company"."balance" AS "company_balance", to_char("company"."created", 'YYYY-MM-DD') AS "company_created", 
                     "company"."identity_uuid" AS "company_identity_uuid", "company"."user_uuid" AS "company_user_uuid",
-                    "company"."timezone" AS "company_timezone", "user"."user_first_name", "user"."user_last_name" FROM "public"."company" "company"
-                    LEFT JOIN "user" "user" ON "user"."user_uuid" = "company"."user_uuid"
-                    WHERE "company"."user_creator"=${userId}`;
+                    "company"."timezone" AS "company_timezone" FROM "public"."company" 
+                    WHERE "company"."user_creator" = ${userId}`;
         
         if (companyUuid) {
-            query2 += `company.comp_uuid=${companyUuid}`;
+            query2 += ` AND "company"."comp_uuid" = '${companyUuid}'`;
         }
 
         let result = await manager.query(query2);
-        return [result, Number(count[0].count)]
+
+        return {result, count: Number(count[0].count)};
     }
 
     async getAllCompanies(companyUuid) {
@@ -203,8 +202,13 @@ export class CompanyFacade extends BaseService {
 
     async changeCompany(company) {
         
-        let manager = await this.entityManager;
-        return await manager.save(company);
+        return await this.entityManager.createQueryBuilder()
+            .update(Company)
+            .set({
+                ...company
+            })
+            .returning('*')
+            .execute();
     }
 
     async updateStatus(id, status) {
@@ -226,7 +230,6 @@ export class CompanyFacade extends BaseService {
         user.firstName = us.firstName;
         user.lastName = us.lastName;
         user.password = us.password;
-        user.companyName = us.companyName;
         // user.isAdmin = us.isAdmin;
         // user.userLastLogin = us.userLastLogin;
         // user.accountID = us.accountID;
@@ -246,6 +249,9 @@ export class CompanyFacade extends BaseService {
         user.invoiceEmail = false;
         user.company = company;
         user.companyUuid = companyUuid;
+        user.companyName = company.companyName;
+        user.active = true;
+        user.emailConfirmed = true;
         const login = `${user.firstName}_${user.lastName}_${Date.now()}`;
         user.sipUsername = login;
         const userEntity = await user.save();

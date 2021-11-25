@@ -39,7 +39,7 @@ export class AuthService extends BaseService {
             userType: user.type,
             is_admin: isAdmin,
             userUuid: userUuid,
-            // companyUuid: user.companyUuid,
+            companyUuid: user.companyUuid,
         });
         if (!token) throw new Error('user:tokenError');
         return token;

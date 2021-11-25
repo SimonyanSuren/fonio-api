@@ -6,17 +6,16 @@ import {CompanyFacade} from '../facade';
 import {Company, User} from '../../models';
 import {ApiBody, ApiResponse, ApiOperation, ApiBearerAuth, ApiTags, ApiQuery, ApiParam} from '@nestjs/swagger';
 import {errorResponse} from "../../filters/errorRespone";
-import {CompanyPost, CompanyUsers, CompanyInfo, CompanyStatus} from '../../util/swagger/company_id';
+import {CompanyPost, CompanyUsers, CompanyUpdate, CompanyStatus} from '../../util/swagger/company_id';
 import {OpentactAuth} from "../opentact";
 import {HelperClass} from "../../filters/Helper";
-import { SignupReq } from '../../util/swagger';
+import { CompanyMember } from '../../util/swagger';
 
 @Controller("company")
 @ApiBearerAuth()
 @ApiTags("company")
 export class CompanyController {
     constructor(
-        private opentactAuth: OpentactAuth,
         private companyFacade: CompanyFacade
     ) {
     }
@@ -89,7 +88,7 @@ export class CompanyController {
     @Post('user')
     @ApiBody({
         // name: "user", 
-        required: true, type: SignupReq})
+        required: true, type: CompanyMember})
     @ApiOperation({description: "Create user.", operationId: "createUser", summary: "Create user"})
     public async createSelfUser(@Req() req, @Res() res: Response) {
         try {
@@ -99,8 +98,6 @@ export class CompanyController {
             user.firstName = body.firstName;
             user.lastName = body.lastName;
             user.password = body.password;
-            user.companyName = body.companyName;
-            user.type = body.type;
             // user.userLastLogin = body.userLastLogin;
             await this.companyFacade.createUser(user, req.user.companyUuid);
             const us = await this.companyFacade.getUserListByCompanyUuid(user.companyUuid);
@@ -143,19 +140,17 @@ export class CompanyController {
     @ApiOperation({description: "Change company information", operationId: "changeCompany", summary: "Change company information"})
     @ApiBody({
         // name: "company", 
-        required: true, type: CompanyInfo})
+        required: true, type: CompanyUpdate})
     @ApiResponse({status: 200, description: "Add OK"})
     public async changeCompany(@Req() req, @Param("uuid") uuid: string, @Res() res: Response) {
         try {
             let {name} = req.body;
-            let company = await this.companyFacade.getCompanyByUuid(uuid);
-            if (!company) {
+            let response = await this.companyFacade.getAllCompaniesByUserCreator(req.user.userId, uuid);
+            if (!response.count) {
                 await HelperClass.throwErrorHelper('company:companyWithThisUuidIsNotExist');
             }
-            else
-                company.companyName = name;
 
-            const result = await this.companyFacade.changeCompany(company);
+            const result = await this.companyFacade.changeCompany({ companyName: name });
             res.status(HttpStatus.OK).json(result);
         } catch (err) {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);

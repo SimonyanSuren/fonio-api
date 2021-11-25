@@ -1,6 +1,7 @@
 export {AuthReq} from './auth';
 export {PaymentOrder} from './paymentOrder';
 export {SignupReq} from './signup';
+export {CompanyMember} from './signup';
 export {CreatePaymentReq} from './signup';
 export {ChangePassword} from './hash';
 export {CompanyDID} from './company_did';

@@ -25,5 +25,5 @@ export interface JWTClaims {
     is_admin: boolean;
     opentactToken: string;
     userUuid: string;
-    // companyUuid: string;
+    companyUuid: string;
 }
