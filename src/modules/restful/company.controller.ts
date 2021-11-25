@@ -1,6 +1,6 @@
 'use strict';
 
-import {Controller, Get, Post, Patch, HttpStatus, Req, Res, Query, Param} from '@nestjs/common';
+import {Controller, Get, Post, Patch, HttpStatus, Req, Res, Query, Param, Body} from '@nestjs/common';
 import {Response} from 'express';
 import {CompanyFacade} from '../facade';
 import {Company, User} from '../../models';
@@ -9,7 +9,8 @@ import {errorResponse} from "../../filters/errorRespone";
 import {CompanyPost, CompanyUsers, CompanyUpdate, CompanyStatus} from '../../util/swagger/company_id';
 import {OpentactAuth} from "../opentact";
 import {HelperClass} from "../../filters/Helper";
-import { CompanyMember } from '../../util/swagger';
+import { CompanyMember, CompanyMemberUpdate } from '../../util/swagger';
+import bodyParser = require('body-parser');
 
 @Controller("company")
 @ApiBearerAuth()
@@ -85,12 +86,13 @@ export class CompanyController {
         }
     }
 
-    @Post('user')
+    @Post(':uuid/user')
+    @ApiParam({name: "uuid", description: "company uuid", required: true, type: String})
     @ApiBody({
         // name: "user", 
         required: true, type: CompanyMember})
     @ApiOperation({description: "Create user.", operationId: "createUser", summary: "Create user"})
-    public async createSelfUser(@Req() req, @Res() res: Response) {
+    public async createSelfUser(@Req() req, @Res() res: Response, @Param('uuid') uuid: string) {
         try {
             const body = req.body;
             const user = new User();
@@ -98,9 +100,13 @@ export class CompanyController {
             user.firstName = body.firstName;
             user.lastName = body.lastName;
             user.password = body.password;
+            user.userPhone = body.userPhone;
+            let response = await this.companyFacade.getAllCompaniesByUserCreator(req.user.userId, uuid);
+            if (!response.count) await HelperClass.throwErrorHelper('company:companyWithThisUuidDoesNotExist');
+            
             // user.userLastLogin = body.userLastLogin;
-            await this.companyFacade.createUser(user, req.user.companyUuid);
-            const us = await this.companyFacade.getUserListByCompanyUuid(user.companyUuid);
+            await this.companyFacade.createUser(user, uuid);
+            const us = await this.companyFacade.getUserListByCompanyUuid(uuid);
             us.forEach(function(item, i) {
                 item.password = undefined;
                 item.salt = undefined;
@@ -112,24 +118,33 @@ export class CompanyController {
         }
     }
 
-    @Post(':uuid/users')
+    @Patch(':uuid/user/:userUuid')
     @ApiParam({name: "uuid", description: "company uuid", required: true, type: String})
-    @ApiOperation({description: "Add user to company", operationId: "addUsers", summary: "Add user to company"})
+    @ApiParam({name: "userUuid", description: "user uuid", required: true, type: String})
     @ApiBody({
-        // name: "users", 
-        required: true, type: CompanyUsers})
-    @ApiResponse({status: 200, description: "Add OK"})
-    public async addUsers(@Req() req, @Param("uuid") uuid: string, @Res() res: Response) {
+        // name: "user", 
+        required: true, type: CompanyMemberUpdate})
+    @ApiOperation({description: "Edit user.", operationId: "editUser", summary: "Edit user"})
+    public async editSelfUser(@Req() req, @Res() res: Response, 
+        @Body() body: CompanyMemberUpdate,
+        @Param('uuid') uuid: string,
+        @Param('userUuid') userUuid: string
+    ) {
         try {
-            let company_name;
-            const company = await this.companyFacade.getCompanyByUuid(uuid);
-            if (!company) {
-                await HelperClass.throwErrorHelper('company:companyWithThisUuidIsNotExist');
-            }
-            else
-                company_name = company.companyName;
-            await this.companyFacade.addUsers(req.body.uuids, company_name);
-            res.status(HttpStatus.OK).json({response: 'ok'});
+            let response = await this.companyFacade.getAllCompaniesByUserCreator(req.user.userId, uuid);
+            if (!response.count) await HelperClass.throwErrorHelper('company:companyWithThisUuidDoesNotExist');
+            let user_exist = await this.companyFacade.getUserUuidByCompanyUuid(uuid, userUuid);
+            if (!user_exist) await HelperClass.throwErrorHelper('company:userWithThisUuidDoesNotExist');
+            console.log('here here here here here here')
+            const user = new User();
+            user.userPhone = body.phone;
+            user.firstName = body.firstName;
+            user.lastName = body.lastName;
+            user.link = body.link;
+
+            let updatedUser = await this.companyFacade.updateCompanyUser(uuid, userUuid, user);
+            
+            res.status(HttpStatus.OK).json(updatedUser);
         } catch (err) {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
         }
@@ -146,9 +161,7 @@ export class CompanyController {
         try {
             let {name} = req.body;
             let response = await this.companyFacade.getAllCompaniesByUserCreator(req.user.userId, uuid);
-            if (!response.count) {
-                await HelperClass.throwErrorHelper('company:companyWithThisUuidIsNotExist');
-            }
+            if (!response.count) await HelperClass.throwErrorHelper('company:companyWithThisUuidDonesNotExist');
 
             const result = await this.companyFacade.changeCompany({ companyName: name });
             res.status(HttpStatus.OK).json(result);

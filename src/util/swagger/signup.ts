@@ -30,6 +30,19 @@ export class CompanyMember {
   firstName: string;
   @ApiProperty()
   lastName: string;
+  @ApiProperty()
+  userPhone: string;
+}
+
+export class CompanyMemberUpdate {
+  @ApiProperty()
+  phone: string;
+  @ApiProperty()
+  link: string;
+  @ApiProperty()
+  firstName: string;
+  @ApiProperty()
+  lastName: string;
 }
 
 export class CreatePaymentReq {

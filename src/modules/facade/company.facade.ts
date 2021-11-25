@@ -78,6 +78,25 @@ export class CompanyFacade extends BaseService {
             .getMany();
     }
 
+    async getUserUuidByCompanyUuid(companyUuid, userUuid) {
+        return await this.entityManager.createQueryBuilder(User, 'u')
+            .where('u.companyUuid=:companyUuid', { companyUuid: companyUuid })
+            .andWhere('u.uuid=:userUuid', { userUuid: userUuid })
+            .getOne();
+    }
+
+    async updateCompanyUser(companyUuid, userUuid, user) {
+        return await this.entityManager.createQueryBuilder()
+            .update(User)
+            .set({
+                ...user
+            })
+            .where('companyUuid=:companyUuid', { companyUuid: companyUuid })
+            .andWhere('uuid=:userUuid', { userUuid: userUuid })
+            .returning('*')
+            .execute();
+    }
+
     async getAllCompaniesByUserCreator(userId, companyUuid?) {
         let manager = await this.entityManager;
         let query1 = `SELECT count(*) FROM "public"."company"
@@ -230,6 +249,7 @@ export class CompanyFacade extends BaseService {
         user.firstName = us.firstName;
         user.lastName = us.lastName;
         user.password = us.password;
+        user.userPhone = us.userPhone;
         // user.isAdmin = us.isAdmin;
         // user.userLastLogin = us.userLastLogin;
         // user.accountID = us.accountID;
