@@ -135,7 +135,7 @@ export class CompanyController {
             if (!response.count) await HelperClass.throwErrorHelper('company:companyWithThisUuidDoesNotExist');
             let user_exist = await this.companyFacade.getUserUuidByCompanyUuid(uuid, userUuid);
             if (!user_exist) await HelperClass.throwErrorHelper('company:userWithThisUuidDoesNotExist');
-            console.log('here here here here here here')
+
             const user = new User();
             user.userPhone = body.phone;
             user.firstName = body.firstName;
