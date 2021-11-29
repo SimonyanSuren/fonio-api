@@ -197,8 +197,8 @@ export class UserFacade {
                 // let userEntity = await tEM.save(user);
                 let companyResponse;
                 let company_uuid = v4();
-                user.companyUuid = company_uuid;
-                await user.save();
+                // user.companyUuid = company_uuid;
+                let userEntity = await user.save();
                 if (user.companyName) {
                     company.companyName = user.companyName;
                     company.companyUuid = company_uuid;
@@ -212,8 +212,8 @@ export class UserFacade {
                     // companyResponse = await tEM.save(company);
                     companyResponse = await company.save();
                 }
-                user.company = company;
-                let userEntity = await user.save();
+                // user.company = company;
+                // let userEntity = await user.save();
  
                 return {
                     user: userEntity,

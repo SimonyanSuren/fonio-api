@@ -13,6 +13,7 @@ const CryptoJS = require("crypto-js");
 import constants from "../../constants";
 import { BaseService } from "../services/base.service";
 import { Repositories } from "../db/repositories";
+import { UserTypes } from "../../models/user.entity";
 
 @EntityRepository()
 @Injectable()
@@ -75,6 +76,12 @@ export class CompanyFacade extends BaseService {
     async getUserListByCompanyUuid(companyUuid) {
         return await this.entityManager.createQueryBuilder(User, 'u')
             .where('u.companyUuid=:companyUuid', { companyUuid: companyUuid })
+            .getMany();
+    }
+
+    async getCompanyListByParentCompanyUuid(companyUuid) {
+        return await this.entityManager.createQueryBuilder(Company, 'c')
+            .where('c.parentCompanyUuid=:companyUuid', { companyUuid: companyUuid })
             .getMany();
     }
 
@@ -243,18 +250,16 @@ export class CompanyFacade extends BaseService {
     }
 
     @Transactional()
-    async createUser(us: User, companyUuid: string) {
+    async createUser(us: User, companyUuid: string, role: string) {
         let user = new User();
         user.email = us.email;
         user.firstName = us.firstName;
         user.lastName = us.lastName;
         user.password = us.password;
         user.userPhone = us.userPhone;
-        // user.isAdmin = us.isAdmin;
-        // user.userLastLogin = us.userLastLogin;
-        // user.accountID = us.accountID;
         user.creation = new Date();
         user.updated = new Date();
+        if (role === 'company') user.type = UserTypes.COMPANY_ADMIN;
         await PasswordHelper.validatePassword(user.password);
         const found = await this.userFacade.findByEmail(user.email);
         if (found) throw new Error('user:alreadyExists');
@@ -275,13 +280,29 @@ export class CompanyFacade extends BaseService {
         const login = `${user.firstName}_${user.lastName}_${Date.now()}`;
         user.sipUsername = login;
         const userEntity = await user.save();
+
+        if (role === 'company' && us.companyName) {
+            let new_company = new Company();
+            new_company.companyName = us.companyName;
+            new_company.companyUuid = v4();
+            new_company.parentCompanyUuid = company.companyUuid;
+            new_company.userUuid = user.uuid
+            new_company.userCreatorID = user.id;
+            new_company.planID = user.planID;
+            new_company.status = true;
+            new_company.balance = 0;
+            new_company.created = new Date();
+            await new_company.save();
+        }
+
         if (us.password) {
-            const createdTokens = await this.saveToken(login, us.password, userEntity)
+            const createdTokens = await this.saveToken(login, us.password, userEntity);
         }
         const sipUser = await this.opentactService.createSipUser({
             login,
             password: us.password,
-        })
+        });
+
         return userEntity
     }
 

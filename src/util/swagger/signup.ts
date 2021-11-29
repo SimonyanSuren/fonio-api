@@ -32,6 +32,8 @@ export class CompanyMember {
   lastName: string;
   @ApiProperty()
   userPhone: string;
+  @ApiProperty()
+  companyName: string;
 }
 
 export class CompanyMemberUpdate {

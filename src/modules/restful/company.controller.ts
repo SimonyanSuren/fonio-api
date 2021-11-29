@@ -6,11 +6,10 @@ import {CompanyFacade} from '../facade';
 import {Company, User} from '../../models';
 import {ApiBody, ApiResponse, ApiOperation, ApiBearerAuth, ApiTags, ApiQuery, ApiParam} from '@nestjs/swagger';
 import {errorResponse} from "../../filters/errorRespone";
-import {CompanyPost, CompanyUsers, CompanyUpdate, CompanyStatus} from '../../util/swagger/company_id';
-import {OpentactAuth} from "../opentact";
+import {CompanyUpdate, CompanyStatus} from '../../util/swagger/company_id';
 import {HelperClass} from "../../filters/Helper";
 import { CompanyMember, CompanyMemberUpdate } from '../../util/swagger';
-import bodyParser = require('body-parser');
+const RreateRoles: string[] = ['user', 'company'];
 
 @Controller("company")
 @ApiBearerAuth()
@@ -49,63 +48,65 @@ export class CompanyController {
         }
     }
 
-    @Post()
-    @ApiOperation({description: "Create company", operationId: "create", summary: "Create Company"})
-    @ApiBody({
-        // name: "user", 
-        required: true, type: CompanyPost})
-    @ApiResponse({status: 200, description: "Company OK", type: Company})
-    public async create(@Req() req, @Res() res: Response) {
+    @Get(':uuid/members/:role')
+    @ApiParam({name: "uuid", description: "company uuid", required: true, type: String})
+    @ApiParam({name: "role", description: "member role", required: true, enum: RreateRoles })
+    @ApiResponse({status: 200, description: "companies OK", type: Company, isArray: true})
+    @ApiOperation({description: "get All members of company", operationId: "getMembers", summary: "Company Members"})
+    public async findByCompany(@Req() req, @Res() res: Response, 
+        @Param("uuid") uuid: string,
+        @Param("role") role: string
+    ) {
         try {
-            let {companyName, zone,userID} = req.body;
-            let {userId, userUuid} = req.user;
-            if (!companyName) await HelperClass.throwErrorHelper('company:youShouldPassCompanyName');
-            if (!zone) await HelperClass.throwErrorHelper('company:youShouldPassTimeZone');
-            let isCompanyExistWithTheSameName = await this.companyFacade.isCompanyExistByCompanyName(companyName, userId);
-            if (isCompanyExistWithTheSameName) await HelperClass.throwErrorHelper('company:companyWithTheSameNameExist');
-           
-            // let adminToken = await this.opentactAuth.adminLoginGettignToken();
-            let helper = new HelperClass();
-            
-            let timezones: any = await helper.callbackGetJson();
-            
-            let comparedZone: Array<object> = [];
-            
-            for (let i = 0; i < timezones.length; i++) {
-                if (zone === timezones[i].zone) {
-                    await comparedZone.push(timezones[i]);
-                }            
+            if (!RreateRoles.includes(role)) await HelperClass.throwErrorHelper('role:invalidMemberRole');
+
+            let response = await this.companyFacade.getAllCompaniesByUserCreator(req.user.userId, uuid);
+            if (!response.count) await HelperClass.throwErrorHelper('company:companyWithThisUuidDoesNotExist');
+
+            let members: any;
+            if (role === 'user') {
+                members = await this.companyFacade.getUserListByCompanyUuid(uuid);
+                members.forEach(function(item, i) {
+                    item.password = undefined;
+                    item.salt = undefined;
+                })
+            } else if (role === 'company') {
+                members = await this.companyFacade.getCompanyListByParentCompanyUuid(uuid);
             }
-            
-            if (comparedZone.length === 0) await HelperClass.throwErrorHelper('company:timeZoneWhichYouPassDoesNotExist');
-            
-            const companies = await this.companyFacade.createCompany(req.user, req.body, '778fe85b-ec0a-44f1-af5e-3be274fc7957', userUuid);
-            res.status(HttpStatus.OK).json(companies);
+
+            res.status(HttpStatus.OK).json(members);
         } catch (err) {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
         }
     }
 
-    @Post(':uuid/user')
+    @Post(':uuid/create/:role')
     @ApiParam({name: "uuid", description: "company uuid", required: true, type: String})
+    @ApiParam({name: "role", description: "member role", required: true, enum: RreateRoles })
     @ApiBody({
         // name: "user", 
         required: true, type: CompanyMember})
-    @ApiOperation({description: "Create user.", operationId: "createUser", summary: "Create user"})
-    public async createSelfUser(@Req() req, @Res() res: Response, @Param('uuid') uuid: string) {
+    @ApiOperation({description: "Create member.", operationId: "createMember", summary: "Create member"})
+    public async createSelfUser(@Req() req, @Res() res: Response, 
+        @Param('uuid') uuid: string,
+        @Param('role') role: string
+    ) {
         try {
+            if (!RreateRoles.includes(role)) await HelperClass.throwErrorHelper('role:invalidMemberRole');
             const body = req.body;
+            if (role === 'company' && !body.companyName) await HelperClass.throwErrorHelper('company:companyNameRequired');
             const user = new User();
             user.email = body.email;
             user.firstName = body.firstName;
             user.lastName = body.lastName;
             user.password = body.password;
             user.userPhone = body.userPhone;
+            user.companyName = body.companyName;
             let response = await this.companyFacade.getAllCompaniesByUserCreator(req.user.userId, uuid);
             if (!response.count) await HelperClass.throwErrorHelper('company:companyWithThisUuidDoesNotExist');
             
             // user.userLastLogin = body.userLastLogin;
-            await this.companyFacade.createUser(user, uuid);
+            await this.companyFacade.createUser(user, uuid, role);
             const us = await this.companyFacade.getUserListByCompanyUuid(uuid);
             us.forEach(function(item, i) {
                 item.password = undefined;

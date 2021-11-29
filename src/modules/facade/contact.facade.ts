@@ -35,11 +35,12 @@ export class ContactFacade {
     }
 
     async create(currentUser, contact_req: ContactReq) {
-        let user: any = await this.userFacade.getUserById(currentUser.userId, currentUser.companyId);
-        if (!user) await HelperClass.throwErrorHelper('user:thisUserDoNotExist');
-        if (!user.companyName) await HelperClass.throwErrorHelper('user:thisUSerDoNotAssinedToCompany');
-        let company = await this.companyFacade.getCompanyByName(user.companyName);
-        if (!company) await HelperClass.throwErrorHelper('company:CompanyDoNotExist');
+        if (!currentUser.companyUuid) await HelperClass.throwErrorHelper('user:thisUserIsNotAssinedToCompany');
+        // let user: any = await this.userFacade.getUserById(currentUser.userId, currentUser.companyId);
+        // if (!user) await HelperClass.throwErrorHelper('user:thisUserDoesNotExist');
+        // if (!user.companyName) await HelperClass.throwErrorHelper('user:thisUserIsNotAssinedToCompany');
+        let company = await this.companyFacade.getCompanyByUuid(currentUser.companyUuid);
+        if (!company) await HelperClass.throwErrorHelper('company:CompanyDoesNotExist');
         let contact = new Contact();
         contact.phoneNumber = contact_req.phoneNumber;
         contact.firstName = contact_req.firstName;
@@ -56,11 +57,12 @@ export class ContactFacade {
     }
 
     async edit(currentUser, id, contact_req: ContactReq) {
-        let user: any = await this.userFacade.getUserById(currentUser.userId, currentUser.companyId);
-        if (!user) await HelperClass.throwErrorHelper('user:thisUserDoNotExist');
-        if (!user.companyName) await HelperClass.throwErrorHelper('user:thisUSerDoNotAssinedToCompany');
-        let company = await this.companyFacade.getCompanyByName(user.companyName);
-        if (!company) await HelperClass.throwErrorHelper('company:CompanyDoNotExist');
+        if (!currentUser.companyUuid) await HelperClass.throwErrorHelper('user:thisUserIsNotAssinedToCompany');
+        // let user: any = await this.userFacade.getUserById(currentUser.userId, currentUser.companyId);
+        // if (!user) await HelperClass.throwErrorHelper('user:thisUserDoNotExist');
+        // if (!user.companyName) await HelperClass.throwErrorHelper('user:thisUSerDoNotAssinedToCompany');
+        let company = await this.companyFacade.getCompanyByUuid(currentUser.companyUuid);
+        if (!company) await HelperClass.throwErrorHelper('company:CompanyDoesNotExist');
         else {
             let contact = await this.findById(company.companyID, id);
             if (!contact) await HelperClass.throwErrorHelper('contact:ContactDoNotExist');
@@ -78,11 +80,12 @@ export class ContactFacade {
     }
 
     async get(currentUser, id) {
-        let user: any = await this.userFacade.getUserById(currentUser.userId, currentUser.companyId);
-        if (!user) await HelperClass.throwErrorHelper('user:thisUserDoNotExist');
-        if (!user.companyName) await HelperClass.throwErrorHelper('user:thisUSerDoNotAssinedToCompany');
-        let company = await this.companyFacade.getCompanyByName(user.companyName);
-        if (!company) await HelperClass.throwErrorHelper('company:CompanyDoNotExist');
+        if (!currentUser.companyUuid) await HelperClass.throwErrorHelper('user:thisUserIsNotAssinedToCompany');
+        // let user: any = await this.userFacade.getUserById(currentUser.userId, currentUser.companyId);
+        // if (!user) await HelperClass.throwErrorHelper('user:thisUserDoNotExist');
+        // if (!user.companyName) await HelperClass.throwErrorHelper('user:thisUSerDoNotAssinedToCompany');
+        let company = await this.companyFacade.getCompanyByUuid(currentUser.companyUuid);
+        if (!company) await HelperClass.throwErrorHelper('company:CompanyDoesNotExist');
         else {
             let contact = await this.findById(company.companyID, id);
             if (!contact) await HelperClass.throwErrorHelper('contact:ContactDoNotExist');
@@ -92,22 +95,24 @@ export class ContactFacade {
     }
 
     async getList(currentUser) {
-        let user: any = await this.userFacade.getUserById(currentUser.userId, currentUser.companyId);
-        if (!user) await HelperClass.throwErrorHelper('user:thisUserDoNotExist');
-        if (!user.companyName) await HelperClass.throwErrorHelper('user:thisUSerDoNotAssinedToCompany');
-        let company = await this.companyFacade.getCompanyByName(user.companyName);
-        if (!company) await HelperClass.throwErrorHelper('company:CompanyDoNotExist');
+        if (!currentUser.companyUuid) await HelperClass.throwErrorHelper('user:thisUserIsNotAssinedToCompany');
+        // let user: any = await this.userFacade.getUserById(currentUser.userId, currentUser.companyId);
+        // if (!user) await HelperClass.throwErrorHelper('user:thisUserDoNotExist');
+        // if (!user.companyName) await HelperClass.throwErrorHelper('user:thisUSerDoNotAssinedToCompany');
+        let company = await this.companyFacade.getCompanyByUuid(currentUser.companyUuid);
+        if (!company) await HelperClass.throwErrorHelper('company:CompanyDoesNotExist');
         else {
             return await this.findByCompId(company.companyID);
         }
     }
 
     async delete(currentUser, id) {
-        let user: any = await this.userFacade.getUserById(currentUser.userId, currentUser.companyId);
-        if (!user) await HelperClass.throwErrorHelper('user:thisUserDoNotExist');
-        if (!user.companyName) await HelperClass.throwErrorHelper('user:thisUSerDoNotAssinedToCompany');
-        let company = await this.companyFacade.getCompanyByName(user.companyName);
-        if (!company) await HelperClass.throwErrorHelper('company:CompanyDoNotExist');
+        if (!currentUser.companyUuid) await HelperClass.throwErrorHelper('user:thisUserIsNotAssinedToCompany');
+        // let user: any = await this.userFacade.getUserById(currentUser.userId, currentUser.companyId);
+        // if (!user) await HelperClass.throwErrorHelper('user:thisUserDoNotExist');
+        // if (!user.companyName) await HelperClass.throwErrorHelper('user:thisUSerDoNotAssinedToCompany');
+        let company = await this.companyFacade.getCompanyByUuid(currentUser.companyUuid);
+        if (!company) await HelperClass.throwErrorHelper('company:CompanyDoesNotExist');
         else {
             let contact = await this.findById(company.companyID, id);
             if (!contact) await HelperClass.throwErrorHelper('contact:ContactDoNotExist');

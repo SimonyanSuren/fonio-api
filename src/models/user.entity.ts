@@ -11,7 +11,7 @@ import { Company } from "./company";
 
 export enum UserTypes {
     COMPANY_ADMIN = "company_admin",
-    NOTIFICATION = "notification",
+    COMPANY_USER = "company_user",
 }
 
 @Entity()
@@ -34,7 +34,7 @@ export class User extends BaseEntity {
     @ApiProperty()
     twoFA?: boolean;
 
-    @Column("enum", { enum: UserTypes, default:UserTypes.NOTIFICATION })
+    @Column("enum", { enum: UserTypes, default:UserTypes.COMPANY_USER })
     type: UserTypes;
 
     @Column({name: "user_company_name", nullable: true})

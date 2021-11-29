@@ -6,7 +6,7 @@ import {ContactReq} from '../../util/swagger';
 import {ValidationPipe} from '../../util/validatior';
 import {ContactFacade} from '../facade';
 import {Contact} from '../../models';
-import {ApiResponse, ApiOperation, ApiBearerAuth, ApiParam} from '@nestjs/swagger';
+import {ApiResponse, ApiOperation, ApiBearerAuth, ApiParam, ApiBody} from '@nestjs/swagger';
 import {errorResponse} from "../../filters/errorRespone";
 
 @Controller("contacts")
@@ -15,9 +15,11 @@ export class ContactController {
     constructor(private contactFacade: ContactFacade) {
     }
 
-    @ApiResponse({status: 200, description: "contact created", type: Contact})
-    @ApiOperation({ description: "create a contact.", operationId: "createContact", summary: "create a contact" })
     @Post()
+    @ApiResponse({status: 200, description: "contact created", type: Contact})
+    @ApiBody({
+        required: true, type: ContactReq})
+    @ApiOperation({ description: "create a contact.", operationId: "createContact", summary: "create a contact" })
     public async create(@Req() req, @Body('', new ValidationPipe()) contact: ContactReq, @Res() res: Response) {
         try {
             res.status(HttpStatus.OK).json(await this.contactFacade.create(req.user, contact));

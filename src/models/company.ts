@@ -21,6 +21,9 @@ export class Company extends BaseEntity {
     @Column({name: "comp_uuid"})
     companyUuid: string;
     @ApiProperty()
+    @Column({name: "parent_comp_uuid", nullable: true})
+    parentCompanyUuid: string;
+    @ApiProperty()
     @Column({name: "status"})
     status: boolean;
     @ApiProperty()

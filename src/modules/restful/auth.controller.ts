@@ -46,8 +46,6 @@ export class AuthController {
     public async signup(@Req() req, @Res() res: Response) {
         try {
             const userSign = await this.authService.signUp(req.body);
-            console.log('here here here here here')
-            console.log(userSign)
             if (!userSign) return res.status(HttpStatus.BAD_REQUEST).json(userSign);
 
             if (userSign.error) return res.status(HttpStatus.BAD_REQUEST).json(userSign);
