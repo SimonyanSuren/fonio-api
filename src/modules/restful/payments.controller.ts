@@ -76,7 +76,7 @@ export class PaymentsController {
             await this.paymentsService.storePaymentData(response.paymentID, { ...rest, userID, companyID, numbers });
 
             if (numbers) {
-                userNumbers = await this.accountNumberFacade.addDidNumbers(userID, companyID, true, didNumbers.payload.request.items, company, planID);
+                userNumbers = await this.accountNumberFacade.addDidNumbers(userID, companyID, true, didNumbers.payload.request?.items||numbers, company, planID);
                 if (userNumbers.error) {
                     return res.status(HttpStatus.BAD_REQUEST).json(userNumbers.error);
                 }
