@@ -42,6 +42,7 @@ export class ContactFacade {
         let company = await this.companyFacade.getCompanyByUuid(currentUser.companyUuid);
         if (!company) await HelperClass.throwErrorHelper('company:CompanyDoesNotExist');
         let contact = new Contact();
+        contact.email = contact_req.email;
         contact.phoneNumber = contact_req.phoneNumber;
         contact.firstName = contact_req.firstName;
         contact.lastName = contact_req.lastName;

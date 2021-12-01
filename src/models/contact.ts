@@ -20,6 +20,10 @@ export class Contact {
     @ApiProperty()
     lastName: string;
 
+    @Column({ name: "cont_email", nullable: true })
+    @ApiProperty()
+    email?: string;
+
     @Column({ name: "cont_created_on" })
     @ApiProperty()
     createdOn?: Date;
