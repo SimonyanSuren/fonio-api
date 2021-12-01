@@ -105,6 +105,11 @@ export class OpentactService extends BaseService {
         return response.data;
     }
 
+    async getAvailableRatecenterStates(country) {
+        const response = await this.axios.get(`/dict/lerg/states?country=${country}`)
+        return response.data;
+    }
+
     async getCountryCodes() {
         const response = await this.axios.get(`/dict/country`)
         return response.data;

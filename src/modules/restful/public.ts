@@ -83,15 +83,31 @@ export class PublicApi {
         }
     }
 
-    @Get("list/npa/:state")
+    @Get("list/npa-npx/:state")
     @ApiParam({ name: 'state', description: 'state with two general letters', required: true, type: String })
-    @ApiResponse({status: 200, description: "get npa for state"})
-    public async searchStateNPA(@Req() req, @Res() res: Response,
+    @ApiResponse({status: 200, description: "get npa and npx for state"})
+    public async searchStateNPANPX(@Req() req, @Res() res: Response,
         @Param("state") state: string,
     ) {
         try {
             
             let response = await this.opentactService.getAvailableRatecenterNpaNxx(state);
+            
+            return res.status(200).send(response.payload);
+        } catch (e) {
+            return res.status(404).send({message: e.message});
+        }
+    }
+
+    @Get("list/state/:country")
+    @ApiParam({ name: 'country', description: 'country with two general letters', required: true, type: String })
+    @ApiResponse({status: 200, description: "get states for country"})
+    public async searchCountryState(@Req() req, @Res() res: Response,
+        @Param("country") country: string,
+    ) {
+        try {
+            
+            let response = await this.opentactService.getAvailableRatecenterStates(country);
             
             return res.status(200).send(response.payload);
         } catch (e) {
