@@ -1,6 +1,5 @@
 import { Contact, User } from "../../models";
 import { Injectable } from '@nestjs/common';
-import { UserFacade } from '../facade/user.facade';
 import { CompanyFacade } from '../facade/company.facade';
 import {HelperClass} from "../../filters/Helper";
 import {ContactReq} from "../../util/swagger/contact_req";
@@ -12,7 +11,6 @@ import { EntityRepository, EntityManager } from "typeorm";
 export class ContactFacade {
 
     constructor(private entityManager: EntityManager,
-                private userFacade: UserFacade,
                 private companyFacade: CompanyFacade) { }
 
     async findById(compId: number, contId: number) {
@@ -36,9 +34,6 @@ export class ContactFacade {
 
     async create(currentUser, contact_req: ContactReq) {
         if (!currentUser.companyUuid) await HelperClass.throwErrorHelper('user:thisUserIsNotAssinedToCompany');
-        // let user: any = await this.userFacade.getUserById(currentUser.userId, currentUser.companyId);
-        // if (!user) await HelperClass.throwErrorHelper('user:thisUserDoesNotExist');
-        // if (!user.companyName) await HelperClass.throwErrorHelper('user:thisUserIsNotAssinedToCompany');
         let company = await this.companyFacade.getCompanyByUuid(currentUser.companyUuid);
         if (!company) await HelperClass.throwErrorHelper('company:CompanyDoesNotExist');
         let contact = new Contact();
@@ -59,9 +54,6 @@ export class ContactFacade {
 
     async edit(currentUser, id, contact_req: ContactReq) {
         if (!currentUser.companyUuid) await HelperClass.throwErrorHelper('user:thisUserIsNotAssinedToCompany');
-        // let user: any = await this.userFacade.getUserById(currentUser.userId, currentUser.companyId);
-        // if (!user) await HelperClass.throwErrorHelper('user:thisUserDoNotExist');
-        // if (!user.companyName) await HelperClass.throwErrorHelper('user:thisUSerDoNotAssinedToCompany');
         let company = await this.companyFacade.getCompanyByUuid(currentUser.companyUuid);
         if (!company) await HelperClass.throwErrorHelper('company:CompanyDoesNotExist');
         else {
@@ -82,9 +74,6 @@ export class ContactFacade {
 
     async get(currentUser, id) {
         if (!currentUser.companyUuid) await HelperClass.throwErrorHelper('user:thisUserIsNotAssinedToCompany');
-        // let user: any = await this.userFacade.getUserById(currentUser.userId, currentUser.companyId);
-        // if (!user) await HelperClass.throwErrorHelper('user:thisUserDoNotExist');
-        // if (!user.companyName) await HelperClass.throwErrorHelper('user:thisUSerDoNotAssinedToCompany');
         let company = await this.companyFacade.getCompanyByUuid(currentUser.companyUuid);
         if (!company) await HelperClass.throwErrorHelper('company:CompanyDoesNotExist');
         else {
@@ -97,9 +86,6 @@ export class ContactFacade {
 
     async getList(currentUser) {
         if (!currentUser.companyUuid) await HelperClass.throwErrorHelper('user:thisUserIsNotAssinedToCompany');
-        // let user: any = await this.userFacade.getUserById(currentUser.userId, currentUser.companyId);
-        // if (!user) await HelperClass.throwErrorHelper('user:thisUserDoNotExist');
-        // if (!user.companyName) await HelperClass.throwErrorHelper('user:thisUSerDoNotAssinedToCompany');
         let company = await this.companyFacade.getCompanyByUuid(currentUser.companyUuid);
         if (!company) await HelperClass.throwErrorHelper('company:CompanyDoesNotExist');
         else {
@@ -109,9 +95,6 @@ export class ContactFacade {
 
     async delete(currentUser, id) {
         if (!currentUser.companyUuid) await HelperClass.throwErrorHelper('user:thisUserIsNotAssinedToCompany');
-        // let user: any = await this.userFacade.getUserById(currentUser.userId, currentUser.companyId);
-        // if (!user) await HelperClass.throwErrorHelper('user:thisUserDoNotExist');
-        // if (!user.companyName) await HelperClass.throwErrorHelper('user:thisUSerDoNotAssinedToCompany');
         let company = await this.companyFacade.getCompanyByUuid(currentUser.companyUuid);
         if (!company) await HelperClass.throwErrorHelper('company:CompanyDoesNotExist');
         else {
