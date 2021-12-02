@@ -145,8 +145,10 @@ export class CompanyController {
 
             let updatedUser = await this.companyFacade.updateCompanyUser(uuid, userUuid, user);
 
-            updatedUser.raw[0].user_password = undefined;
-            updatedUser.raw[0].user_salt = undefined;
+            if (updatedUser) {
+                updatedUser.password = undefined;
+                updatedUser.salt = undefined;
+            }
             
             res.status(HttpStatus.OK).json(updatedUser);
         } catch (err) {

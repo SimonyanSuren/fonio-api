@@ -93,15 +93,16 @@ export class CompanyFacade extends BaseService {
     }
 
     async updateCompanyUser(companyUuid, userUuid, user) {
-        return await this.entityManager.createQueryBuilder()
+        await this.entityManager.createQueryBuilder()
             .update(User)
             .set({
                 ...user
             })
             .where('companyUuid=:companyUuid', { companyUuid: companyUuid })
             .andWhere('uuid=:userUuid', { userUuid: userUuid })
-            .returning('*')
             .execute();
+
+        return await this.userFacade.getUserByUuid(userUuid);
     }
 
     async getAllCompaniesByUserCreator(userId, companyUuid?) {
