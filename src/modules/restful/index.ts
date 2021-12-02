@@ -18,7 +18,7 @@ import { BlackListController } from './blacklist.controller';
 // import { SimulcallController } from "./simulcall";
 import { DidController } from './did.controller';
 // import { DialsController } from "./dials";
-// import { Upload } from './upload';
+import { UploadUserImage } from './upload';
 import { PublicApi } from './public';
 // import { AreaCodeController } from './area_code.controller';
 import { AuthModule } from '../auth';
@@ -29,7 +29,7 @@ import { PaymentsService } from '../payments';
 import { EmailModule } from '../email';
 import { AdminApi } from "./admin-api";
 import { TrackingNumberController } from './tracking.number.controller';
-// import { DeleteFileController } from "./delete";
+import { DeleteUserImage } from "./delete";
 // import { KeywordsController } from "./keywords.controller";
 // import { StatisticsController } from "./statistics.controller";
 import { UserController } from "./user.controller";
@@ -71,8 +71,8 @@ import { Repositories} from '../db/repositories';
         // SimulcallController,
         // CreditCardController,
         // StatisticsController,
-        // Upload,
-        // DeleteFileController,
+        UploadUserImage,
+        DeleteUserImage,
         DidController,
         // PlanController,
         PublicApi,
