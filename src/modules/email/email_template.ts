@@ -705,4 +705,165 @@ export const EmailTemplate: { [messageCode: string]: EmailOptions } = {
         </html>
         `,
     },
+    'auth:notification': {
+        subject: "HI {FIRST_NAME} {LAST_NAME}",
+        template: `<hrml>
+            <head></head>
+            <body>
+            <style>
+                /*  "CORE" STYLES */
+                :root {
+                    --vb-color-primary: #4b7cf3;
+                    --vb-font-family: 'Mukta', sans-serif;
+                }
+        
+                html {
+                    font-size: 15px;
+                }
+        
+                @media (max-width: 575px) {
+                    html {
+                        font-size: 14px;
+                    }
+                }
+        
+                body {
+                    font-size: 1rem;
+                    line-height: 1.5;
+                    font-family: var(--vb-font-family);
+                    color: #595c97;
+                    overflow-x: hidden;
+                    position: relative;
+                    font-variant: normal;
+                    font-feature-settings: normal;
+                }
+        
+                a {
+                    text-decoration: none;
+                    color: #595c97;
+                    transition: color 0.2s ease-in-out;
+                }
+        
+                a:hover, a:active, a:focus {
+                    color: var(--vb-color-primary);
+                    text-decoration: none;
+                }
+        
+                input {
+                    outline: none !important;
+                    font-family: var(--vb-font-family);
+                    color: #595c97;
+                }
+        
+                button,
+                input {
+                    box-shadow: none !important;
+                    outline: none !important;
+                }
+        
+                input[type='text'],
+                input[type='password'],
+                input[type='email'],
+                textarea {
+                    -webkit-appearance: none !important;
+                    -moz-appearance: none !important;
+                    appearance: none !important;
+                }
+        
+                h1,
+                h2,
+                h3,
+                h4,
+                h5,
+                h6 {
+                    color: #141322;
+                }
+        
+                svg {
+                    vertical-align: initial;
+                    overflow: auto;
+                }
+        
+                .badge-example {
+                    font-size: 0.93rem;
+                    text-transform: uppercase;
+                    margin-bottom: 1rem;
+                    background: #e4e9f0;
+                    color: #141322;
+                    display: inline-block;
+                    padding: 0.2rem 0.4rem;
+                    border-radius: 4px;
+                }
+        
+                [data-vb-theme='dark'] body {
+                    background: #141322;
+                    color: #aeaee0;
+                }
+        
+                [data-vb-theme='dark'] .badge-example {
+                    background: #232135;
+                }
+        
+                [data-vb-theme='dark'] h1,
+                [data-vb-theme='dark'] h2,
+                [data-vb-theme='dark'] h3,
+                [data-vb-theme='dark'] h4,
+                [data-vb-theme='dark'] h5,
+                [data-vb-theme='dark'] h6 {
+                    color: #aeaee0;
+                }
+        
+                [data-vb-theme='dark'] a {
+                    color: #aeaee0;
+                }
+        
+                [data-vb-theme='dark'] a:hover, [data-vb-theme='dark'] a:active, [data-vb-theme='dark'] a:focus {
+                    text-decoration: none;
+                }
+            </style>
+        
+        
+            <div style="width: 100%; background: #f2f4f8; padding: 50px 20px; color: #514d6a;">
+        
+                <div style="max-width: 700px; margin: 0px auto; font-size: 14px">
+                    <div style="padding: 20px 0 1px 23px;background-color: #e1e8f3">
+                        <table style="border-collapse: collapse; border: 0; width: 100%; margin-bottom: 20px">
+                            <tbody><tr>
+                                <td style="vertical-align: top;">
+                                    <img style="width: 138px;height: 40px" src="{LOGO}" alt="">
+                                </td>
+                                <td style="text-align: right; vertical-align: middle;">
+                        <span style="color: #a09bb9;">
+        
+                        </span>
+                                </td>
+                            </tr>
+                            </tbody></table>
+                    </div>
+        
+                    <div style="padding: 40px 40px 20px 40px; background: #fff;">
+                        <table style="border-collapse: collapse; border: 0; width: 100%;">
+                            <tbody>
+                            <tr>
+                                <td> <h1 style="color: #23c0ff">Notification</h1></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <p>Hi <b>{FIRST_NAME} {LAST_NAME}</p>
+                                    <p>{MESSAGE}</p>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="text-align: center; font-size: 12px; color: #a09bb9; margin-top: 20px">
+                        <p>
+                        <!-- copyrigth part-->
+                        </p>
+                    </div>
+                </div>
+            </div>
+            </body>
+        </hrml>`
+    },
 };

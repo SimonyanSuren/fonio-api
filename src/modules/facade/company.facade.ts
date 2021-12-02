@@ -119,7 +119,7 @@ export class CompanyFacade extends BaseService {
                     "company"."comp_uuid" AS "company_comp_uuid", "company"."status" AS "company_status", 
                     "company"."balance" AS "company_balance", to_char("company"."created", 'YYYY-MM-DD') AS "company_created", 
                     "company"."identity_uuid" AS "company_identity_uuid", "company"."user_uuid" AS "company_user_uuid",
-                    "company"."timezone" AS "company_timezone" FROM "public"."company" 
+                    "company"."timezone" AS "company_timezone", "company"."notification" AS "company_notification" FROM "public"."company" 
                     WHERE "company"."user_creator" = ${userId}`;
         
         if (companyUuid) {
@@ -245,6 +245,18 @@ export class CompanyFacade extends BaseService {
                 status: status
             })
             .where('comp_id=:id', { id: id })
+            .returning('*')
+            .execute();
+
+    }
+
+    async updateNotificationStatus(uuid, status) {
+        return this.entityManager.createQueryBuilder()
+            .update(Company)
+            .set({
+                status: status
+            })
+            .where('comp_uuid=:uuid', { uuid: uuid })
             .returning('*')
             .execute();
 

@@ -41,8 +41,11 @@ export class Company extends BaseEntity {
     @ApiProperty()
     @Column({name: "timezone", nullable: true})
     timezone: string;
-    @Column({name: "plan_id", nullable: true})
     @ApiProperty()
+    @Column({name: "notification", default: true })
+    notification: boolean;
+    @ApiProperty()
+    @Column({name: "plan_id", nullable: true})
     planID?: number;
 
     @ApiProperty({ type: () => AccountBlacklist })

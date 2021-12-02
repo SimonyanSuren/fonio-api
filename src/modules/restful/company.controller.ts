@@ -9,6 +9,7 @@ import {errorResponse} from "../../filters/errorRespone";
 import {CompanyUpdate, CompanyStatus} from '../../util/swagger/company_id';
 import {HelperClass} from "../../filters/Helper";
 import { CompanyMember, CompanyMemberUpdate } from '../../util/swagger';
+import { EmailService } from '../email';
 const RreateRoles: string[] = ['user', 'company'];
 
 @Controller("company")
@@ -16,7 +17,8 @@ const RreateRoles: string[] = ['user', 'company'];
 @ApiTags("company")
 export class CompanyController {
     constructor(
-        private companyFacade: CompanyFacade
+        private companyFacade: CompanyFacade,
+        private emailService: EmailService,
     ) {
     }
 
@@ -112,6 +114,15 @@ export class CompanyController {
                 item.password = undefined;
                 item.salt = undefined;
             })
+
+            if (response.result.notification) {
+                await this.emailService.sendMail("auth:notification", user.email, {
+                    FIRST_NAME: user.firstName,
+                    LAST_NAME: user.lastName,
+                    LOGO: `${process.env.BASE_URL||process.env.FONIO_URL}/public/assets/logo.png`,
+                    MESSAGE: `You'r account has been added.`
+                });
+            }
             
             res.status(HttpStatus.OK).json(us);
         } catch (err) {
@@ -167,7 +178,7 @@ export class CompanyController {
         try {
             let {name} = req.body;
             let response = await this.companyFacade.getAllCompaniesByUserCreator(req.user.userId, uuid);
-            if (!response.count) await HelperClass.throwErrorHelper('company:companyWithThisUuidDonesNotExist');
+            if (!response.count) await HelperClass.throwErrorHelper('company:companyWithThisUuidDoesNotExist');
 
             const result = await this.companyFacade.changeCompany({ companyName: name });
             res.status(HttpStatus.OK).json(result);
@@ -205,6 +216,25 @@ export class CompanyController {
                 await HelperClass.throwErrorHelper('company:companyWithThisIdIsNotExist');
             }
             let result = await this.companyFacade.updateStatus(id, req.body.status);
+            res.status(HttpStatus.OK).json({response: result[0]});
+        } catch (err) {
+            errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @Patch(':uuid/notification/status')
+    @ApiParam({name: "uuid", description: "company uuid", required: true, type: String})
+    @ApiOperation({description: "update notification status", operationId: "updateNotificationStatus", summary: "Update Notification Status"})
+    @ApiBody({
+        // name: "users", 
+        required: true, type: CompanyStatus})
+    @ApiResponse({status: 200, description: "Add OK"})
+    public async updateNotificationStatus(@Req() req, @Param("uuid") uuid: number, @Res() res: Response) {
+        try {
+            const response = await this.companyFacade.getAllCompaniesByUserCreator(req.user.userId, uuid);
+            if (!response.count) await HelperClass.throwErrorHelper('company:companyWithThisUuidDoesNotExist');
+
+            let result = await this.companyFacade.updateNotificationStatus(uuid, req.body.status);
             res.status(HttpStatus.OK).json({response: result[0]});
         } catch (err) {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
