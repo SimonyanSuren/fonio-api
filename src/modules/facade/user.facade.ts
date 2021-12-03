@@ -198,6 +198,8 @@ export class UserFacade {
                 let companyResponse;
                 let company_uuid = v4();
                 // user.companyUuid = company_uuid;
+                const login = `${user.firstName}_${user.lastName}_${Date.now()}`;
+                user.sipUsername = login;
                 let userEntity = await user.save();
                 if (user.companyName) {
                     company.companyName = user.companyName;
@@ -212,6 +214,11 @@ export class UserFacade {
                     // companyResponse = await tEM.save(company);
                     companyResponse = await company.save();
                 }
+
+                const sipUser = await this.opentactService.createSipUser({
+                    login,
+                    password: user.password,
+                });
                 // user.company = company;
                 // let userEntity = await user.save();
  

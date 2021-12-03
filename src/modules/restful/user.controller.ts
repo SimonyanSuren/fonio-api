@@ -20,6 +20,7 @@ import constants from '../../constants';
 import { BuyDidNumbers, PaymentsService } from '../payments';
 import { SendSmsReq } from '../../util/swagger/send_sms';
 import { OpentactAuth } from '../opentact';
+import { UserTypes } from '../../models/user.entity';
 
 
 
@@ -253,13 +254,14 @@ export class UserController {
     @Post('invite')
     public async invite(@Req() req, @Res() res: Response) {
         try {
+            if (req.user.type !== UserTypes.COMPANY_ADMIN) return res.status(HttpStatus.FORBIDDEN).json({ response: 'Only company admin can send invitations' });
             const body = req.body;
             await this.emailService.sendMail("user:invite", body.email, {
                 FIRST_NAME: body.firstName,
                 LAST_NAME: body.lastName,
                 LINK: `${process.env.FONIO_URL}/signup`
             });
-            res.status(HttpStatus.OK).json({ response: 'ok' });
+            return res.status(HttpStatus.OK).json({ response: 'Invitation has been sent successfully.' });
         } catch (err) {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
         }
