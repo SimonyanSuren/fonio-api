@@ -41,8 +41,6 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
     console.log('Opentact wss connection established')
 
     let openTactToken = await that.opentactAuth.getToken();
-    console.log('here here here here here here here here here')
-    console.log({ tokenData: openTactToken });
     const authRequest = {
       type: 'auth',
       payload: openTactToken.payload.token,
