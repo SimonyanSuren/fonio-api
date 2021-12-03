@@ -189,6 +189,9 @@ export class UserFacade {
                 // user.creation = new Date();
                 // user.updated = new Date();
                 const salt = genSaltSync(Config.number("BCRYPT_SALT_ROUNDS", 10));
+                const sipPassword = user.password;
+                const sipLogin = `${user.firstName}_${Date.now()}`;
+                user.sipUsername = sipLogin;
                 user.password = await hashSync(user.password, salt);
                 user.emailConfirmed = true; // Email confirmed is not being used now
                 user.salt = salt;
@@ -198,8 +201,6 @@ export class UserFacade {
                 let companyResponse;
                 let company_uuid = v4();
                 // user.companyUuid = company_uuid;
-                const login = `${user.firstName}_${Date.now()}`;
-                user.sipUsername = login;
                 let userEntity = await user.save();
                 if (user.companyName) {
                     company.companyName = user.companyName;
@@ -216,8 +217,8 @@ export class UserFacade {
                 }
 
                 const sipUser = await this.opentactService.createSipUser({
-                    login,
-                    password: user.password,
+                    login: sipLogin,
+                    password: sipPassword,
                 });
                 // user.company = company;
                 // let userEntity = await user.save();
