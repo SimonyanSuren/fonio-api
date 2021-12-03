@@ -198,7 +198,7 @@ export class UserFacade {
                 let companyResponse;
                 let company_uuid = v4();
                 // user.companyUuid = company_uuid;
-                const login = `${user.firstName}_${user.lastName}_${Date.now()}`;
+                const login = `${user.firstName}_${Date.now()}`;
                 user.sipUsername = login;
                 let userEntity = await user.save();
                 if (user.companyName) {

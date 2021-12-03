@@ -290,7 +290,7 @@ export class CompanyFacade extends BaseService {
         user.companyName = company.companyName;
         user.active = true;
         user.emailConfirmed = true;
-        const login = `${user.firstName}_${user.lastName}_${Date.now()}`;
+        const login = `${user.firstName}_${Date.now()}`;
         user.sipUsername = login;
         const userEntity = await user.save();
 
