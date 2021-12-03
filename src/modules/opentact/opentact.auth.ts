@@ -57,6 +57,7 @@ export class OpentactAuth {
             }
         }
         const response = await this.axios.get("/auth", config)
+        console.log(response.data)
         if (response.data.payload.token) {
             this.jwtToken = response.data.payload.token
         }
