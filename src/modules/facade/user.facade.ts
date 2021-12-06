@@ -1,4 +1,4 @@
-import { User, Company, ApiKey } from "../../models";
+import { User, Company, ApiKey, Invitation } from "../../models";
 import { Injectable } from '@nestjs/common';
 import { EmailService } from '../email';
 import { Config } from '../../util/config';
@@ -155,7 +155,7 @@ export class UserFacade {
             .execute();
     }
 
-    async signupUser(user: User) {
+    async signupUser(user: User, invitation?: Invitation) {
         try {
             if (!user) throw new Error(errorMessagesConfig['auth:signup:missingInformation'].errorMessage);
             if (!user.firstName) throw new Error(errorMessagesConfig['auth:signup:missingFirstName'].errorMessage);
@@ -168,67 +168,60 @@ export class UserFacade {
             await PasswordHelper.validatePassword(user.password);
             const found = await this.findByEmail(user.email);
             if (found) throw new Error(errorMessagesConfig['user:alreadyExists'].errorMessage);
-            // let manager = await this.entityManager;
-            // return await manager.transaction(async tEM => {
-                let company = new Company();
-                // let account = new Account();
-                // account.creation = new Date();
-                // account.number = v4();
-                // account.status = false;
-                // account.planID = user.planID;
-                // account.allowOutbound = true;
-                // account.status = true; // Email confirmed is not being used now
-                // account = await tEM.save(account);
-                // account = await account.save();
-                user.uuid = v4();
-                user.plaintText = true;
-                // user.accountID = account.id;
-                user.invoiceEmail = false;
-                user.active = true; // Email confirmed is not being used now;
-                user.type = UserTypes.COMPANY_ADMIN;
-                // user.creation = new Date();
-                // user.updated = new Date();
-                const salt = genSaltSync(Config.number("BCRYPT_SALT_ROUNDS", 10));
-                const sipPassword = user.password;
-                const sipLogin = `${user.firstName}_${Date.now()}`;
-                user.sipUsername = sipLogin;
-                user.password = await hashSync(user.password, salt);
-                user.emailConfirmed = true; // Email confirmed is not being used now
-                user.salt = salt;
-                user.userIdentityOpenTact = false;
+            let company = new Company();
+            user.uuid = v4();
+            user.plaintText = true;
+            user.invoiceEmail = false;
+            user.active = true; // Email confirmed is not being used now;
 
-                // let userEntity = await tEM.save(user);
-                let companyResponse;
-                let company_uuid = v4();
-                // user.companyUuid = company_uuid;
-                let userEntity = await user.save();
-                if (user.companyName) {
-                    company.companyName = user.companyName;
-                    company.companyUuid = company_uuid;
-                    company.userUuid = user.uuid
-                    company.userCreatorID = user.id;
-                    company.planID = user.planID;
-                    // company.accountID = account.id;
-                    company.status = true;
-                    company.balance = 0;
-                    company.created = new Date();
-                    // companyResponse = await tEM.save(company);
-                    companyResponse = await company.save();
+            if (invitation) {
+                user.companyUuid = invitation.companyUuid;
+                user.firstName = invitation.firstName;
+                user.lastName = invitation.lastName;
+                user.type = invitation.type;
+            } else {
+                user.type = UserTypes.COMPANY_ADMIN;
+            }
+
+            const salt = genSaltSync(Config.number("BCRYPT_SALT_ROUNDS", 10));
+            const sipPassword = user.password;
+            const sipLogin = `${user.firstName}_${Date.now()}`;
+            user.sipUsername = sipLogin;
+            user.password = await hashSync(user.password, salt);
+            user.emailConfirmed = true; // Email confirmed is not being used now
+            user.salt = salt;
+            user.userIdentityOpenTact = false;
+
+            let companyResponse;
+            let company_uuid = v4();
+            let userEntity = await user.save();
+            
+            if (user.companyName && (!invitation || invitation?.type === UserTypes.COMPANY_ADMIN)) {
+                company.companyName = user.companyName;
+                company.companyUuid = company_uuid;
+                company.userUuid = user.uuid
+                company.userCreatorID = user.id;
+                company.planID = user.planID;
+                company.status = true;
+                company.balance = 0;
+                company.created = new Date();
+                
+                if (invitation) {
+                    company.parentCompanyUuid = invitation.companyUuid;
                 }
 
-                const sipUser = await this.opentactService.createSipUser({
-                    login: sipLogin,
-                    password: sipPassword,
-                });
-                // user.company = company;
-                // let userEntity = await user.save();
- 
-                return {
-                    user: userEntity,
-                    // account: account,
-                    company: companyResponse
-                };
-            // });
+                companyResponse = await company.save();
+            }
+
+            const sipUser = await this.opentactService.createSipUser({
+                login: sipLogin,
+                password: sipPassword,
+            });
+
+            return {
+                user: userEntity,
+                company: companyResponse
+            };
         } catch (err) {
             console.log(err)
             return { error: err.message }
@@ -433,6 +426,12 @@ export class UserFacade {
             .returning('*')
             .execute();
 
+    }
+
+    async getInvitationByUuid(uuid: string) {
+        return await this.entityManager.createQueryBuilder(Invitation, 'inv')
+            .where('inv.uuid = :uuid', { uuid })
+            .getOne();
     }
 
     // async cancelAccount(account_Id) {

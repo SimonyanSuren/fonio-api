@@ -77,6 +77,10 @@ export class AuthService extends BaseService {
 
     public async signUp(body): Promise<SignInResponse> {
         try {
+            let invitation;
+            if (body.invitationUuid) {
+                invitation = this.userFacade.getInvitationByUuid(body.invitationUuid);
+            }
             const user = new User();
             user.email = body.email;
             user.firstName = body.firstName;
@@ -90,7 +94,7 @@ export class AuthService extends BaseService {
                 let plan = await this.planFacade.getPlanByPlanId(user.planID);
                 if (!plan) await HelperClass.throwErrorHelper('auth:planByThisIdIsNotExist');
             }
-            const response = await this.userFacade.signupUser(user);
+            const response = await this.userFacade.signupUser(user, invitation);
             /* Don't need email confirmation now
             **
             if (response.user) {

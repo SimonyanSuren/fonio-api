@@ -27,6 +27,7 @@ export {Recording} from './recording';
 export {Contact} from './contact';
 export {Payment} from './payment.entity';
 export {Invoice} from './invoice';
+export {Invitation} from './invitation';
 export {Token} from './token.entity';
 // export {SmsWebhookStorage} from './sms_webhook_storage';
 export {Country} from './countries.entity';

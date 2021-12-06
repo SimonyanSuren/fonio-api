@@ -247,25 +247,25 @@ export class UserController {
     //     }
     // }
 
-    @ApiBody({
-        required: true, type: InvitationReq,
-    })
-    @ApiResponse({ status: 200, description: "Invitation successful" })
-    @Post('invite')
-    public async invite(@Req() req, @Res() res: Response) {
-        try {
-            if (req.user.type !== UserTypes.COMPANY_ADMIN) return res.status(HttpStatus.FORBIDDEN).json({ response: 'Only company admin can send invitations' });
-            const body = req.body;
-            await this.emailService.sendMail("user:invite", body.email, {
-                FIRST_NAME: body.firstName,
-                LAST_NAME: body.lastName,
-                LINK: `${process.env.FONIO_URL}/signup`
-            });
-            return res.status(HttpStatus.OK).json({ response: 'Invitation has been sent successfully.' });
-        } catch (err) {
-            errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
-        }
-    }
+    // @ApiBody({
+    //     required: true, type: InvitationReq,
+    // })
+    // @ApiResponse({ status: 200, description: "Invitation successful" })
+    // @Post('invite')
+    // public async invite(@Req() req, @Res() res: Response) {
+    //     try {
+    //         if (req.user.type !== UserTypes.COMPANY_ADMIN) return res.status(HttpStatus.FORBIDDEN).json({ response: 'Only company admin can send invitations' });
+    //         const body = req.body;
+    //         await this.emailService.sendMail("user:invite", body.email, {
+    //             FIRST_NAME: body.firstName,
+    //             LAST_NAME: body.lastName,
+    //             LINK: `${process.env.FONIO_URL}/signup`
+    //         });
+    //         return res.status(HttpStatus.OK).json({ response: 'Invitation has been sent successfully.' });
+    //     } catch (err) {
+    //         errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
+    //     }
+    // }
 
     @Get("image")
     @ApiOperation({ description: "Get user image" })

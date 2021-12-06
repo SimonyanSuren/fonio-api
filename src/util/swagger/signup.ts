@@ -17,6 +17,8 @@ export class SignupReq {
     companyName: string;
     @ApiProperty()
     userPhone: string;
+    @ApiProperty()
+    invitationUuid?: string;
 }
 
 export class CompanyMember {

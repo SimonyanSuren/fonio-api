@@ -8,8 +8,9 @@ import {ApiBody, ApiResponse, ApiOperation, ApiBearerAuth, ApiTags, ApiQuery, Ap
 import {errorResponse} from "../../filters/errorRespone";
 import {CompanyUpdate, CompanyStatus} from '../../util/swagger/company_id';
 import {HelperClass} from "../../filters/Helper";
-import { CompanyMember, CompanyMemberUpdate } from '../../util/swagger';
+import { CompanyMember, CompanyMemberUpdate, InvitationReq } from '../../util/swagger';
 import { EmailService } from '../email';
+import constants from '../../constants';
 const RreateRoles: string[] = ['user', 'company'];
 
 @Controller("company")
@@ -236,6 +237,31 @@ export class CompanyController {
 
             let result = await this.companyFacade.updateNotificationStatus(uuid, req.body.status);
             res.status(HttpStatus.OK).json({response: result[0]});
+        } catch (err) {
+            errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @Post('invite')
+    @ApiBody({
+        required: true, type: InvitationReq,
+    })
+    @ApiResponse({ status: 200, description: "Invitation successful" })
+    public async invite(@Req() req, @Res() res: Response) {
+        try {
+            const body = req.body;
+            const response = await this.companyFacade.getAllCompaniesByUserCreator(req.user.userId, body.companyUuid);
+            if (!response.count) await HelperClass.throwErrorHelper('company:companyWithThisUuidDoesNotExist');
+
+            const invitation = await this.companyFacade.storeInvitationData(body);
+            if(!invitation) return res.status(HttpStatus.BAD_REQUEST).json({ response: 'Invitation was not created.' });
+
+            await this.emailService.sendMail("user:invite", body.email, {
+                FIRST_NAME: body.firstName,
+                LAST_NAME: body.lastName,
+                LINK: `${constants.FONIO_DOMAIN}/#/registration?invitationUuid=${invitation.uuid}&&type=${invitation.type}`
+            });
+            return res.status(HttpStatus.OK).json({ response: 'Invitation has been sent successfully.' });
         } catch (err) {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
         }

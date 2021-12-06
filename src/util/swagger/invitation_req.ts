@@ -11,8 +11,22 @@ export class InvitationReq {
     email: string;
 
     @ApiProperty()
-    type: number;
+    type: boolean;
 
     @ApiProperty()
-    compId: number;
+    companyUuid: string;
+}
+
+export class InvitationData {
+    @ApiProperty()
+    firstName: string;
+
+    @ApiProperty()
+    lastName: string;
+
+    @ApiProperty()
+    type: boolean;
+
+    @ApiProperty()
+    companyUuid: string;
 }

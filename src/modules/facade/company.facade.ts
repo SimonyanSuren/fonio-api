@@ -1,4 +1,4 @@
-import {Company, User} from "../../models";
+import {Company, Invitation, User} from "../../models";
 import {Injectable} from '@nestjs/common';
 import {Config} from '../../util/config';
 import {v4} from 'uuid';
@@ -14,6 +14,7 @@ import constants from "../../constants";
 import { BaseService } from "../services/base.service";
 import { Repositories } from "../db/repositories";
 import { UserTypes } from "../../models/user.entity";
+import { InvitationData } from "../../util/swagger/invitation_req";
 
 @EntityRepository()
 @Injectable()
@@ -44,6 +45,10 @@ export class CompanyFacade extends BaseService {
         return this.entityManager.createQueryBuilder(Company, 'c')
             .where('c.companyName=:name', {name: companyName})
             .getOne();
+    }
+
+    async getUserByEmail(email: string) {
+        return await this.userFacade.findByEmail(email);
     }
 
     // async findAll(accountId: number, filter: string | undefined, offset: number | undefined, limit: number | undefined) {
@@ -328,5 +333,17 @@ export class CompanyFacade extends BaseService {
             `${login}@${domain}:${domain}:${password}`
         ).toString();
         return await this.createEntity(this.Repositories.TOKEN, { user, ha1, ha1b })
+    }
+
+    public async storeInvitationData(data: InvitationData) {
+        const invitation = new Invitation();
+
+        invitation.uuid = v4();
+        invitation.firstName = data.firstName;
+        invitation.lastName = data.lastName;
+        invitation.companyUuid = data.companyUuid;
+        invitation.type = data.type ? UserTypes.COMPANY_ADMIN : UserTypes.COMPANY_USER;
+
+        return await invitation.save();
     }
 }
