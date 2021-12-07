@@ -73,7 +73,7 @@ export class AuthMiddleware implements NestMiddleware {
                             await HelperClass.throwErrorHelper('token:expired');
                         }
                     }
-                    if (!user || !user.userId || !user.companyId) {
+                    if (!user || !user.userId) {
                         await HelperClass.throwErrorHelper('request:unauthorized');
                     }
                     if (!user.active) {
