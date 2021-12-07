@@ -10,6 +10,12 @@ export const errorMessagesConfig: { [messageCode: string]: ErrorMessage } = {
         errorMessage: 'Access unauthorized.',
         userMessage: 'Access unauthorized.'
     },
+    'auth:signup:missingInformation': {
+        type: 'BadRequest',
+        httpStatus: HttpStatus.BAD_REQUEST,
+        errorMessage: 'User data is missing.',
+        userMessage: 'Bad Request'
+    },
     'auth:signup:missingFirstName': {
         type: 'BadRequest',
         httpStatus: HttpStatus.BAD_REQUEST,
@@ -20,6 +26,12 @@ export const errorMessagesConfig: { [messageCode: string]: ErrorMessage } = {
         type: 'BadRequest',
         httpStatus: HttpStatus.BAD_REQUEST,
         errorMessage: 'Unable to create the user without first name.',
+        userMessage: 'Bad Request'
+    },
+    'auth:signup:missignCompanyName': {
+        type: 'BadRequest',
+        httpStatus: HttpStatus.BAD_REQUEST,
+        errorMessage: 'Unable to create the user without company name.',
         userMessage: 'Bad Request'
     },
     'auth:signup:missingEmail': {

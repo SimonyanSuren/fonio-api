@@ -161,7 +161,7 @@ export class UserFacade {
             if (!user.firstName) throw new Error(errorMessagesConfig['auth:signup:missingFirstName'].errorMessage);
             if (!user.lastName) throw new Error(errorMessagesConfig['auth:signup:missingLastName'].errorMessage);
             if (!user.email) throw new Error(errorMessagesConfig['auth:signup:missingEmail'].errorMessage);
-            if (!user.companyName) throw new Error(errorMessagesConfig['auth:signup:missignCompanyName'].errorMessage);
+            if (!user.companyName && (!invitation || invitation?.type === UserTypes.COMPANY_ADMIN)) throw new Error(errorMessagesConfig['auth:signup:missignCompanyName'].errorMessage);
             if (!user.password) throw new Error(errorMessagesConfig['auth:signup:missingPassword'].errorMessage);
             if (!user.rePassword) throw new Error(errorMessagesConfig['auth:signup:missinRePassword'].errorMessage);
             if (user.password !== user.rePassword) throw new Error(errorMessagesConfig['auth:signup:passwordMatch'].errorMessage);
