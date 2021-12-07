@@ -157,6 +157,15 @@ export class UserFacade {
 
     async signupUser(user: User, invitation?: Invitation) {
         try {
+            if (invitation) {
+                user.companyUuid = invitation.companyUuid;
+                user.firstName = invitation.firstName;
+                user.lastName = invitation.lastName;
+                user.type = invitation.type;
+            } else {
+                user.type = UserTypes.COMPANY_ADMIN;
+            }
+            
             if (!user) throw new Error(errorMessagesConfig['auth:signup:missingInformation'].errorMessage);
             if (!user.firstName) throw new Error(errorMessagesConfig['auth:signup:missingFirstName'].errorMessage);
             if (!user.lastName) throw new Error(errorMessagesConfig['auth:signup:missingLastName'].errorMessage);
@@ -173,15 +182,6 @@ export class UserFacade {
             user.plaintText = true;
             user.invoiceEmail = false;
             user.active = true; // Email confirmed is not being used now;
-
-            if (invitation) {
-                user.companyUuid = invitation.companyUuid;
-                user.firstName = invitation.firstName;
-                user.lastName = invitation.lastName;
-                user.type = invitation.type;
-            } else {
-                user.type = UserTypes.COMPANY_ADMIN;
-            }
 
             const salt = genSaltSync(Config.number("BCRYPT_SALT_ROUNDS", 10));
             const sipPassword = user.password;
