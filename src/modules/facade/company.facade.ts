@@ -78,10 +78,18 @@ export class CompanyFacade extends BaseService {
     //     return query.getMany();
     // }
 
-    async getUserListByCompanyUuid(companyUuid) {
-        return await this.entityManager.createQueryBuilder(User, 'u')
-            .where('u.companyUuid=:companyUuid', { companyUuid: companyUuid })
-            .getMany();
+    async getUserListByCompanyUuid(companyUuid, orderBy?, orderType?) {
+        let by;
+        if (orderBy === 'created') by = 'creation';
+
+        let request = this.entityManager.createQueryBuilder(User, 'u')
+            .where('u.companyUuid=:companyUuid', { companyUuid: companyUuid });
+
+        if (by) {
+            request.orderBy(`u.${by}`, orderType === 'asc' ? "ASC" : "DESC")
+        }
+
+        return await request.getMany();
     }
 
     async getCompanyListByParentCompanyUuid(companyUuid) {

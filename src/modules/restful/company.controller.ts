@@ -54,11 +54,15 @@ export class CompanyController {
     @Get(':uuid/members/:role')
     @ApiParam({name: "uuid", description: "company uuid", required: true, type: String})
     @ApiParam({name: "role", description: "member role", required: true, enum: RreateRoles })
+    @ApiQuery({ name: 'orderBy', required: false, enum: ['created'] })
+    @ApiQuery({ name: 'orderType', required: false, enum: ['asc', 'desc'] })
     @ApiResponse({status: 200, description: "companies OK", type: Company, isArray: true})
     @ApiOperation({description: "get All members of company", operationId: "getMembers", summary: "Company Members"})
     public async findByCompany(@Req() req, @Res() res: Response, 
         @Param("uuid") uuid: string,
-        @Param("role") role: string
+        @Param("role") role: string,
+        @Query('orderBy') orderBy: string,
+        @Query('orderType') orderType: string,
     ) {
         try {
             if (!RreateRoles.includes(role)) await HelperClass.throwErrorHelper('role:invalidMemberRole');
@@ -68,7 +72,7 @@ export class CompanyController {
 
             let members: any;
             if (role === 'user') {
-                members = await this.companyFacade.getUserListByCompanyUuid(uuid);
+                members = await this.companyFacade.getUserListByCompanyUuid(uuid, orderBy, orderType);
                 members.forEach(function(item, i) {
                     item.password = undefined;
                     item.salt = undefined;
