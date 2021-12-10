@@ -35,10 +35,22 @@ export class CompanyFacade extends BaseService {
             .getOne();
     }
 
-    async getCompanyById(id) {
-        return this.entityManager.createQueryBuilder(Company, 'c')
+    async getCompanyById(userCreatotId, id) {
+        const company = await this.entityManager.createQueryBuilder(Company, 'c')
             .where('c.companyID=:id', {id: id})
+            .andWhere('c.userCreatorID=:userCreatotId', {userCreatotId: userCreatotId})
             .getOne();
+        
+        const user = await this.entityManager.createQueryBuilder(User, 'u')
+            .where('u.id=:id', {id: userCreatotId})
+            .getOne();
+
+        if (user) {
+            user.password = undefined;
+            user.salt = undefined;
+        }
+
+        return { company, user };
     }
 
     async getCompanyByName(companyName) {

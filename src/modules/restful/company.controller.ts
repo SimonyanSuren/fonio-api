@@ -11,7 +11,7 @@ import {HelperClass} from "../../filters/Helper";
 import { CompanyMember, CompanyMemberUpdate, InvitationReq } from '../../util/swagger';
 import { EmailService } from '../email';
 import constants from '../../constants';
-const RreateRoles: string[] = ['user', 'company'];
+const CreateRoles: string[] = ['user', 'company'];
 
 @Controller("company")
 @ApiBearerAuth()
@@ -53,7 +53,7 @@ export class CompanyController {
 
     @Get(':uuid/members/:role')
     @ApiParam({name: "uuid", description: "company uuid", required: true, type: String})
-    @ApiParam({name: "role", description: "member role", required: true, enum: RreateRoles })
+    @ApiParam({name: "role", description: "member role", required: true, enum: CreateRoles })
     @ApiQuery({ name: 'orderBy', required: false, enum: ['created'] })
     @ApiQuery({ name: 'orderType', required: false, enum: ['asc', 'desc'] })
     @ApiResponse({status: 200, description: "companies OK", type: Company, isArray: true})
@@ -65,7 +65,7 @@ export class CompanyController {
         @Query('orderType') orderType: string,
     ) {
         try {
-            if (!RreateRoles.includes(role)) await HelperClass.throwErrorHelper('role:invalidMemberRole');
+            if (!CreateRoles.includes(role)) await HelperClass.throwErrorHelper('role:invalidMemberRole');
 
             let response = await this.companyFacade.getAllCompaniesByUserCreator(req.user.userId, uuid);
             if (!response.count) await HelperClass.throwErrorHelper('company:companyWithThisUuidDoesNotExist');
@@ -89,7 +89,7 @@ export class CompanyController {
 
     @Post(':uuid/create/:role')
     @ApiParam({name: "uuid", description: "company uuid", required: true, type: String})
-    @ApiParam({name: "role", description: "member role", required: true, enum: RreateRoles })
+    @ApiParam({name: "role", description: "member role", required: true, enum: CreateRoles })
     @ApiBody({
         // name: "user", 
         required: true, type: CompanyMember})
@@ -99,7 +99,7 @@ export class CompanyController {
         @Param('role') role: string
     ) {
         try {
-            if (!RreateRoles.includes(role)) await HelperClass.throwErrorHelper('role:invalidMemberRole');
+            if (!CreateRoles.includes(role)) await HelperClass.throwErrorHelper('role:invalidMemberRole');
             const body = req.body;
             if (role === 'company' && !body.companyName) await HelperClass.throwErrorHelper('company:companyNameRequired');
             const user = new User();
@@ -197,7 +197,7 @@ export class CompanyController {
     @ApiOperation({description: "Get company informations.", operationId: "getCompany", summary: "Get company infotmation"})
     public async getCompanies(@Req() req, @Param("id") id: number, @Res() res: Response) {
         try {
-            const company = await this.companyFacade.getCompanyById(id);
+            const company = await this.companyFacade.getCompanyById(req.user.userId, id);
             if (!company) {
                 await HelperClass.throwErrorHelper('company:notFound');
             }
@@ -216,9 +216,9 @@ export class CompanyController {
     @ApiResponse({status: 200, description: "Add OK"})
     public async updateStatus(@Req() req, @Param("id") id: number, @Res() res: Response) {
         try {
-            const company = await this.companyFacade.getCompanyById(id);
+            const company = await this.companyFacade.getCompanyById(req.user.userId, id);
             if (!company) {
-                await HelperClass.throwErrorHelper('company:companyWithThisIdIsNotExist');
+                await HelperClass.throwErrorHelper('company:companyWithThisIdDoesNotExist');
             }
             let result = await this.companyFacade.updateStatus(id, req.body.status);
             res.status(HttpStatus.OK).json({response: result[0]});
@@ -263,7 +263,7 @@ export class CompanyController {
             await this.emailService.sendMail("user:invite", body.email, {
                 FIRST_NAME: body.firstName,
                 LAST_NAME: body.lastName,
-                LINK: `${constants.FONIO_DOMAIN}/#/registration?invitationUuid=${invitation.uuid}&&type=${invitation.type}`
+                LINK: `${constants.FONIO_DOMAIN}/#/invitation-company-${body.type ? 'admin' : 'user'}?invitationUuid=${invitation.uuid}&&type=${invitation.type}`
             });
             return res.status(HttpStatus.OK).json({ response: 'Invitation has been sent successfully.' });
         } catch (err) {

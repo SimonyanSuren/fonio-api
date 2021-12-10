@@ -64,12 +64,12 @@ export class UserController {
     public async getUserListByCompId(@Req() req, @Param("id") id: number, @Res() res: Response) {
         try {
             let uuid;
-            const company = await this.companyFacade.getCompanyById(id);
-            if (!company) {
+            const user_company = await this.companyFacade.getCompanyById(req.user.userid, id);
+            if (!user_company.company) {
                 await HelperClass.throwErrorHelper('company:notFound');
             }
             else
-                uuid = company.companyUuid;
+                uuid = user_company.company.companyUuid;
 
             let users: any = await this.userFacade.getUserListByCompUuid(uuid);
             return res.status(HttpStatus.OK).json({
