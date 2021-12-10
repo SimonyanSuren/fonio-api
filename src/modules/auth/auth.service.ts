@@ -79,7 +79,7 @@ export class AuthService extends BaseService {
         try {
             let invitation;
             if (body.invitationUuid) {
-                invitation = this.userFacade.getInvitationByUuid(body.invitationUuid);
+                invitation = await this.userFacade.getInvitationByUuid(body.invitationUuid);
             }
             const user = new User();
             user.email = body.email;
