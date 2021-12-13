@@ -51,6 +51,10 @@ const constants = {
         process.env.DEV_PATH_TO_AUDIO_FOLDER || "assets/dev/recordings" :
         process.env.PROD_PATH_TO_AUDIO_FOLDER || "assets/prod/recordings",
 
+    PATH_TO_VOICEMAIL_FOLDER: process.env.NODE_ENV === "development" ? 
+        process.env.DEV_PATH_TO_VOICEMAIL_FOLDER || "assets/dev/voicemail" :
+        process.env.PROD_PATH_TO_VOICEMAIL_FOLDER || "assets/prod/voicemail",
+
     PATH_TO_TEMP_XML: process.env.PATH_TO_TEMP_XML || "assets/temp_xml",
 };
 

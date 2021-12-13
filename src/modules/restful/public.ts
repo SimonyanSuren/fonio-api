@@ -8,6 +8,7 @@ import { UserFacade } from '../facade';
 import { UpdatePassword } from '../../util/swagger/update_password';
 import { OpentactService } from '../opentact';
 import { join } from 'path';
+import constants from '../../constants';
 
 @Controller("public")
 @ApiTags("Public")
@@ -119,6 +120,19 @@ export class PublicApi {
     public async getFonioLogo(@Req() req, @Res() res: Response, @Param('image') image) {
         try {
             res.contentType('content-type: image/png').sendFile(join(process.cwd(), `/assets/${image}`), function (err) {
+                if (err) {
+                  return res.status(404).end();
+                }
+            })
+        } catch (e) {
+            return res.status(404).send({message: e.message});
+        }
+    }
+
+    @Get("voicemail/:audio")
+    public async getVoiceMail(@Req() req, @Res() res: Response, @Param('audio') audio) {
+        try {
+            res.contentType('content-type: audio/wav').sendFile(join(process.cwd(), `${constants.PATH_TO_VOICEMAIL_FOLDER}/${audio}`), function (err) {
                 if (err) {
                   return res.status(404).end();
                 }

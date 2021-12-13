@@ -24,6 +24,7 @@ export class AuthMiddleware implements NestMiddleware {
                 || url.includes("public/verify_token")
                 || url.includes("public/list/npa")
                 || url.includes("public/assets")
+                || url.includes("public/voicemail")
                 || url.includes("dynamic_number")
                 || url.includes("auth/change/password")
                 || url.includes("auth/reset/password")
