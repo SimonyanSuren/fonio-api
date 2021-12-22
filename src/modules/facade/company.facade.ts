@@ -1,4 +1,4 @@
-import {Company, Invitation, User} from "../../models";
+import {Company, Contact, Invitation, User} from "../../models";
 import {Injectable} from '@nestjs/common';
 import {Config} from '../../util/config';
 import {v4} from 'uuid';
@@ -154,6 +154,47 @@ export class CompanyFacade extends BaseService {
         let result = await manager.query(query2);
 
         return {result, count: Number(count[0].count)};
+    }
+
+    async getCompanyContacts(comp_id) {
+        return await this.entityManager.createQueryBuilder(Contact, 'contact')
+            .where('contact.comp_id=:comp_id', { comp_id })
+            .getMany();
+    }
+
+    async assignUserContact(userId, creator_id, company_id, contact_req) {
+        let contact = new Contact();
+        contact.email = contact_req.email;
+        contact.phoneNumber = contact_req.phoneNumber;
+        contact.firstName = contact_req.firstName;
+        contact.lastName = contact_req.lastName;
+        contact.createdOn = new Date();
+        contact.lastModified = new Date();
+        contact.active = contact_req.active;
+        contact.modifiedBy = creator_id;
+        contact.assignedTo = User.withId(userId);
+        contact.company = Company.withId(company_id);
+        return await this.entityManager.save(contact);
+    }
+
+    async UpdateCompanyContact(user_id, comp_id, cont_id, contact_req) {
+        let contact = await await this.entityManager.createQueryBuilder(Contact, 'contact')
+            .where('contact.cont_id=:cont_id', { cont_id })
+            .andWhere('contact.comp_id=:comp_id', { comp_id })
+            .getOne();
+
+        if (!contact) await HelperClass.throwErrorHelper('contact:ContactDoesNotExist');
+        else  {
+            contact.phoneNumber = contact_req.phoneNumber;
+            contact.firstName = contact_req.firstName;
+            contact.lastName = contact_req.lastName;
+            contact.lastModified = new Date();
+            contact.active = contact_req.active;
+            contact.modifiedBy = user_id;
+            // contact.modifiedBy = User.withId(user_id);
+            let manager = await this.entityManager;
+            return await manager.save(contact);
+        }
     }
 
     async getAllCompanies(companyUuid) {

@@ -44,7 +44,9 @@ export class ContactFacade {
         contact.createdOn = new Date();
         contact.lastModified = new Date();
         contact.active = contact_req.active;
-        contact.modifiedBy = User.withId(currentUser.userId);
+        contact.modifiedBy = currentUser.userId;
+        contact.assignedTo = User.withId(currentUser.userId);
+        // contact.modifiedBy = User.withId(currentUser.userId);
         if (company)        
             contact.company = company;
         let manager = await this.entityManager;
@@ -65,7 +67,8 @@ export class ContactFacade {
                 contact.lastName = contact_req.lastName;
                 contact.lastModified = new Date();
                 contact.active = contact_req.active;
-                contact.modifiedBy = User.withId(currentUser.userId);
+                contact.modifiedBy = currentUser.userId;
+                // contact.modifiedBy = User.withId(currentUser.userId);
                 let manager = await this.entityManager;
                 return await manager.save(contact);
             }

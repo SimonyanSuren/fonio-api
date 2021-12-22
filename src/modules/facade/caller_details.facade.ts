@@ -77,7 +77,9 @@ export class CallerDetailsFacade {
                         lastName: req_contact.last_name,
                         active: true,
                         company: Company.withId(company.companyID),
-                        modifiedBy: User.withId(currentUser.userId)
+                        modifiedBy: currentUser.userId,
+                        assignedTo: User.withId(currentUser.userId)
+                        // modifiedBy: User.withId(currentUser.userId)
                     })
                     .returning('*')
                     .execute();
@@ -88,7 +90,8 @@ export class CallerDetailsFacade {
                     .set({
                         firstName: req_contact.first_name,
                         lastName: req_contact.last_name,
-                        modifiedBy: User.withId(currentUser.userId),
+                        modifiedBy: currentUser.userId,
+                        // modifiedBy: User.withId(currentUser.userId),
                         lastModified: new Date()
                     })
                     .where('cont_id=:id', { id: contact.id })

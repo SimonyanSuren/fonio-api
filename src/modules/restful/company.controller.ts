@@ -11,6 +11,7 @@ import {HelperClass} from "../../filters/Helper";
 import { CompanyMember, CompanyMemberUpdate, InvitationReq } from '../../util/swagger';
 import { EmailService } from '../email';
 import constants from '../../constants';
+import { ContactReq } from '../../util/swagger/contact_req';
 const CreateRoles: string[] = ['user', 'company'];
 
 @Controller("company")
@@ -23,29 +24,99 @@ export class CompanyController {
     ) {
     }
 
-    @Get('all')
+    // @Get('all')
+    // @ApiQuery({name: 'companyUuid', description: 'company uuid', required: false})
+    // @ApiResponse({status: 200, description: "companies OK", type: Company, isArray: true})
+    // @ApiOperation({description: "get All companies", operationId: "get", summary: "All Companies"})
+    // public async findAll(@Req() req, @Res() res: Response, @Query("companyUuid") companyUuid: string) {
+    //     try {
+    //         let user = req.user;
+    //         const companies = await this.companyFacade.getAllCompanies(companyUuid);
+    //         res.status(HttpStatus.OK).json(companies);
+    //     } catch (err) {
+    //         errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
+    //     }
+    // }
+
+    @Get('list')
     @ApiQuery({name: 'companyUuid', description: 'company uuid', required: false})
     @ApiResponse({status: 200, description: "companies OK", type: Company, isArray: true})
-    @ApiOperation({description: "get All companies", operationId: "get", summary: "All Companies"})
-    public async findAll(@Req() req, @Res() res: Response, @Query("companyUuid") companyUuid: string) {
+    @ApiOperation({description: "get All companies from creator", operationId: "getByCreator", summary: "Companies Creator"})
+    public async findByCreator(@Req() req, @Res() res: Response, @Query("companyUuid") companyUuid: string) {
         try {
             let user = req.user;
-            const companies = await this.companyFacade.getAllCompanies(companyUuid);
+            const companies = await this.companyFacade.getAllCompaniesByUserCreator(user.userId, companyUuid);
             res.status(HttpStatus.OK).json(companies);
         } catch (err) {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
         }
     }
 
-    @Get('list')
-    @ApiQuery({name: 'companyUuid', description: 'company uuid', required: false})
+    @Get(':companyUuid/contacts')
+    @ApiParam({name: 'companyUuid', description: 'company uuid'})
     @ApiResponse({status: 200, description: "companies OK", type: Company, isArray: true})
-    @ApiOperation({description: "get All companies from creator", operationId: "get", summary: "Companies Creator"})
-    public async findByCreator(@Req() req, @Res() res: Response, @Query("companyUuid") companyUuid: string) {
+    @ApiOperation({description: "get All company contacts", operationId: "getContacts", summary: "Companies Contacts"})
+    public async contactsList(@Req() req, @Res() res: Response, @Param("companyUuid") companyUuid: string) {
         try {
-            let user = req.user;
-            const companies = await this.companyFacade.getAllCompaniesByUserCreator(user.userId, companyUuid);
-            res.status(HttpStatus.OK).json(companies);
+            let response = await this.companyFacade.getAllCompaniesByUserCreator(req.user.userId, companyUuid);
+            if (!response.count) await HelperClass.throwErrorHelper('company:companyWithThisUuidDoesNotExist');
+
+            let contacts = await this.companyFacade.getCompanyContacts(response.result[0].company_comp_id);
+
+            res.status(HttpStatus.OK).json(contacts);
+        } catch (err) {
+            errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @Patch(':companyUuid/contacts/:id')
+    @ApiParam({name: 'id', description: 'contact id'})
+    @ApiParam({name: 'companyUuid', description: 'company uuid'})
+    @ApiBody({
+        required: true, type: ContactReq
+    })
+    @ApiResponse({status: 200, description: "companies OK", type: Company, isArray: true})
+    @ApiOperation({description: "update company contact", operationId: "updateCompanyContact", summary: "Update company contact"})
+    public async contactEdit(@Req() req, @Res() res: Response, 
+        @Param("companyUuid") companyUuid: string,
+        @Param("id") id: string,
+        @Body() body: ContactReq
+    ) {
+        try {
+            let response = await this.companyFacade.getAllCompaniesByUserCreator(req.user.userId, companyUuid);
+            if (!response.count) await HelperClass.throwErrorHelper('company:companyWithThisUuidDoesNotExist');
+
+            let contacts = await this.companyFacade.UpdateCompanyContact(req.user.userId, response.result[0].company_comp_id, id, body);
+
+            res.status(HttpStatus.OK).json(contacts);
+        } catch (err) {
+            errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @Post(':companyUuid/:userUuid/contacts')
+    @ApiParam({name: 'companyUuid', description: 'company uuid'})
+    @ApiParam({name: 'userUuid', description: 'user uuid'})
+    @ApiBody({
+        required: true, type: ContactReq
+    })
+    @ApiResponse({status: 200, description: "companies OK", type: Company, isArray: true})
+    @ApiOperation({description: "assign user contact", operationId: "assignUserContact", summary: "Assign user contact"})
+    public async assignContact(@Req() req, @Res() res: Response, 
+        @Param("companyUuid") companyUuid: string,
+        @Param("userUuid") userUuid: string,
+        @Body() body: ContactReq
+    ) {
+        try {
+            let response = await this.companyFacade.getAllCompaniesByUserCreator(req.user.userId, companyUuid);
+            if (!response.count) await HelperClass.throwErrorHelper('company:companyWithThisUuidDoesNotExist');
+
+            let user = await this.companyFacade.getUserUuidByCompanyUuid(companyUuid, userUuid);
+            if (!user) await HelperClass.throwErrorHelper('user:companyMemberWithThisUuidDoesNotExist');
+            
+            let contact = await this.companyFacade.assignUserContact(user?.id, req.user.userId, response.result[0].company_comp_id, body);
+
+            res.status(HttpStatus.OK).json(contact);
         } catch (err) {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
         }
@@ -118,7 +189,7 @@ export class CompanyController {
             us.forEach(function(item, i) {
                 item.password = undefined;
                 item.salt = undefined;
-            })
+            });
 
             if (response.result.notification) {
                 await this.emailService.sendMail("auth:notification", user.email, {

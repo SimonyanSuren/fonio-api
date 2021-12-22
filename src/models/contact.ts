@@ -36,10 +36,14 @@ export class Contact {
     @ApiProperty()
     active: boolean;
 
+    @ApiProperty()
+    @Column({ name: "modified_by" })
+    modifiedBy: number;
+
     @ApiProperty({ type: () => User, description: "USER" })
     @ManyToOne(type => User)
-    @JoinColumn({ name: "modified_by" })
-    modifiedBy: User;
+    @JoinColumn({ name: "assigned_to" })
+    assignedTo: User;
 
     @ApiProperty({ type: () => Company, description: "COMPANY" })
     @ManyToOne(type => Company)
