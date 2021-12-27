@@ -36,6 +36,10 @@ export class Contact {
     @ApiProperty()
     active: boolean;
 
+    @Column({name: "cont_favourite", default: false})
+    @ApiProperty()
+    favourite: boolean;
+
     @ApiProperty()
     @Column({ name: "modified_by" })
     modifiedBy: number;

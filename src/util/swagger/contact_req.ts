@@ -15,4 +15,7 @@ export class ContactReq {
 
     @ApiProperty()
     active: boolean;
+
+    @ApiProperty()
+    favourite: boolean;
 }

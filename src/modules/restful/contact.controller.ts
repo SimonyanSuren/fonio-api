@@ -30,6 +30,8 @@ export class ContactController {
 
     @Patch(":id")
     @ApiParam({name: "id", description: "id", required: true, type: Number})
+    @ApiBody({
+        required: true, type: ContactReq})
     @ApiResponse({ status: 200, description: "contact updated", type: Contact })
     @ApiOperation({ description: "edit contact.", operationId: "editContact", summary: "Edit Contact" })
     public async edit( @Req() req, @Body() contact: ContactReq, @Res() res: Response, @Param("id") id: number) {
