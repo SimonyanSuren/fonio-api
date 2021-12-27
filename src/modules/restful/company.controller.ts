@@ -164,7 +164,7 @@ export class CompanyController {
     @ApiQuery({ name: 'orderBy', required: false, enum: ['created'] })
     @ApiQuery({ name: 'orderType', required: false, enum: ['asc', 'desc'] })
     @ApiResponse({status: 200, description: "companies OK", type: Company, isArray: true})
-    @ApiOperation({description: "get All members of company", operationId: "getMembers", summary: "Company Members"})
+    @ApiOperation({description: "get a member of company", operationId: "getMember", summary: "Company Member"})
     public async findUserByCompany(@Req() req, @Res() res: Response, 
         @Param("uuid") uuid: string,
         @Param("userUuid") userUuid: string,
