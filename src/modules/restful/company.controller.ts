@@ -158,6 +158,30 @@ export class CompanyController {
         }
     }
 
+    @Get(':uuid/members/:userUuid')
+    @ApiParam({name: "uuid", description: "company uuid", required: true, type: String})
+    @ApiParam({name: "userUuid", description: "member uuid", required: true, enum: CreateRoles })
+    @ApiQuery({ name: 'orderBy', required: false, enum: ['created'] })
+    @ApiQuery({ name: 'orderType', required: false, enum: ['asc', 'desc'] })
+    @ApiResponse({status: 200, description: "companies OK", type: Company, isArray: true})
+    @ApiOperation({description: "get All members of company", operationId: "getMembers", summary: "Company Members"})
+    public async findUserByCompany(@Req() req, @Res() res: Response, 
+        @Param("uuid") uuid: string,
+        @Param("userUuid") userUuid: string,
+    ) {
+        try {
+            let response = await this.companyFacade.getAllCompaniesByUserCreator(req.user.userId, uuid);
+            if (!response.count) await HelperClass.throwErrorHelper('company:companyWithThisUuidDoesNotExist');
+
+            let members = this.companyFacade.getUserUuidByCompanyUuid(uuid, userUuid);
+            if (!members) await HelperClass.throwErrorHelper('user:userWithThisUuidDoesNotExist');
+
+            res.status(HttpStatus.OK).json(members);
+        } catch (err) {
+            errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
+        }
+    }
+
     @Post(':uuid/create/:role')
     @ApiParam({name: "uuid", description: "company uuid", required: true, type: String})
     @ApiParam({name: "role", description: "member role", required: true, enum: CreateRoles })
