@@ -47,6 +47,8 @@ export class CompanyMemberUpdate {
   firstName: string;
   @ApiProperty()
   lastName: string;
+  @ApiProperty()
+  active: boolean;
 }
 
 export class CreatePaymentReq {

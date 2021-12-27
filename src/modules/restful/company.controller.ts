@@ -247,10 +247,11 @@ export class CompanyController {
             if (!user_exist) await HelperClass.throwErrorHelper('company:userWithThisUuidDoesNotExist');
 
             const user = new User();
-            user.userPhone = body.phone;
-            user.firstName = body.firstName;
-            user.lastName = body.lastName;
-            user.link = body.link;
+            if (body.phone) user.userPhone = body.phone;
+            if (body.firstName) user.firstName = body.firstName;
+            if (body.lastName) user.lastName = body.lastName;
+            if (body.link) user.link = body.link;
+            if (body.active) user.active = body.active;
 
             let updatedUser = await this.companyFacade.updateCompanyUser(uuid, userUuid, user);
 
