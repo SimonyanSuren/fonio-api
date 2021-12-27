@@ -160,7 +160,7 @@ export class CompanyController {
 
     @Get(':uuid/members/:userUuid')
     @ApiParam({name: "uuid", description: "company uuid", required: true, type: String})
-    @ApiParam({name: "userUuid", description: "member uuid", required: true, enum: CreateRoles })
+    @ApiParam({name: "userUuid", description: "member uuid", required: true, type: String })
     @ApiResponse({status: 200, description: "companies OK", type: Company, isArray: true})
     @ApiOperation({description: "get a member of company", operationId: "getMember", summary: "Company Member"})
     public async findUserByCompany(@Req() req, @Res() res: Response, 
