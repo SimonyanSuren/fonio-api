@@ -56,13 +56,15 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
   async onWssMessage(msg: any) {
     let data = JSON.parse(msg.data.toString());
 
-    // let number: number = (data.payload.direction === 'in') ? data.payload.to : data.payload.from;
-    // let numberData = await that.didFacade.findNumberOwner(number);
-    // let currentRoom = numberData?.user.uuid||that.room;
+    if (data.type !== 'auth') {
+      if (data.type === 'tn_order') {
+        const order = await that.logFacade.orderNumber(data);
 
-    await that.logFacade.addLog(data);
-
-    that.wss.to(that.room).emit('msgToClient', data);
+        that.wss.to(`room_${order.raw[0].user_uuid}`).emit('msgToClient', { ...data, ...order });
+      } else {
+        await that.logFacade.addLog(data);
+      }
+    }
 
     if (data.type === 'call_state' && data.payload.direction === 'in' && data.payload.state === 'online') {
       const socx = await that.callFlowFacade.sendOpentactCallXml(data.payload.uuid, data.payload.to);
@@ -89,10 +91,15 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
 
   async handleConnection(client: Socket, ...args: any[]) {
     let token:any = client.handshake.headers['authorization'] && (client.handshake.headers['authorization']).split(' ')[1];
-    const user:any = await JWTHelper.verify(token);
-    if (!user) {
+    let user:any;
+    if (token) {user = await JWTHelper.verify(token)} else user = { userUuid : client.handshake.headers['tempuuid'] };
+    if (!user || !user.userUuid) {
         client.disconnect(true);
-        throw new Error('authentication error')
+        throw new Error('authentication error');
+    }
+    if (!user.userUuid.match(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i)) {
+        client.disconnect(true);
+        throw new Error('invalid uuid');
     }
     that.logger.log(`Client connected: ${client.id}`);
     client.emit('getRoom', user.userUuid);

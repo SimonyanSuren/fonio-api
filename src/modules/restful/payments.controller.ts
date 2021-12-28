@@ -5,8 +5,9 @@ import { PaymentsService, CreatePayment } from "../payments";
 import { PaymentOrder } from '../../util/swagger';
 import { EmailService } from '../email';
 import { OpentactService } from '../opentact';
-import { AccountNumberFacade } from '../facade';
+import { AccountNumberFacade, OrderFacade } from '../facade';
 import { OpentactAuth } from '../opentact';
+import { OrderDid } from '../../util/swagger/order_did';
 
 @Controller('payments')
 @ApiBearerAuth()
@@ -14,10 +15,41 @@ import { OpentactAuth } from '../opentact';
 export class PaymentsController {
     constructor(private paymentsService: PaymentsService,
         private opentactAuth: OpentactAuth,
+        private orderFacade: OrderFacade,
         private opentactService: OpentactService,
         private emailService: EmailService,
         private accountNumberFacade: AccountNumberFacade,
     ) { }
+
+    @Post('order_did/:tempUuid')
+    @ApiParam({ name: 'tempUuid', description: 'This is temporary uuid that has been used to connect the Callify socket' })
+    @ApiBody({
+        type: OrderDid
+    })
+    @ApiOperation({ description: "order did number to create payments for Paypal and Stripe", })
+    @ApiResponse({ status: 200, description: "order_did" })
+    public async orderDid(@Req() req, @Res() res: Response,
+        @Param('tempUuid') tempUuid: string,
+        @Body() body: OrderDid,
+    ) {
+        try {
+            if (!tempUuid.match(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i)) {
+                return res.status(HttpStatus.BAD_REQUEST).json({ message: 'invalid uuid format' });
+            }
+
+            let userToken = await this.opentactService.getToken();
+            let order = await this.opentactService.buyDidNumbers(userToken.payload.token, body);
+
+            if (order.error) {
+                return res.status(order.error.status).json(order);
+            }
+
+            let new_order = await this.orderFacade.saveOrder(order.payload, tempUuid);
+            return res.status(201).json(new_order);
+        } catch (err) {
+            return res.status(HttpStatus.BAD_REQUEST).json({ message: err.message })
+        }
+    }
 
     @Post('create_payments')
     @ApiOperation({ description: "create payments for Paypal and Stripe", })
@@ -25,27 +57,39 @@ export class PaymentsController {
     public async createPayment(@Req() req, @Res() res: Response, @Body() body: CreatePayment) {
         try {
 
-            const { register, ...rest } = body;
+            const { register, orderUuid, tempUuid, ...rest } = body;
 
             let userID,
                 companyID,
                 didNumbers,
                 userNumbers,
                 company,
+                buy_failed,
+                buy_state,
+                order_uuid = orderUuid,
                 numbers = register.did_numbers,
                 planID = register.planID;
 
-            if (numbers) {
-                let userToken = await this.opentactAuth.getToken();
-                didNumbers = await this.opentactService.buyDidNumbers(userToken.payload.token, numbers);
+            let order = await this.orderFacade.getUserOrder(orderUuid, tempUuid);
+            if (!order) return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Order does not exist', status: 'not exist', success: false, failed: true });
+            if (order.done) return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Order is already done', status: 'done', success: false, failed: true });
 
-                if (didNumbers.error) {
-                    return res.status(didNumbers.error.status).json(didNumbers);
-                }
-                
-                if (didNumbers.payload.failed) {
-                    return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Buying number is failed.' })
-                }
+            let userToken = await this.opentactAuth.getToken();
+            
+            didNumbers = await this.opentactService.getDidOrderByUuid(userToken.payload.token, orderUuid);
+            
+            if (didNumbers.error) {
+                return res.status(didNumbers.error.status).json(didNumbers);
+            }
+
+            buy_failed = didNumbers.payload.failed;
+            buy_state = didNumbers.payload.state;
+            if (didNumbers.payload.failed || didNumbers.payload.state === 'failed') {
+                await this.orderFacade.getUserOrder(orderUuid, req.user.userUuid);
+                return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Buying number is failed.', status: 'failed', success: false, failed: true })
+            }
+            if (!didNumbers.payload.success && didNumbers.payload.state !== 'success') {
+                return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Order is not fulfilled yet. Please wait.', status: 'waiting', success: false, failed: false })
             }
 
             let response = await this.paymentsService.createPayment({ ...rest, companyID, planID });
@@ -73,15 +117,15 @@ export class PaymentsController {
                 companyID = company.companyId;
             }
 
-            await this.paymentsService.storePaymentData(response.paymentID, { ...rest, userID, companyID, numbers });
+            await this.paymentsService.storePaymentData(response.paymentID, { ...rest, userID, companyID, numbers: didNumbers.payload.request?.items||numbers });
 
-            if (numbers) {
+            if (didNumbers.payload.request?.items||numbers) {
                 userNumbers = await this.accountNumberFacade.addDidNumbers(userID, companyID, true, didNumbers.payload.request?.items||numbers, company, planID);
                 if (userNumbers.error) {
                     return res.status(HttpStatus.BAD_REQUEST).json(userNumbers.error);
                 }
             }
-            return res.status(HttpStatus.OK).json({ ...response, ...{numbers: userNumbers}, ...{userID, companyID, planID, companyUuid: company.companyUuid} });
+            return res.status(HttpStatus.OK).json({ ...response, ...{numbers: userNumbers}, ...{userID, companyID, planID, companyUuid: company.companyUuid}, ...{ buy_failed, buy_state, order_uuid } });
         } catch (err) {
             throw new Error(err.message)
         }

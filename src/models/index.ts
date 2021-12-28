@@ -35,3 +35,4 @@ export {Province} from './provinces.entity';
 export {SmsTableList} from './sms_table_list';
 export {CallLogTableList} from './call_log_table_list';
 export {PaymentSettings} from './payment_settings';
+export {Orders} from './orders';

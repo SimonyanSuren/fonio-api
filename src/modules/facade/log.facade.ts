@@ -3,7 +3,7 @@ import { Injectable } from "@nestjs/common";
 import { EntityManager, EntityRepository } from "typeorm";
 import { InjectQueue } from "@nestjs/bull";
 import { Queue } from 'bull';
-import { CallLogTableList } from "../../models";
+import { CallLogTableList, Orders } from "../../models";
 
 @EntityRepository()
 @Injectable()
@@ -68,4 +68,14 @@ export class LogFacade {
         return tables.map(({tableName}) => tableName);
     }
 
+    async orderNumber(data: any) {
+        return await this.entityManager.createQueryBuilder()
+            .update(Orders)
+            .set({
+                state: data.payload.state
+            })
+            .where('orders.order_uuid=:uuid', { uuid: data.payload.uuid })
+            .returning('*')
+            .execute();
+    }
 }

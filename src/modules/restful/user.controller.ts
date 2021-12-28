@@ -3,7 +3,7 @@
 import { join } from 'path';
 import { Inject, Controller, Get, HttpStatus, Req, Res, Post, Patch, Param, Put, Delete, Body } from '@nestjs/common';
 import { Response } from 'express';
-import { UserFacade, CompanyFacade } from '../facade';
+import { UserFacade, CompanyFacade, OrderFacade } from '../facade';
 import { ApiOperation, ApiBearerAuth, ApiTags, ApiBody, ApiParam, ApiResponse } from '@nestjs/swagger';
 import { errorResponse } from "../../filters/errorRespone";
 import { HelperClass } from "../../filters/Helper";
@@ -21,6 +21,7 @@ import { BuyDidNumbers, PaymentsService } from '../payments';
 import { SendSmsReq } from '../../util/swagger/send_sms';
 import { OpentactAuth } from '../opentact';
 import { UserTypes } from '../../models/user.entity';
+import { OrderDid } from '../../util/swagger/order_did';
 
 
 
@@ -36,6 +37,7 @@ export class UserController {
         private companyFacade: CompanyFacade,
         private opentactAuth: OpentactAuth,
         private opentactService: OpentactService,
+        private orderFacade : OrderFacade,
         private emailService: EmailService,
         private accountNumberFacade: AccountNumberFacade,
         private commonService: CommonService,
@@ -303,6 +305,28 @@ export class UserController {
         }
     }
 
+    @Post('order_did_number')
+    @ApiOperation({ description: "Order number", })
+    @ApiResponse({ status: 200, description: "id" })
+    @ApiBody({
+        required: true, type: OrderDid,
+    })
+    public async orderDidNumber(@Req() req, @Res() res: Response, @Body() body: OrderDid) {
+        try {
+            let userToken = await this.opentactService.getToken();
+            let order = await this.opentactService.buyDidNumbers(userToken.payload.token, body);
+
+            if (order.error) {
+                return res.status(order.error.status).json(order);
+            }
+
+            let new_order = await this.orderFacade.saveOrder(order.payload, req.user.userUuid);
+            return res.status(201).json(new_order);
+        } catch (err) {
+            return res.status(HttpStatus.BAD_REQUEST).json({ message: err.message })
+        }
+    }
+
     @Post('buy_did_number')
     @ApiOperation({ description: "Buy number", })
     @ApiResponse({ status: 200, description: "id" })
@@ -312,7 +336,7 @@ export class UserController {
     public async buyDidNumber(@Req() req, @Res() res: Response, @Body() body: BuyDidNumbers) {
         try {
 
-            const { type, amount, additionalNumbers } = body;
+            const { type, amount, orderUuid, additionalNumbers } = body;
 
             let userID = req.user?.userId,
                 companyID = req.user?.companyId,
@@ -320,19 +344,31 @@ export class UserController {
                 didNumbers,
                 userNumbers,
                 company,
+                buy_failed,
+                buy_state,
+                order_uuid = orderUuid,
                 planID = (await this.userFacade.findById(userID))?.planID;
 
-            if (numbers) {
-                let userToken = await this.opentactAuth.getToken();
-                didNumbers = await this.opentactService.buyDidNumbers(userToken.payload.token, numbers);
+            let order = await this.orderFacade.getUserOrder(orderUuid, req.user.userUuid);
+            if (!order) return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Order does not exist', status: 'not exist', success: false, failed: true });
+            if (order.done) return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Order is already done', status: 'done', success: false, failed: true });
 
-                if (didNumbers.error) {
-                    return res.status(didNumbers.error.status).json(didNumbers);
-                }
-                
-                if (didNumbers.payload.failed) {
-                    return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Buying number is failed.' })
-                }
+            let userToken = await this.opentactAuth.getToken();
+
+            didNumbers = await this.opentactService.getDidOrderByUuid(userToken.payload.token, order_uuid);
+
+            if (didNumbers.error) {
+                return res.status(didNumbers.error.status).json(didNumbers);
+            }
+
+            buy_failed = didNumbers.payload.failed;
+            buy_state = didNumbers.payload.state;
+            if (didNumbers.payload.failed || didNumbers.payload.state === 'failed') {
+                await this.orderFacade.getUserOrder(orderUuid, req.user.userUuid);
+                return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Buying number is failed.', status: 'failed', success: false, failed: true})
+            }
+            if (!didNumbers.payload.success && didNumbers.payload.state !== 'success') {
+                return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Order is not fulfilled yet. Please wait.', status: 'waiting', success: false, failed: false })
             }
 
             let response = await this.paymentsService.createPayment({ type, amount, companyID, planID });
@@ -342,14 +378,14 @@ export class UserController {
             
             company = await this.userFacade.getCompanyByUserId(userID);
 
-            if (numbers) {
+            if (didNumbers.payload.request?.items||numbers) {
                 userNumbers = await this.accountNumberFacade.addDidNumbers(userID, companyID, true, didNumbers.payload.request?.items||numbers, company, planID);
                 if (userNumbers.error) {
                     return res.status(HttpStatus.BAD_REQUEST).json(userNumbers.error);
                 }
             }
 
-            return res.status(HttpStatus.OK).json({ ...response, ...{numbers: userNumbers}, ...{userID, companyID, planID, companyUuid: company.companyUuid} });
+            return res.status(HttpStatus.OK).json({ ...response, ...{numbers: userNumbers}, ...{userID, companyID, planID, companyUuid: company.companyUuid}, ...{buy_failed, buy_state, order_uuid} });
         } catch (err) {
             throw new Error(err.message)
         }

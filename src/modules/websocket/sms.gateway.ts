@@ -52,6 +52,8 @@ export class WSGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
     async handleConnection(client: Socket, ...args: any[]) {
         console.log(`Client connected: ${client.id} ${new Date()}`);
         let token:any = client.handshake.headers['authorization'] && (client.handshake.headers['authorization']).split(' ')[1];
+
+        if (!token) return client.disconnect(true);
         const user:any = await JWTHelper.verify(token);
         if (!user) {
             client.disconnect(true);

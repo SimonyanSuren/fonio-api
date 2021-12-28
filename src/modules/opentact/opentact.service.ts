@@ -393,6 +393,20 @@ export class OpentactService extends BaseService {
             });
     }
 
+    async getDidOrderByUuid(token, uuid) {
+        return await this.axios.get(`${process.env.OPENTACT_API}/order/${uuid}`, 
+            { 
+                headers: { "X-Auth-Token": token, "Content-Type": "application/json" } 
+            })
+            .then((res) => {
+                return res.data;
+            })
+            .catch((err) => {
+                console.log(err)
+                return { error: err.response.data };
+            });
+    }
+
     async buyDid(token: string, didId: string) {
         return await fetch(`${process.env.OPENTACT_API}/dids/buyDid/${process.env.FONIO_APP}/${didId}`, {
             method: 'POST',

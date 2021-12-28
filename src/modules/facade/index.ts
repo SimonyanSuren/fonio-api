@@ -30,6 +30,7 @@ import {CallFlowStepFacade} from './callflowstep.facade';
 import {ContactFacade} from './contact.facade';
 import {InvoiceFacade} from './invoice.facade';
 import {PaymentFacade} from './payment.facade';
+import {OrderFacade} from './order.facade';
 // import {SmsFacade} from './sms.facade';
 import {CallerDetailsFacade} from './caller_details.facade';
 import {Repositories} from '../db/repositories';
@@ -45,7 +46,7 @@ const FACADES = [
     DidFacade, //HangupFacade, MenuFacade,
     AccountNumberFacade, //KeywordsFacade,
     // StatisticsFacade, CallTranslateFacade, 
-    TagFacade,
+    TagFacade, OrderFacade,
     // CallNotificationFacade, CompanySummaryFacade,
     RecordingFacade, CallFlowStepFacade, DataFacade, ContactFacade,
     InvoiceFacade, PaymentFacade, CallerDetailsFacade, //SmsFacade, 
@@ -96,6 +97,7 @@ export {CallFlowStepFacade} from './callflowstep.facade';
 export {ContactFacade} from './contact.facade';
 export {InvoiceFacade} from './invoice.facade';
 export {PaymentFacade} from './payment.facade';
+export {OrderFacade} from './order.facade';
 // export {SmsFacade} from './sms.facade';
 export {CallerDetailsFacade} from './caller_details.facade';
 export {LogFacade} from './log.facade';
