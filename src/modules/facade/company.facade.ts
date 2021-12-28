@@ -320,7 +320,7 @@ export class CompanyFacade extends BaseService {
         return this.entityManager.createQueryBuilder()
             .update(Company)
             .set({
-                status: status
+                notification: status
             })
             .where('comp_uuid=:uuid', { uuid: uuid })
             .returning('*')
