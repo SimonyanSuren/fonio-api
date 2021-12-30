@@ -82,7 +82,7 @@ export class TrackingNumberController {
     @ApiQuery({ name: 'state', description: 'Two-letter state or province abbreviation (e.g. IL, CA)', required: false })
     @ApiQuery({ name: 'type', description: 'Default: \"long_code\".The type of number. Must be "long_code" or "toll_free"', required: false })
     @ApiQuery({ name: 'npa', description: 'Default undefined. NPA ratecenter', required: false })
-    @ApiQuery({ name: 'nxx', description: 'Default undefined. NPA ratecenter', required: false })
+    @ApiQuery({ name: 'nxx', description: 'Default undefined. NXX ratecenter', required: false })
     @ApiResponse({ status: 200, description: "numbers trackingNumber OK", type: opentactITNSearchResponse, isArray: false })
     @ApiBody({
         type: NumberFeatures,
