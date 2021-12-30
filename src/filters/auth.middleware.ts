@@ -22,7 +22,8 @@ export class AuthMiddleware implements NestMiddleware {
                 || url.includes("public/timezone/list")
                 || url.includes("public/number_search")
                 || url.includes("public/verify_token")
-                || url.includes("public/list/npa")
+                || url.includes("public/list/npa-nxx")
+                || url.includes("public/list/state")
                 || url.includes("public/assets")
                 || url.includes("public/voicemail")
                 || url.includes("dynamic_number")
@@ -41,6 +42,7 @@ export class AuthMiddleware implements NestMiddleware {
                 || url.includes("/opentact/call_flow/callback")
                 || url.includes("/tracking_numbers/provinces/list")
                 || url.includes("/payments/payment_approval_url")
+                || url.includes("/google/redirect")
                 || url.includes("/socket.io")
                 || url === "/"
                 || url === "/tracking_numbers"

@@ -84,7 +84,7 @@ export class PublicApi {
         }
     }
 
-    @Get("list/npa-npx/:state")
+    @Get("list/npa-nxx/:state")
     @ApiParam({ name: 'state', description: 'state with two general letters', required: true, type: String })
     @ApiResponse({status: 200, description: "get npa and npx for state"})
     public async searchStateNPANPX(@Req() req, @Res() res: Response,

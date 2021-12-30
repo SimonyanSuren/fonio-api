@@ -78,7 +78,7 @@ export class OpentactService extends BaseService {
         return config;
     };
 
-    async getTrackingNumbers({ skip = 0, take = 10, type = 'long_code', pattern = undefined, line = undefined, profile = 'US',  city = undefined, state = undefined, npa = undefined, features = ['sms', 'voice'] } = {}) {
+    async getTrackingNumbers({ skip = 0, take = 10, type = 'long_code', pattern = undefined, line = undefined, profile = 'US',  city = undefined, state = undefined, npa = undefined, nxx = undefined, features = ['sms', 'voice'] } = {}) {
         try {
             const country = profile
             const response = await this.axios.post(`/tn/search`, {
@@ -89,6 +89,7 @@ export class OpentactService extends BaseService {
                 line,
                 pattern,
                 npa,
+                nxx,
                 take,
                 features
             })

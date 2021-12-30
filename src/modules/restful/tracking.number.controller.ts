@@ -81,6 +81,8 @@ export class TrackingNumberController {
     @ApiQuery({ name: 'city', description: 'Location Full Name filter for telephone numbers.', required: false })
     @ApiQuery({ name: 'state', description: 'Two-letter state or province abbreviation (e.g. IL, CA)', required: false })
     @ApiQuery({ name: 'type', description: 'Default: \"long_code\".The type of number. Must be "long_code" or "toll_free"', required: false })
+    @ApiQuery({ name: 'npa', description: 'Default undefined. NPA ratecenter', required: false })
+    @ApiQuery({ name: 'nxx', description: 'Default undefined. NPA ratecenter', required: false })
     @ApiResponse({ status: 200, description: "numbers trackingNumber OK", type: opentactITNSearchResponse, isArray: false })
     @ApiBody({
         type: NumberFeatures,
@@ -95,13 +97,15 @@ export class TrackingNumberController {
         @Query("state") state: any,
         @Query("type") type: any = 'long_code',
         @Body("features") features: string[],
+        @Body("npa") npa: any,
+        @Body("nxx") nxx: any,
     ) {
         try {  
             if (!['toll_free', 'long_code'].includes(type)){
                 return res.status(HttpStatus.BAD_REQUEST).json({ message: "type must me one of the following ['toll_free', 'long_code']" });
             }
             let num_type: any = type === 'long_code' ? {line: search||'xxxx'} : {pattern: search||'xxxxxxx'};
-            let response = await this.opentactService.getTrackingNumbers({ ...{ skip, take, type, profile, city, state, features }, ...num_type });
+            let response = await this.opentactService.getTrackingNumbers({ ...{ skip, take, type, profile, city, state, features, npa, nxx }, ...num_type });
             return res.status(HttpStatus.OK).json(response);
         } catch (err) {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
