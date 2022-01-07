@@ -177,6 +177,18 @@ export class CompanyFacade extends BaseService {
         return await this.entityManager.save(contact);
     }
 
+    async reassignUserContact(userId, creator_id, contact_id) {
+        return await this.entityManager.createQueryBuilder()
+            .update(Contact)
+            .set({
+                modifiedBy: creator_id,
+                assignedTo: User.withId(userId)
+            })
+            .where('contacts.cont_id=:contact_id', { contact_id })
+            .returning('*')
+            .execute();
+    }
+
     async UpdateCompanyContact(user_id, comp_id, cont_id, contact_req) {
         let contact = await await this.entityManager.createQueryBuilder(Contact, 'contact')
             .where('contact.cont_id=:cont_id', { cont_id })
