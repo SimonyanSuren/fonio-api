@@ -156,10 +156,15 @@ export class CompanyFacade extends BaseService {
         return {result, count: Number(count[0].count)};
     }
 
-    async getCompanyContacts(comp_id) {
-        return await this.entityManager.createQueryBuilder(Contact, 'contact')
-            .where('contact.comp_id=:comp_id', { comp_id })
-            .getMany();
+    async getCompanyContacts(comp_id, id?) {
+        let query = this.entityManager.createQueryBuilder(Contact, 'contact')
+            .where('contact.comp_id=:comp_id', { comp_id });
+
+        if (id) {
+            query.andWhere('contact.cont_id=:id', { id });
+        }
+        
+        return await query.getMany();
     }
 
     async assignUserContact(userId, creator_id, company_id, contact_req) {
@@ -177,7 +182,7 @@ export class CompanyFacade extends BaseService {
         return await this.entityManager.save(contact);
     }
 
-    async reassignUserContact(userId, creator_id, contact_id) {
+    async reassignUserContact(userId, creator_id, contact_id, company_id) {
         return await this.entityManager.createQueryBuilder()
             .update(Contact)
             .set({
@@ -185,6 +190,7 @@ export class CompanyFacade extends BaseService {
                 assignedTo: User.withId(userId)
             })
             .where('contacts.cont_id=:contact_id', { contact_id })
+            .andWhere('contacts.comp_id=:company_id', { company_id })
             .returning('*')
             .execute();
     }

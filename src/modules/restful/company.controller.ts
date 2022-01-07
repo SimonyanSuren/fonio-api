@@ -69,6 +69,28 @@ export class CompanyController {
         }
     }
 
+    @Get(':companyUuid/contacts/:id')
+    @ApiParam({name: 'companyUuid', description: 'company uuid'})
+    @ApiParam({name: 'id', description: 'contact id'})
+    @ApiResponse({status: 200, description: "companies OK", type: Company, isArray: true})
+    @ApiOperation({description: "get company contact by id", operationId: "getContactById", summary: "Companies Contact By Id"})
+    public async companyContact(@Req() req, @Res() res: Response, 
+        @Param("companyUuid") companyUuid: string,
+        @Param("id") id: string
+    ) {
+        try {
+            let response = await this.companyFacade.getAllCompaniesByUserCreator(req.user.userId, companyUuid);
+            if (!response.count) await HelperClass.throwErrorHelper('company:companyWithThisUuidDoesNotExist');
+
+            let contact = (await this.companyFacade.getCompanyContacts(response.result[0].company_comp_id, id))[0];
+            if (!contact) await HelperClass.throwErrorHelper('contact:contactDoesNotExist');
+
+            res.status(HttpStatus.OK).json(contact);
+        } catch (err) {
+            errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
+        }
+    }
+
     @Patch(':companyUuid/contacts/:id')
     @ApiParam({name: 'id', description: 'contact id'})
     @ApiParam({name: 'companyUuid', description: 'company uuid'})
@@ -140,7 +162,7 @@ export class CompanyController {
             let user = await this.companyFacade.getUserUuidByCompanyUuid(companyUuid, userUuid);
             if (!user) await HelperClass.throwErrorHelper('user:companyMemberWithThisUuidDoesNotExist');
             
-            let contact = await this.companyFacade.reassignUserContact(user?.id, req.user.userId, contactId);
+            let contact = await this.companyFacade.reassignUserContact(user?.id, req.user.userId, contactId, response.result[0].company_comp_id);
 
             res.status(HttpStatus.OK).json(contact);
         } catch (err) {
