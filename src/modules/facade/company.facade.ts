@@ -167,6 +167,16 @@ export class CompanyFacade extends BaseService {
         return await query.getMany();
     }
 
+    async deleteCompanyContacts(comp_id, id) {
+        return await this.entityManager.createQueryBuilder()
+            .delete()
+            .from(Contact)
+            .where('contacts.comp_id=:comp_id', { comp_id })
+            .andWhere('contacts.cont_id=:id', { id })
+            .returning('*')
+            .execute();
+    }
+
     async assignUserContact(userId, creator_id, company_id, contact_req) {
         let contact = new Contact();
         contact.email = contact_req.email;

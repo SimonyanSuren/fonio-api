@@ -1,6 +1,6 @@
 'use strict';
 
-import {Controller, Get, Post, Patch, HttpStatus, Req, Res, Query, Param, Body} from '@nestjs/common';
+import {Controller, Get, Post, Patch, HttpStatus, Req, Res, Query, Param, Body, Delete} from '@nestjs/common';
 import {Response} from 'express';
 import {CompanyFacade} from '../facade';
 import {Company, User} from '../../models';
@@ -111,6 +111,28 @@ export class CompanyController {
             let contacts = await this.companyFacade.UpdateCompanyContact(req.user.userId, response.result[0].company_comp_id, id, body);
 
             res.status(HttpStatus.OK).json(contacts);
+        } catch (err) {
+            errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @Delete(':companyUuid/contacts/:id')
+    @ApiParam({name: 'companyUuid', description: 'company uuid'})
+    @ApiParam({name: 'id', description: 'contact id'})
+    @ApiResponse({status: 200, description: "companies OK", type: Company, isArray: true})
+    @ApiOperation({description: "delete company contact by id", operationId: "deleteContactById", summary: "Delete Companies Contact By Id"})
+    public async deleteCompanyContact(@Req() req, @Res() res: Response, 
+        @Param("companyUuid") companyUuid: string,
+        @Param("id") id: string
+    ) {
+        try {
+            let response = await this.companyFacade.getAllCompaniesByUserCreator(req.user.userId, companyUuid);
+            if (!response.count) await HelperClass.throwErrorHelper('company:companyWithThisUuidDoesNotExist');
+
+            let contact = (await this.companyFacade.deleteCompanyContacts(response.result[0].company_comp_id, id));
+            if (!contact.affected) await HelperClass.throwErrorHelper('contact:contactDoesNotExist');
+
+            res.status(HttpStatus.OK).json({ message: 'Contact was successfuly removed'});
         } catch (err) {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
         }
