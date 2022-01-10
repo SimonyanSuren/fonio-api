@@ -69,11 +69,15 @@ export class ContactController {
 
     @Get()
     @ApiQuery({name: 'userUuid', description: 'user uuid', required: false})
+    @ApiQuery({name: 'firstName', description: 'contact firstName', required: false})
     @ApiResponse({ status: 200, description: "contact info", type: Contact })
     @ApiOperation({ description: "get contact list.", operationId: "getContactList", summary: "Get Contact List" })
-    public async getAll( @Req() req, @Res() res: Response, @Query('userUuid') userUuid: string) {
+    public async getAll( @Req() req, @Res() res: Response, 
+        @Query('userUuid') userUuid: string,
+        @Query("firstName") firstName: string
+    ) {
         try {
-            let result = await this.contactFacade.getList(req.user, userUuid);
+            let result = await this.contactFacade.getList(req.user, {userUuid, firstName});
             if (result) {
                 (result[0]).forEach(contact => {
                     contact.assignedTo.password = undefined;

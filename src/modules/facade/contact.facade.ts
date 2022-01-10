@@ -23,14 +23,18 @@ export class ContactFacade {
             .getOne();
     }
 
-    async findByCompId(compId: number, userUuid: any) {
+    async findByCompId(compId: number, options: any) {
         let query = this.entityManager.createQueryBuilder(Contact, "cont")
             .leftJoinAndSelect("cont.company", "company")
             .leftJoinAndSelect("cont.assignedTo", "user")
             .where("company.comp_id = :compId ", { compId })
 
-        if (userUuid) {
-            query.andWhere('user.uuid=:userUuid', { userUuid })
+        if (options?.userUuid) {
+            query.andWhere('user.uuid=:userUuid', { userUuid: options.userUuid })
+        }
+
+        if (options?.firstName) {
+            query.andWhere('LOWER(cont.firstName) like :name', { name: `${options.firstName.toLowerCase()}%` })
         }
 
         return await query.getManyAndCount();
@@ -93,12 +97,12 @@ export class ContactFacade {
         }
     }
 
-    async getList(currentUser, userUuid?) {
+    async getList(currentUser, options?) {
         if (!currentUser.companyUuid) await HelperClass.throwErrorHelper('user:thisUserIsNotAssinedToCompany');
         let company = await this.companyFacade.getCompanyByUuid(currentUser.companyUuid);
         if (!company) await HelperClass.throwErrorHelper('company:CompanyDoesNotExist');
         else {
-            return await this.findByCompId(company.companyID, userUuid);
+            return await this.findByCompId(company.companyID, options);
         }
     }
 
