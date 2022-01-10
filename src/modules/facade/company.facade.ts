@@ -63,33 +63,6 @@ export class CompanyFacade extends BaseService {
         return await this.userFacade.findByEmail(email);
     }
 
-    // async findAll(accountId: number, filter: string | undefined, offset: number | undefined, limit: number | undefined) {
-    //     let manager = await this.entityManager;
-    //     let query = manager.createQueryBuilder(Company, "company")
-    //         .where("account.id = :accountId ")
-    //         .leftJoinAndSelect("company.account", "account")
-    //         .leftJoinAndSelect("company.type", "type")
-    //         .where(" 1=1 ");
-
-    //     if (filter) {
-    //         query.andWhere(" LOWER(company.name) like LOWER(:filter)");
-    //     }
-    //     if (offset && limit && limit >= 0) {
-    //         query.offset(offset);
-    //     }
-
-    //     if (!limit || limit < 1) {
-    //         limit = Config.number("DEFAULT_LIMIT", 20);
-    //     }
-    //     let params = {accountId};
-    //     if (filter) {
-    //         params["filter"] = "%" + filter.toLowerCase() + "%";
-    //     }
-    //     query.setParameters(params);
-    //     query.limit(limit);
-    //     return query.getMany();
-    // }
-
     async getUserListByCompanyUuid(companyUuid, orderBy?, orderType?) {
         let by;
         if (orderBy === 'created') by = 'creation';
@@ -189,6 +162,7 @@ export class CompanyFacade extends BaseService {
         contact.modifiedBy = creator_id;
         contact.assignedTo = User.withId(userId);
         contact.company = Company.withId(company_id);
+        contact.favourite = contact_req.favourite;
         return await this.entityManager.save(contact);
     }
 
@@ -206,23 +180,24 @@ export class CompanyFacade extends BaseService {
     }
 
     async UpdateCompanyContact(user_id, comp_id, cont_id, contact_req) {
-        let contact = await await this.entityManager.createQueryBuilder(Contact, 'contact')
-            .where('contact.cont_id=:cont_id', { cont_id })
-            .andWhere('contact.comp_id=:comp_id', { comp_id })
-            .getOne();
+        let contact: any = {};
 
-        if (!contact) await HelperClass.throwErrorHelper('contact:ContactDoesNotExist');
-        else  {
-            contact.phoneNumber = contact_req.phoneNumber;
-            contact.firstName = contact_req.firstName;
-            contact.lastName = contact_req.lastName;
-            contact.lastModified = new Date();
-            contact.active = contact_req.active;
-            contact.modifiedBy = user_id;
-            // contact.modifiedBy = User.withId(user_id);
-            let manager = await this.entityManager;
-            return await manager.save(contact);
-        }
+        if (contact_req.email) contact.email = contact_req.email;
+        if (contact_req.phoneNumber) contact.phoneNumber = contact_req.phoneNumber;
+        if (contact_req.firstName) contact.firstName = contact_req.firstName;
+        if (contact_req.lastName) contact.lastName = contact_req.lastName;
+        if (contact_req.hasOwnProperty('active')) contact.active = contact_req.active;
+        if (contact_req.hasOwnProperty('favourite')) contact.favourite = contact_req.favourite;
+        contact.lastModified = new Date();
+        contact.modifiedBy = user_id;
+
+        return await this.entityManager.createQueryBuilder()
+            .update(Contact)
+            .set(contact)
+            .where('contacts.cont_id=:cont_id', { cont_id })
+            .andWhere('contacts.comp_id=:comp_id', { comp_id })
+            .returning('*')
+            .execute();
     }
 
     async getAllCompanies(companyUuid) {
@@ -280,26 +255,6 @@ export class CompanyFacade extends BaseService {
             .where('company.companyUuid=:companyUuid', {companyUuid: companyUuid})
             .getOne();
     }
-
-    // async getAllCompaniesByAccountId(accountId) {
-    //     let manager = await this.entityManager;
-    //     let query = manager.createQueryBuilder(Company, 'company')
-    //         .where('company.accountID=:accountId', {accountId: accountId});
-
-    //     let companies = await query.getMany();
-    //     let companies_new = new Array();
-    //     for (const company of companies) {
-    //         let query_count1 = await manager.query(`select count(*) from "user" where user_company_name = '${company.companyName}' and account_id = ${accountId}`);
-    //         let query_count2 = await manager.query(`select count(*) from "tracking_numbers" where comp_name = '${company.companyName}' and acco_id = ${accountId}`);
-    //         let new_company = {
-    //             users: query_count1[0].count,
-    //             numbers: query_count2[0].count
-    //         };
-    //         Object.assign(new_company, company);
-    //         companies_new.push(new_company);
-    //     }
-    //     return companies_new;
-    // }
 
     async addUsers(uuids, comp_name) {
         let manager = await this.entityManager;

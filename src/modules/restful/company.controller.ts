@@ -24,20 +24,6 @@ export class CompanyController {
     ) {
     }
 
-    // @Get('all')
-    // @ApiQuery({name: 'companyUuid', description: 'company uuid', required: false})
-    // @ApiResponse({status: 200, description: "companies OK", type: Company, isArray: true})
-    // @ApiOperation({description: "get All companies", operationId: "get", summary: "All Companies"})
-    // public async findAll(@Req() req, @Res() res: Response, @Query("companyUuid") companyUuid: string) {
-    //     try {
-    //         let user = req.user;
-    //         const companies = await this.companyFacade.getAllCompanies(companyUuid);
-    //         res.status(HttpStatus.OK).json(companies);
-    //     } catch (err) {
-    //         errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
-    //     }
-    // }
-
     @Get('list')
     @ApiQuery({name: 'companyUuid', description: 'company uuid', required: false})
     @ApiResponse({status: 200, description: "companies OK", type: Company, isArray: true})
