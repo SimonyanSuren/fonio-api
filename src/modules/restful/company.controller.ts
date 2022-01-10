@@ -227,10 +227,10 @@ export class CompanyController {
             let response = await this.companyFacade.getAllCompaniesByUserCreator(req.user.userId, uuid);
             if (!response.count) await HelperClass.throwErrorHelper('company:companyWithThisUuidDoesNotExist');
 
-            let members = this.companyFacade.getUserUuidByCompanyUuid(uuid, userUuid);
-            if (!members) await HelperClass.throwErrorHelper('user:userWithThisUuidDoesNotExist');
+            let member = await this.companyFacade.getUserUuidByCompanyUuid(uuid, userUuid);
+            if (!member) await HelperClass.throwErrorHelper('user:userWithThisUuidDoesNotExist');
 
-            res.status(HttpStatus.OK).json(members);
+            res.status(HttpStatus.OK).json(member);
         } catch (err) {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
         }
