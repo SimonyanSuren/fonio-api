@@ -86,15 +86,20 @@ export class PublicApi {
 
     @Get("list/npa-nxx/:state")
     @ApiParam({ name: 'state', description: 'state with two general letters', required: true, type: String })
+    @ApiQuery({ name: 'rate_center', description: 'rate center name with general letters', required: false, type: String })
     @ApiResponse({status: 200, description: "get npa and npx for state"})
     public async searchStateNPANPX(@Req() req, @Res() res: Response,
         @Param("state") state: string,
+        @Query("rate_center") rate_center: string,
     ) {
         try {
             
             let response = await this.opentactService.getAvailableRatecenterNpaNxx(state);
-            
-            return res.status(200).send(response.payload);
+
+            let data = rate_center ? response.payload.find(one => one.rate_center === rate_center.toUpperCase()) : response.payload;
+            if (!data) return res.status(404).json({message: 'Rate center was not found'});
+
+            return res.status(200).json(data);
         } catch (e) {
             return res.status(404).send({message: e.message});
         }
