@@ -319,7 +319,7 @@ export class CompanyController {
             if (body.firstName) user.firstName = body.firstName;
             if (body.lastName) user.lastName = body.lastName;
             if (body.link) user.link = body.link;
-            if (body.active) user.active = body.active;
+            if (body.hasOwnProperty('active')) user.active = body.active;
 
             let updatedUser = await this.companyFacade.updateCompanyUser(uuid, userUuid, user);
 
