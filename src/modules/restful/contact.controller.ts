@@ -1,12 +1,12 @@
 'use strict';
 
-import {Controller, Get, Post, HttpStatus, Req, Res, Body, Delete, Param, Patch} from '@nestjs/common';
+import {Controller, Get, Post, HttpStatus, Req, Res, Body, Delete, Param, Patch, Query} from '@nestjs/common';
 import {Response} from 'express';
 import {ContactReq} from '../../util/swagger';
 import {ValidationPipe} from '../../util/validatior';
 import {ContactFacade} from '../facade';
 import {Contact} from '../../models';
-import {ApiResponse, ApiOperation, ApiBearerAuth, ApiParam, ApiBody} from '@nestjs/swagger';
+import {ApiResponse, ApiOperation, ApiBearerAuth, ApiParam, ApiBody, ApiQuery} from '@nestjs/swagger';
 import {errorResponse} from "../../filters/errorRespone";
 
 @Controller("contacts")
@@ -68,13 +68,20 @@ export class ContactController {
     }
 
     @Get()
+    @ApiQuery({name: 'userUuid', description: 'user uuid', required: false})
     @ApiResponse({ status: 200, description: "contact info", type: Contact })
     @ApiOperation({ description: "get contact list.", operationId: "getContactList", summary: "Get Contact List" })
-    public async getAll( @Req() req, @Res() res: Response) {
+    public async getAll( @Req() req, @Res() res: Response, @Query('userUuid') userUuid: string) {
         try {
-            let result = await this.contactFacade.getList(req.user);
-            if (result)
+            let result = await this.contactFacade.getList(req.user, userUuid);
+            if (result) {
+                (result[0]).forEach(contact => {
+                    contact.assignedTo.password = undefined;
+                    contact.assignedTo.salt = undefined;
+                });
+
                 res.status(HttpStatus.OK).json({response: result[0], entries: result[1]});
+            }
             else
                 res.status(HttpStatus.OK).json({response: [], entries: 0});
         } catch (err) {

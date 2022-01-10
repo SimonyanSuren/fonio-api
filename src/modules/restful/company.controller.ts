@@ -40,14 +40,23 @@ export class CompanyController {
 
     @Get(':companyUuid/contacts')
     @ApiParam({name: 'companyUuid', description: 'company uuid'})
+    @ApiQuery({name: 'userUuid', description: 'user uuid', required: false})
     @ApiResponse({status: 200, description: "companies OK", type: Company, isArray: true})
     @ApiOperation({description: "get All company contacts", operationId: "getContacts", summary: "Companies Contacts"})
-    public async contactsList(@Req() req, @Res() res: Response, @Param("companyUuid") companyUuid: string) {
+    public async contactsList(@Req() req, @Res() res: Response, 
+        @Param("companyUuid") companyUuid: string,
+        @Query("userUuid") userUuid: string
+    ) {
         try {
             let response = await this.companyFacade.getAllCompaniesByUserCreator(req.user.userId, companyUuid);
             if (!response.count) await HelperClass.throwErrorHelper('company:companyWithThisUuidDoesNotExist');
 
-            let contacts = await this.companyFacade.getCompanyContacts(response.result[0].company_comp_id);
+            let contacts = await this.companyFacade.getCompanyContacts(response.result[0].company_comp_id, undefined, userUuid);
+
+            contacts.forEach(contact => {
+                contact.assignedTo.password = undefined;
+                contact.assignedTo.salt = undefined;
+            })
 
             res.status(HttpStatus.OK).json(contacts);
         } catch (err) {
@@ -70,6 +79,9 @@ export class CompanyController {
 
             let contact = (await this.companyFacade.getCompanyContacts(response.result[0].company_comp_id, id))[0];
             if (!contact) await HelperClass.throwErrorHelper('contact:contactDoesNotExist');
+
+            contact.assignedTo.password = undefined;
+            contact.assignedTo.salt = undefined;
 
             res.status(HttpStatus.OK).json(contact);
         } catch (err) {

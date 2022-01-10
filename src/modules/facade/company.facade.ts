@@ -129,9 +129,14 @@ export class CompanyFacade extends BaseService {
         return {result, count: Number(count[0].count)};
     }
 
-    async getCompanyContacts(comp_id, id?) {
+    async getCompanyContacts(comp_id, id?, userUuid?) {
         let query = this.entityManager.createQueryBuilder(Contact, 'contact')
+            .leftJoinAndSelect('contact.assignedTo', 'user')
             .where('contact.comp_id=:comp_id', { comp_id });
+
+        if (userUuid) {
+            query.andWhere('user.uuid=:userUuid', { userUuid })
+        }
 
         if (id) {
             query.andWhere('contact.cont_id=:id', { id });
