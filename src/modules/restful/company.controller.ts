@@ -318,7 +318,6 @@ export class CompanyController {
             if (body.phone) user.userPhone = body.phone;
             if (body.firstName) user.firstName = body.firstName;
             if (body.lastName) user.lastName = body.lastName;
-            if (body.link) user.link = body.link;
             if (body.hasOwnProperty('active')) user.active = body.active;
 
             let updatedUser = await this.companyFacade.updateCompanyUser(uuid, userUuid, user);

@@ -42,8 +42,6 @@ export class CompanyMemberUpdate {
   @ApiProperty()
   phone: string;
   @ApiProperty()
-  link: string;
-  @ApiProperty()
   firstName: string;
   @ApiProperty()
   lastName: string;
