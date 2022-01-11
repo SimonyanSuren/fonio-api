@@ -80,6 +80,7 @@ export class TrackingNumberController {
     @ApiQuery({ required: false, name: 'search', description: 'Default: \"xxxx\". 4 (for \"long_code\") or 7 (for \"toll_free\") digit numbers. To search full number provide the whole 4 or 7 numbers. In a case of seraching numbers that are starting or ending with provideed ones, fill the missing ones with \"x\". For example: xx67, 67xx or xxxx123, 123xxxxx.' })
     @ApiQuery({ name: 'city', description: 'Location Full Name filter for telephone numbers.', required: false })
     @ApiQuery({ name: 'state', description: 'Two-letter state or province abbreviation (e.g. IL, CA)', required: false })
+    @ApiQuery({ name: 'rate_center', description: 'Rate center name with general letters (e.g. SALMON)', required: false })
     @ApiQuery({ name: 'type', description: 'Default: \"long_code\".The type of number. Must be "long_code" or "toll_free"', required: false })
     @ApiQuery({ name: 'npa', description: 'Default undefined. NPA ratecenter', required: false })
     @ApiQuery({ name: 'nxx', description: 'Default undefined. NXX ratecenter', required: false })
@@ -95,6 +96,7 @@ export class TrackingNumberController {
         @Query("profile") profile: string = 'US',
         @Query("city") city: any,
         @Query("state") state: any,
+        @Query("rate_center") rate_center: any,
         @Query("type") type: any = 'long_code',
         @Body("features") features: string[],
         @Body("npa") npa: any,
@@ -105,7 +107,7 @@ export class TrackingNumberController {
                 return res.status(HttpStatus.BAD_REQUEST).json({ message: "type must me one of the following ['toll_free', 'long_code']" });
             }
             let num_type: any = type === 'long_code' ? {line: search||'xxxx'} : {pattern: search||'xxxxxxx'};
-            let response = await this.opentactService.getTrackingNumbers({ ...{ skip, take, type, profile, city, state, features, npa, nxx }, ...num_type });
+            let response = await this.opentactService.getTrackingNumbers({ ...{ skip, take, type, profile, city, state, rate_center, features, npa, nxx }, ...num_type });
             return res.status(HttpStatus.OK).json(response);
         } catch (err) {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
