@@ -269,14 +269,18 @@ export class UserController {
     //     }
     // }
 
-    @Get("image")
+    @Get("image/:image")
+    @ApiParam({ name: 'image', description: 'image name' })
     @ApiOperation({ description: "Get user image" })
     public async getUserImage(
         @Req() req, 
         @Res() res: Response, 
+        @Param('image') image: string
     ) {
         try {
-            res.sendFile(join(process.cwd(), `${constants.PATH_TO_IMAGE_FOLDER}/${req.user.userUuid}.jpeg`), function (err) {
+            if (!image.includes(req.user.userUuid)) res.status(404).send({ message: 'image not found' });
+
+            res.sendFile(join(process.cwd(), `${constants.PATH_TO_IMAGE_FOLDER}/${image}`), function (err) {
                 if (err) {
                   return res.status(404).end();
                 }

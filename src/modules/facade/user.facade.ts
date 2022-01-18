@@ -250,14 +250,14 @@ export class UserFacade {
             .execute();
     }
 
-    async deleteImageFromDisk(link, userUuid) {
-        if (fs.existsSync(`${link}/${userUuid}.jpeg`)) {
-            fs.unlinkSync(`${link}/${userUuid}.jpeg`);
+    async deleteImageFromDisk(link, image_name) {
+        if (fs.existsSync(`${link}/${image_name}`)) {
+            fs.unlinkSync(`${link}/${image_name}`);
         }
     }
 
-    async deleteImageFromDistPromise(link, userUuid) {
-        return await this.deleteImageFromDisk(link, userUuid);
+    async deleteImageFromDistPromise(link, image_name) {
+        return await this.deleteImageFromDisk(link, image_name);
     }
 
     async getUserById(userId, companyId) {

@@ -12,6 +12,7 @@ import { CompanyMember, CompanyMemberUpdate, InvitationReq } from '../../util/sw
 import { EmailService } from '../email';
 import constants from '../../constants';
 import { ContactReq } from '../../util/swagger/contact_req';
+import { join } from 'path';
 const CreateRoles: string[] = ['user', 'company'];
 
 @Controller("company")
@@ -431,6 +432,31 @@ export class CompanyController {
             return res.status(HttpStatus.OK).json({ response: 'Invitation has been sent successfully.' });
         } catch (err) {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @Get(":uuid/user/image/:image")
+    @ApiParam({ name: 'uuid', description: 'company uuid' })
+    @ApiParam({ name: 'image', description: 'image name' })
+    @ApiOperation({ description: "Get user image" })
+    public async getUserImage(
+        @Req() req, 
+        @Res() res: Response, 
+        @Param('uuid') uuid: string,
+        @Param('image') image: string,
+    ) {
+        try {
+            let userUuid = image.split('_')[0];
+            let user_exist = await this.companyFacade.getUserUuidByCompanyUuid(uuid, userUuid);
+            if (!user_exist) await HelperClass.throwErrorHelper('company:imageDoesNotExist');
+
+            res.sendFile(join(process.cwd(), `${constants.PATH_TO_IMAGE_FOLDER}/${image}`), function (err) {
+                if (err) {
+                  return res.status(404).end();
+                }
+            })
+        } catch (e) {
+            return res.status(404).send({message: e.message});
         }
     }
 

@@ -21,8 +21,9 @@ export class DeleteUserImage {
     @ApiOperation({description: "delete user image", operationId: "deleteUserImage", summary: "Delete User Image"})
     public async removeUserImage(@Req() req, @Res() res: Response) {
         try {
-            let {userUuid} = req.user;
-            await this.userFacade.deleteImageFromDistPromise(`${constants.PATH_TO_IMAGE_FOLDER}`, userUuid);
+            let {link, userUuid} = req.user;
+            let image_name = link.split('user/image/')[1];
+            await this.userFacade.deleteImageFromDistPromise(`${constants.PATH_TO_IMAGE_FOLDER}`, image_name);
             await this.userFacade.deleteImageFromTable(userUuid);
 
             return res.status(202).json({response: 'Image was removed'});
@@ -45,8 +46,8 @@ export class DeleteUserImage {
             if (!response.count) await HelperClass.throwErrorHelper('company:companyWithThisUuidDoesNotExist');
             let user_exist = await this.companyFacade.getUserUuidByCompanyUuid(companyUuid, userUuid);
             if (!user_exist) await HelperClass.throwErrorHelper('company:userWithThisUuidDoesNotExist');
-
-            await this.userFacade.deleteImageFromDistPromise(`${constants.PATH_TO_IMAGE_FOLDER}`, userUuid);
+            let image_name = user_exist?.link?.split('user/image/')[1];
+            await this.userFacade.deleteImageFromDistPromise(`${constants.PATH_TO_IMAGE_FOLDER}`, image_name);
             await this.userFacade.deleteImageFromTable(userUuid);
 
             return res.status(202).json({response: 'Image was removed'});

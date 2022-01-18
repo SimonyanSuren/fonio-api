@@ -43,10 +43,7 @@ import { existsSync, mkdirSync, unlinkSync } from 'fs';
                 return cb(null, `${constants.PATH_TO_IMAGE_FOLDER}`);
             },
             filename: (req: any, file, cb) => {
-                if (existsSync(`${constants.PATH_TO_IMAGE_FOLDER}/${req.user.userUuid}.jpeg`)){
-                    unlinkSync(`${constants.PATH_TO_IMAGE_FOLDER}/${req.user.userUuid}.jpeg`);
-                }
-                return cb(null, `${req.user.userUuid}.jpeg`);
+                return cb(null, `${req.params.userUuid||req.user.userUuid}_${Date.now()}.jpeg`);
             }
         }),
         fileFilter: async (req, file: any, cb) => {
@@ -93,8 +90,14 @@ export class UploadUserImage {
     public async uploadImageForUser(@Req() req, @Res() res: Response, @UploadedFile() file) {
         try {
             if (!req.file) await HelperClass.throwErrorHelper('upload:fileFormatWrong');
-            let link = `${process.env.CURRENT_SERVER}/user/image/${req.user.userUuid}.jpeg`;
+            let currentUser = await this.userFacade.getUserByUuid(req.user.userUuid);
+            if (!currentUser) await HelperClass.throwErrorHelper('user:userWithThisUuidDoesNotExist');
+            let link = `${process.env.CURRENT_SERVER}/user/image/${req.file.filename}`;
+            let old_link = currentUser?.link;
             await this.userFacade.uploadedImageLinkToUserTable(link, req.user.userUuid);
+            if (old_link && existsSync(`${constants.PATH_TO_IMAGE_FOLDER}/${old_link.split('user/image/')[1]}`)) {
+                unlinkSync(`${constants.PATH_TO_IMAGE_FOLDER}/${old_link.split('user/image/')[1]}`);
+            }
 
             return res.status(202).json({ response: 'Successful image uploading' });
         } catch (err) {
@@ -138,9 +141,13 @@ export class UploadUserImage {
             if (!response.count) await HelperClass.throwErrorHelper('company:companyWithThisUuidDoesNotExist');
             let user_exist = await this.companyFacade.getUserUuidByCompanyUuid(companyUuid, userUuid);
             if (!user_exist) await HelperClass.throwErrorHelper('company:userWithThisUuidDoesNotExist');
+            let link = `${process.env.CURRENT_SERVER}/user/image/${req.file.filename}`;
+            let old_link = user_exist?.link;
 
-            let link = `${process.env.CURRENT_SERVER}/user/image/${req.user.userUuid}.jpeg`;
             await this.userFacade.uploadedImageLinkToUserTable(link, userUuid);
+            if (old_link && existsSync(`${constants.PATH_TO_IMAGE_FOLDER}/${old_link.split('user/image/')[1]}`)) {
+                unlinkSync(`${constants.PATH_TO_IMAGE_FOLDER}/${old_link.split('user/image/')[1]}`);
+            }
 
             return res.status(202).json({ response: 'Successful image uploading' });
         } catch (err) {
