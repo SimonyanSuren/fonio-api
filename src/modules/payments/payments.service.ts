@@ -168,17 +168,17 @@ export class PaymentsService extends BaseService {
     public async createPayment(data) {
         try {
             let paymentId;
-            await this.getDurationFromAmount(data.amount, data.companyID, data.planID);
-            if (data.type === 'paypal') {
-                const { items, total_amount } = await this.prepareDataPaypal(data.amount)
+            let duration = await this.getDurationFromAmount(data.amount, data.companyID, data.planID);
+            if (data.paymentType === 'paypal') {
+                const { items, total_amount } = await this.prepareDataPaypal(data.amount, data.numberQuantity)
                 paymentId = await this.createPaypalPayment({ total_amount, items })
             } else
-                if (data.type === 'stripe') {
-                    const { items, total_amount } = await this.prepareDataStripe(data.amount)
+                if (data.paymentType === 'stripe') {
+                    const { items, total_amount } = await this.prepareDataStripe(data.amount, data.numberQuantity)
                     paymentId = await this.createStripePayment({ items })
                 }
 
-            return { paymentID: paymentId }
+            return { paymentID: paymentId, duration }
 
 
         } catch (e) {
@@ -190,16 +190,16 @@ export class PaymentsService extends BaseService {
     public async storePaymentData(paymentId, data) {
         const paymentBody = {
             transactionId: paymentId,
-            payWith: data.type,
+            payWith: data.paymentType,
             userId: data.userID,
             companyId: data.companyID,
-            amount: data.amount,
+            amount: (data.amount * data.numbers.length),
             numbers: data.numbers,
         }
         return await this.paymentsRepository.create(paymentBody);
     }
 
-    private async prepareDataPaypal(amount) {
+    private async prepareDataPaypal(amount, numberQuantity = 1) {
         const items = [
             {
                 name: 'top up',
@@ -209,12 +209,12 @@ export class PaymentsService extends BaseService {
                 unit_amount: amount,
             }
         ]
-        const total_amount = amount
+        const total_amount = amount * numberQuantity;
 
         return { total_amount, items }
     }
 
-    private async prepareDataStripe(amount) {
+    private async prepareDataStripe(amount, numberQuantity) {
 
         const items = [{
             price_data: {
@@ -227,11 +227,11 @@ export class PaymentsService extends BaseService {
                 },
                 unit_amount: amount * 100,
             },
-            quantity: 1,
+            quantity: numberQuantity,
             description: 'top up your balance'
         }];
 
-        const total_amount = amount
+        const total_amount = amount * numberQuantity;
 
         return { total_amount, items }
     }

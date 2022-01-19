@@ -337,10 +337,10 @@ export class UserController {
     @ApiBody({
         required: true, type: BuyDidNumbers,
     })
-    public async buyDidNumber(@Req() req, @Res() res: Response, @Body() body: BuyDidNumbers) {
+    public async buyDidNumber(@Req() req, @Res() res:  Response, @Body() body: BuyDidNumbers) {
         try {
 
-            const { type, amount, orderUuid, additionalNumbers } = body;
+            const { paymentType, amount, orderUuid, additionalNumbers } = body;
 
             let userID = req.user?.userId,
                 companyID = req.user?.companyId,
@@ -375,15 +375,19 @@ export class UserController {
                 return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Order is not fulfilled yet. Please wait.', status: 'waiting', success: false, failed: false })
             }
 
-            let response = await this.paymentsService.createPayment({ type, amount, companyID, planID });
+            let tnArray = didNumbers.payload.request?.items||numbers;
+
+            let response = await this.paymentsService.createPayment({ paymentType, amount, companyID, planID,  numberQuantity: tnArray.length });
             if (response.error) {
                 return res.status(HttpStatus.BAD_REQUEST).send({ message: (response.error === '404') ? `Payment responde with status ${response.error}`: response.error });
             }
             
             company = await this.userFacade.getCompanyByUserId(userID);
 
-            if (didNumbers.payload.request?.items||numbers) {
-                userNumbers = await this.accountNumberFacade.addDidNumbers(userID, companyID, true, didNumbers.payload.request?.items||numbers, company, planID);
+            await this.paymentsService.storePaymentData(response.paymentID, { paymentType, amount, planID, userID, companyID, numbers: tnArray });
+
+            if (tnArray) {
+                userNumbers = await this.accountNumberFacade.addDidNumbers(userID, companyID, true, tnArray, company, planID, response.duration);
                 if (userNumbers.error) {
                     return res.status(HttpStatus.BAD_REQUEST).json(userNumbers.error);
                 }

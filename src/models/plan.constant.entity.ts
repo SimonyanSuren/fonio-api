@@ -18,6 +18,11 @@ export interface IPlan extends IPlanCreateProps{
     updatedOn?: Date;
 }
 
+export enum PlanNumberTypes {
+    TOLL_FREE = 'toll_free',
+    LONG_CODE = 'long_code'
+}
+
 @Entity()
 export class Plan implements IPlan{
     @PrimaryGeneratedColumn({ name: "plan_id" })
@@ -48,6 +53,9 @@ export class Plan implements IPlan{
     @ApiProperty()
     @Column({ name: "plan_status", nullable: true })
     status: boolean;
+    @ApiProperty()
+    @Column("enum", { enum: PlanNumberTypes })
+    type: PlanNumberTypes;
 
     @ApiProperty()
     @CreateDateColumn({ name: "plan_creation", type: "date" })

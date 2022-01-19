@@ -3,6 +3,7 @@ import {MessageCodeError} from '../../util/error';
 
 import {EntityRepository, EntityManager} from "typeorm";
 import {Did} from "../../models/";
+import moment = require('moment');
 
 @EntityRepository()
 @Injectable()
@@ -53,12 +54,14 @@ export class DidFacade {
             .execute();
     }
 
-    async addDidAfterBuying(userID, companyID, didStatus, didNumber) {
+    async addDidAfterBuying(userID, companyID, didStatus, didNumber, duration) {
+        let exporeOn = moment(Date.now()).add(duration, 'M').toISOString();
         let did = new Did();
             did.number = didNumber;
             did.status = didStatus;
             did.companyID = companyID;
             did.userID = userID;
+            did.expireOn = new Date(exporeOn);
 
         return await this.entityManager.createQueryBuilder()
             .insert()

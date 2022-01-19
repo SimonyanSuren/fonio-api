@@ -173,7 +173,6 @@ export class AdminApi {
                 @Query('orderType') orderType: string) {
         try {
             let token: any = await getCompaignIdFromAdminToken(req.headers['authorization']);
-            console.log("token: ", token);
             await HelperClass.isUserAdmin(token);
             let plan = await this.planFacade.getAllPlans(orderBy, orderType, offset, limit);
             res.status(HttpStatus.OK).json({total_did_count: plan.payload.total_did_count, entries: plan.payload.total, response: plan.payload.items, did_counts: plan.payload.number});

@@ -1,4 +1,5 @@
 import {ApiProperty} from '@nestjs/swagger';
+import { PlanNumberTypes } from '../../models/plan.constant.entity';
 
 export class PatchPlan {
     @ApiProperty()
@@ -9,10 +10,6 @@ export class PatchPlan {
     annuallyAmount: number;
     @ApiProperty()
     name: string;
-    @ApiProperty()
-    numbers: number;
-    @ApiProperty()
-    minutes: number;
     @ApiProperty()
     text: string;
     @ApiProperty()
@@ -51,9 +48,7 @@ export class PlanPost {
     @ApiProperty()
     name: string;
     @ApiProperty()
-    numbers: number;
-    @ApiProperty()
-    minutes: number;
-    @ApiProperty()
     text: string;
+    @ApiProperty()
+    type: PlanNumberTypes;
 }

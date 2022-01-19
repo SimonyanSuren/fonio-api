@@ -293,11 +293,11 @@ export class AccountNumberFacade {
         };
     }
 
-    async addDidNumbers(userID, companyID, didStatus, didNumbers, company, planID) {
+    async addDidNumbers(userID, companyID, didStatus, didNumbers, company, planID, duration) {
         try {
             for (let num of didNumbers) {
                 let didNumber = num.tn;
-                let did = await this.didFacade.addDidAfterBuying(userID, companyID, didStatus, didNumber);
+                let did = await this.didFacade.addDidAfterBuying(userID, companyID, didStatus, didNumber, duration);
                 let accountNumber = {
                     recordCalls: '',
                     recordCallsBoolean: true,
