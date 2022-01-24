@@ -20,8 +20,7 @@ import constants from '../../constants';
 import { BuyDidNumbers, PaymentsService } from '../payments';
 import { SendSmsReq } from '../../util/swagger/send_sms';
 import { OpentactAuth } from '../opentact';
-import { UserTypes } from '../../models/user.entity';
-import { OrderDid } from '../../util/swagger/order_did';
+import { OrderDids } from '../../util/swagger/order_did';
 
 
 
@@ -238,37 +237,6 @@ export class UserController {
         }
     }
 
-    // @Post('/account/cancel')
-    // @ApiOperation({ description: "Cancel user.", operationId: "cancelUser", summary: "Cancel user" })
-    // public async cancelUser(@Req() req, @Res() res: Response) {
-    //     try {
-    //         let result = await this.userFacade.cancelAccount(req.user.accountId);
-    //         res.status(HttpStatus.OK).json({ response: result });
-    //     } catch (err) {
-    //         errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
-    //     }
-    // }
-
-    // @ApiBody({
-    //     required: true, type: InvitationReq,
-    // })
-    // @ApiResponse({ status: 200, description: "Invitation successful" })
-    // @Post('invite')
-    // public async invite(@Req() req, @Res() res: Response) {
-    //     try {
-    //         if (req.user.type !== UserTypes.COMPANY_ADMIN) return res.status(HttpStatus.FORBIDDEN).json({ response: 'Only company admin can send invitations' });
-    //         const body = req.body;
-    //         await this.emailService.sendMail("user:invite", body.email, {
-    //             FIRST_NAME: body.firstName,
-    //             LAST_NAME: body.lastName,
-    //             LINK: `${process.env.FONIO_URL}/signup`
-    //         });
-    //         return res.status(HttpStatus.OK).json({ response: 'Invitation has been sent successfully.' });
-    //     } catch (err) {
-    //         errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
-    //     }
-    // }
-
     @Get("image/:image")
     @ApiParam({ name: 'image', description: 'image name' })
     @ApiOperation({ description: "Get user image" })
@@ -313,12 +281,12 @@ export class UserController {
     @ApiOperation({ description: "Order number", })
     @ApiResponse({ status: 200, description: "id" })
     @ApiBody({
-        required: true, type: OrderDid,
+        required: true, type: OrderDids,
     })
-    public async orderDidNumber(@Req() req, @Res() res: Response, @Body() body: OrderDid) {
+    public async orderDidNumber(@Req() req, @Res() res: Response, @Body() body: OrderDids) {
         try {
             let userToken = await this.opentactService.getToken();
-            let order = await this.opentactService.buyDidNumbers(userToken.payload.token, body);
+            let order = await this.opentactService.buyDidNumbers(userToken.payload.token, body.numbers);
 
             if (order.error) {
                 return res.status(order.error.status).json(order);
@@ -340,7 +308,7 @@ export class UserController {
     public async buyDidNumber(@Req() req, @Res() res:  Response, @Body() body: BuyDidNumbers) {
         try {
 
-            const { paymentType, amount, orderUuid, additionalNumbers } = body;
+            const { paymentType, amount, orderUuid, additionalNumbers, planID } = body;
 
             let userID = req.user?.userId,
                 companyID = req.user?.companyId,
@@ -350,8 +318,7 @@ export class UserController {
                 company,
                 buy_failed,
                 buy_state,
-                order_uuid = orderUuid,
-                planID = (await this.userFacade.findById(userID))?.planID;
+                order_uuid = orderUuid;
 
             let order = await this.orderFacade.getUserOrder(orderUuid, req.user.userUuid);
             if (!order) return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Order does not exist', status: 'not exist', success: false, failed: true });
@@ -387,7 +354,7 @@ export class UserController {
             await this.paymentsService.storePaymentData(response.paymentID, { paymentType, amount, planID, userID, companyID, numbers: tnArray });
 
             if (tnArray) {
-                userNumbers = await this.accountNumberFacade.addDidNumbers(userID, companyID, true, tnArray, company, planID, response.duration);
+                userNumbers = await this.accountNumberFacade.addDidNumbers(userID, companyID, true, tnArray, company, planID);
                 if (userNumbers.error) {
                     return res.status(HttpStatus.BAD_REQUEST).json(userNumbers.error);
                 }

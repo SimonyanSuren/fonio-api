@@ -54,14 +54,12 @@ export class DidFacade {
             .execute();
     }
 
-    async addDidAfterBuying(userID, companyID, didStatus, didNumber, duration) {
-        let exporeOn = moment(Date.now()).add(duration, 'M').toISOString();
+    async addDidAfterBuying(userID, companyID, didStatus, didNumber) {
         let did = new Did();
             did.number = didNumber;
             did.status = didStatus;
             did.companyID = companyID;
             did.userID = userID;
-            did.expireOn = new Date(exporeOn);
 
         return await this.entityManager.createQueryBuilder()
             .insert()
@@ -130,6 +128,17 @@ export class DidFacade {
         query.limit(limit);
 
         return await query.getManyAndCount();
+    }
+
+    async updateExpirationByNumbers(numbers, date) {
+        return this.entityManager.createQueryBuilder()
+        .update(Did)
+        .set({
+            expireOn: date
+        })
+        .where("did.number IN (:numbers) ", { numbers })
+        .returning('*')
+        .execute();
     }
 
     async deleteDid(id, userID, compnayID) {

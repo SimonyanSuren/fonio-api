@@ -42,9 +42,11 @@ export class AuthMiddleware implements NestMiddleware {
                 || url.includes("/opentact/call_flow/callback")
                 || url.includes("/tracking_numbers/provinces/list")
                 || url.includes("/payments/payment_approval_url")
+                || url.includes("/plan")
                 || url.includes("/google/redirect")
                 || url.includes("/socket.io")
                 || url === "/"
+                || url === "/google"
                 || url === "/tracking_numbers"
                 || url === '/plan/list'
                 || url === '/payments/create_payments'

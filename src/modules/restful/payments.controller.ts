@@ -7,7 +7,7 @@ import { EmailService } from '../email';
 import { OpentactService } from '../opentact';
 import { AccountNumberFacade, OrderFacade } from '../facade';
 import { OpentactAuth } from '../opentact';
-import { OrderDid } from '../../util/swagger/order_did';
+import { OrderDids } from '../../util/swagger/order_did';
 
 @Controller('payments')
 @ApiBearerAuth()
@@ -24,13 +24,13 @@ export class PaymentsController {
     @Post('order_did/:tempUuid')
     @ApiParam({ name: 'tempUuid', description: 'This is temporary uuid that has been used to connect the Callify socket' })
     @ApiBody({
-        type: OrderDid
+        type: OrderDids
     })
     @ApiOperation({ description: "order did number to create payments for Paypal and Stripe", })
     @ApiResponse({ status: 200, description: "order_did" })
-    public async orderDid(@Req() req, @Res() res: Response,
+    public async OrderDids(@Req() req, @Res() res: Response,
         @Param('tempUuid') tempUuid: string,
-        @Body() body: OrderDid,
+        @Body() body: OrderDids,
     ) {
         try {
             if (!tempUuid.match(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i)) {
@@ -38,7 +38,7 @@ export class PaymentsController {
             }
 
             let userToken = await this.opentactService.getToken();
-            let order = await this.opentactService.buyDidNumbers(userToken.payload.token, body);
+            let order = await this.opentactService.buyDidNumbers(userToken.payload.token, body.numbers);
 
             if (order.error) {
                 return res.status(order.error.status).json(order);
@@ -57,7 +57,7 @@ export class PaymentsController {
     public async createPayment(@Req() req, @Res() res: Response, @Body() body: CreatePayment) {
         try {
 
-            const { register, orderUuid, tempUuid, ...rest } = body;
+            const { register, orderUuid, tempUuid, planID, ...rest } = body;
 
             let userID,
                 companyID,
@@ -67,8 +67,7 @@ export class PaymentsController {
                 buy_failed,
                 buy_state,
                 order_uuid = orderUuid,
-                numbers = register.did_numbers,
-                planID = register.planID;
+                numbers = register.did_numbers;
 
             let order = await this.orderFacade.getUserOrder(orderUuid, tempUuid);
             if (!order) return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Order does not exist', status: 'not exist', success: false, failed: true });
@@ -119,10 +118,10 @@ export class PaymentsController {
                 companyID = company.companyId;
             }
 
-            await this.paymentsService.storePaymentData(response.paymentID, { ...rest, userID, companyID, numbers: tnArray });
+            await this.paymentsService.storePaymentData(response.paymentID, { ...rest, userID, planID, companyID, numbers: tnArray });
 
             if (tnArray) {
-                userNumbers = await this.accountNumberFacade.addDidNumbers(userID, companyID, true, tnArray, company, planID, response.duration);
+                userNumbers = await this.accountNumberFacade.addDidNumbers(userID, companyID, true, tnArray, company, planID);
                 if (userNumbers.error) {
                     return res.status(HttpStatus.BAD_REQUEST).json(userNumbers.error);
                 }

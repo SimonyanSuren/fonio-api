@@ -45,6 +45,14 @@ export class PlanFacade {
             .getOne();
     }
 
+    async getPlanByPlanType(type) {
+        let manager = await this.entityManager;
+        return await manager.createQueryBuilder(Plan, "p")
+            .where("p.type = :type")
+            .setParameters({ type })
+            .getOne();
+    }
+
     async getNumbersCountByPlanId(planID) {
         return await this.entityManager.createQueryBuilder(AccountNumber, 'an')
             .where('an.plan_id=:id', {id: planID})
@@ -70,12 +78,12 @@ export class PlanFacade {
         return this.getPlanByPlanUuid(id);
     }
 
-    async assignPlanToCompany(body, userId, isPlanAssignedToCompany) {
-        if (!isPlanAssignedToCompany) {
-            return await this.insertPlanCompanyEntityIntoDb(body.planID, body.companyUuid, userId);
-        }
-        return await this.updatePlanCompanyEntity(body.planID, body.companyUuid, userId);
-    }
+    // async assignPlanToCompany(body, userId, isPlanAssignedToCompany) {
+    //     if (!isPlanAssignedToCompany) {
+    //         return await this.insertPlanCompanyEntityIntoDb(body.planID, body.companyUuid, userId);
+    //     }
+    //     return await this.updatePlanCompanyEntity(body.planID, body.companyUuid, userId);
+    // }
 
     async insertPlanCompanyEntityIntoDb(planID, companyUuid, userID) {
         return await this.entityManager.createQueryBuilder()

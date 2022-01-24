@@ -9,9 +9,10 @@ import { BaseService } from '../services/base.service'
 import { HelperClass } from "../../filters/Helper";
 import { AuthService } from '../auth';
 import { Transactional } from "typeorm-transactional-cls-hooked"
-import * as dayjs from "dayjs";
-import { CompanyFacade } from '../facade';
+import { CompanyFacade, DidFacade } from '../facade';
 import { Repositories } from '../db/repositories';
+import moment = require('moment');
+import { EntityManager } from 'typeorm';
 
 @Injectable()
 export class PaymentsService extends BaseService {
@@ -21,9 +22,9 @@ export class PaymentsService extends BaseService {
         private readonly Repositories: Repositories,
         @Inject('PaymentsRepository')
         private readonly paymentsRepository: PaymentsRepository,
-        private readonly didRepository: DidsRepository,
         private readonly companyFacade: CompanyFacade,
         private readonly opentactService: OpentactService,
+        private readonly didFacade: DidFacade,
         private authService: AuthService,
 
     ) {
@@ -71,16 +72,23 @@ export class PaymentsService extends BaseService {
     private async paymentSucceed({ transactionId }) {
         const updatedPayment = await this.updateEntity(this.Repositories.PAYMENTS, { transactionId }, { success: true });
         const updatedUser = await this.updateEntity(this.Repositories.USERS, { id: updatedPayment.userId }, { status: true });
-        // const updatedAccount = await this.updateEntity(this.Repositories.ACCOUNTS, { id: updatedUser.accountID }, { status: true })
-        const duration = await this.getDurationFromAmount(updatedPayment.amount, updatedUser.companyID);
-        const didArray = await this.createDidNumbers({
-            numbers: updatedPayment.numbers,
-            companyID: updatedUser.companyID,
-            userID: updatedPayment.userId,
-            duration
-        });
+        const numArr = updatedPayment.numbers?.map(num => JSON.parse(num).tn);
+        
+        const { unitAmount, planId, isMonth, duration } = updatedPayment;
+        const defDuration = await this.getDurationFromAmount(unitAmount, planId, isMonth, duration);
+        const months = defDuration * duration;
+
+        await this.updateDidExpiration(numArr, months)
+        // NEED TO UPDATE DID EXPIRATION DATE HERE
 
         return updatedUser;
+    }
+
+    private async updateDidExpiration(numbersArray, months) {
+        let expiration = moment(Date.now()).add(months, 'M').toISOString();
+        let expireOn = new Date(expiration);
+
+        await this.didFacade.updateExpirationByNumbers(numbersArray, expireOn);
     }
 
     @Transactional()
@@ -110,76 +118,43 @@ export class PaymentsService extends BaseService {
         }
     }
 
-    private async getDurationFromAmount(amount, companyID, planID?) {
-        let planId = planID;
-        if (companyID) {
-            const company = await this.getEntity(this.Repositories.COMPANY, { id: companyID });
-            planId = company.planID;
+    private async getDurationFromAmount(amount, planID, is_month, duration) {
+        if (!duration) {
+            throw new Error("Please provide duration greater than 0");
         }
-        if (!planId) {
-            throw new Error("Missing plan id")
+        if (!planID) {
+            throw new Error("Missing plan id");
         }
-        const plan = await this.getEntity(this.Repositories.PLAN, { id: planId, status: true });
-        // const plan = await this.getEntity(Repositories.PLAN, [{ monthlyAmount: amount }, { annuallyAmount: amount }])
+        const plan = await this.getEntity(this.Repositories.PLAN, { id: planID, status: true });
         if (!plan) {
-            throw new Error("No such plan or user has another plan")
+            throw new Error("No such plan");
         }
-        let duration
+        let defDuration
         switch (+amount) {
-            case plan.annuallyAmount: duration = 12
+            case (plan.annuallyAmount && !is_month): defDuration = 12
                 break
-            case plan.monthlyAmount: duration = 1
+            case (plan.monthlyAmount && is_month): defDuration = 1
                 break
-            default: throw new Error("Incorrect amount")
+            default: throw new Error("Incorrect amount");
         }
 
-        return duration
+        return defDuration;
     }
-
-
-    private async createDidNumbers({ numbers, companyID, userID, duration }) {
-        if (numbers.length > 2) {
-            throw new Error("Too many numbers")
-        }
-        const items = numbers.map(number => {
-            return { tn: number }
-        })
-        const opentactOrder = await this.opentactService.createTNOrder({ items })
-
-        const checkOpentactOrder = await this.opentactService.getOrder(opentactOrder.payload.uuid)
-        const expireOn = dayjs().endOf("date").add(duration, "month").toDate();
-        // TODO Add any alerts if order is not success
-        let promiseArray: Promise<any>[] = [];
-        numbers.forEach(number => {
-            const didPromise = this.didRepository.create({
-                number: number,
-                status: true,
-                companyID,
-                userID,
-                expireOn,
-            })
-            promiseArray.push(didPromise)
-        })
-        const result = await Promise.all(promiseArray);
-        return result;
-    }
-
 
     public async createPayment(data) {
         try {
             let paymentId;
-            let duration = await this.getDurationFromAmount(data.amount, data.companyID, data.planID);
+            await this.getDurationFromAmount(data.amount, data.planID, data.is_month, data.duration);
             if (data.paymentType === 'paypal') {
-                const { items, total_amount } = await this.prepareDataPaypal(data.amount, data.numberQuantity)
+                const { items, total_amount } = await this.prepareDataPaypal(data.amount, data.numberQuantity, data.duration)
                 paymentId = await this.createPaypalPayment({ total_amount, items })
             } else
                 if (data.paymentType === 'stripe') {
-                    const { items, total_amount } = await this.prepareDataStripe(data.amount, data.numberQuantity)
+                    const { items, total_amount } = await this.prepareDataStripe(data.amount, data.numberQuantity, data.duration)
                     paymentId = await this.createStripePayment({ items })
                 }
 
-            return { paymentID: paymentId, duration }
-
+            return { paymentID: paymentId }
 
         } catch (e) {
             console.error(e)
@@ -193,28 +168,33 @@ export class PaymentsService extends BaseService {
             payWith: data.paymentType,
             userId: data.userID,
             companyId: data.companyID,
-            amount: (data.amount * data.numbers.length),
+            amount: (data.amount * data.numbers.length * data.duration),
+            isMonth: data.is_month,
+            unitAmount: data.amount,
+            duration: data.duration,
             numbers: data.numbers,
+            planId: data.planID,
         }
         return await this.paymentsRepository.create(paymentBody);
     }
 
-    private async prepareDataPaypal(amount, numberQuantity = 1) {
+    private async prepareDataPaypal(amount, numberQuantity, duration) {
         const items = [
             {
                 name: 'top up',
                 currency: "USD",
                 description: 'top up your balance',
-                quantity: 1,
+                quantity: numberQuantity,
                 unit_amount: amount,
+                duration,
             }
         ]
-        const total_amount = amount * numberQuantity;
+        const total_amount = amount * numberQuantity * duration;
 
         return { total_amount, items }
     }
 
-    private async prepareDataStripe(amount, numberQuantity) {
+    private async prepareDataStripe(amount, numberQuantity, duration) {
 
         const items = [{
             price_data: {
@@ -228,7 +208,8 @@ export class PaymentsService extends BaseService {
                 unit_amount: amount * 100,
             },
             quantity: numberQuantity,
-            description: 'top up your balance'
+            description: 'top up your balance',
+            duration,
         }];
 
         const total_amount = amount * numberQuantity;

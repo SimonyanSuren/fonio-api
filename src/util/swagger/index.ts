@@ -13,7 +13,7 @@ export {AccountNumberTiny} from './account_number_tiny';
 export {IdentityId} from './identity_id';
 export {LeadCreate} from './lead_create';
 export {CompanyUsers} from './company_users';
-export {PatchPlan, PatchPlanUser} from './plan_features';
+export {PatchPlan} from './plan_features';
 export {CallTranslateReq} from './call_translate_req';
 export {CallFlowReq} from './call_flow_req';
 export {AccountNumberReq} from './account_number';

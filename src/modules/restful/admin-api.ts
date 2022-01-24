@@ -20,7 +20,7 @@ import {PlanFacade, DidFacade, UserFacade, InvoiceFacade, PaymentFacade} from ".
 import {User} from '../../models/';
 import {AdminUserActivation, ActivationResend, PaymentSettingsRequest} from "../../util/swagger/admin_restful_api";
 import {UserStatus, UserPatchByAdmin} from "../../util/swagger/user";
-import {PatchPlan, PlanPost, PatchPlanUser, DeleteUserByAdmin} from "../../util/swagger/plan_features";
+import {DeleteUserByAdmin} from "../../util/swagger/plan_features";
 import {OpentactService} from "../opentact";
 import {EmailService} from "../email";
 import { RoleGuard } from '../../util/guard/RoleGuard';
@@ -117,103 +117,6 @@ export class AdminApi {
                 LOGO: `${process.env.BASE_URL||process.env.FONIO_URL}/public/assets/logo.png`
             });
             return res.status(HttpStatus.OK).json({response: true});
-        } catch (err) {
-            errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    @ApiBody({required: true, type: PatchPlan, 
-    })
-    @ApiResponse({status: 200, description: "Successful plan updating"})
-    @Roles("admin")
-    @Patch('plan')
-    public async patchPlanByAdmin(@Req() req, @Res() res: Response) {
-        try {
-            let token: any = await getCompaignIdFromAdminToken(req.headers['authorization']);
-            await HelperClass.isUserAdmin(token);
-            if (!req.body.id) await HelperClass.throwErrorHelper('plan:youShouldPassIdField');
-            let plan = await this.planFacade.getPlanByPlanId(req.body.id);
-            if (!plan) await HelperClass.throwErrorHelper('plan:thisPlanIsNotExist');
-            let object = await this.planFacade.getPlanObjectForUpdating(req.body, plan);
-            let entity = await this.planFacade.updateAllPlanEntityByPlanUuid(object, req.body.id);
-            return res.status(HttpStatus.OK).json({response: entity});
-        } catch (err) {
-            errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    @ApiResponse({status: 200, description: "Successful plan getting"})
-    @ApiParam({name: "id", description: "id for getting plan info", required: true, type: Number})
-    @Roles("admin")
-    @Get('plan/:id')
-    public async getPlanByAdmin(@Req() req, @Param("id") id, @Res() res: Response) {
-        try {
-            let token: any = await getCompaignIdFromAdminToken(req.headers['authorization']);
-            await HelperClass.isUserAdmin(token);
-            let plan = await this.planFacade.getPlanByPlanId(id);
-            if (!plan) await HelperClass.throwErrorHelper('plan:thisPlanIsNotExist');
-            let did_count = await this.planFacade.getNumbersCountByPlanId(id);
-            return res.status(HttpStatus.OK).json({response: {...plan, did_count}});
-        } catch (err) {
-            errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    @Roles("admin")
-    @Get('plans')
-    @ApiQuery({name: 'orderBy', required: false, enum: ['order', 'annualy', 'monthly']})
-    @ApiQuery({name: 'orderType', required: false, enum: ['ascending', 'descending']})
-    @ApiQuery({name: 'offset', description: 'offset parameter. default 0', required: false})
-    @ApiQuery({name: 'limit', description: 'limit parameter, default 10', required: false})
-    @ApiOperation({description: "returns all plans with features.", operationId: "getAllPlans", summary: "All plans"})
-    public async all(@Req() req, @Res() res: Response,
-                @Query('offset') offset: number = 0,
-                @Query('limit') limit: number = 10,
-                @Query('orderBy') orderBy: string,
-                @Query('orderType') orderType: string) {
-        try {
-            let token: any = await getCompaignIdFromAdminToken(req.headers['authorization']);
-            await HelperClass.isUserAdmin(token);
-            let plan = await this.planFacade.getAllPlans(orderBy, orderType, offset, limit);
-            res.status(HttpStatus.OK).json({total_did_count: plan.payload.total_did_count, entries: plan.payload.total, response: plan.payload.items, did_counts: plan.payload.number});
-        } catch (err) {
-            console.log("err: ", err);
-            errorResponse(res, err, HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    @ApiBody({required: true, type: PlanPost, 
-    })
-    @ApiResponse({status: 200, description: "Successful plan updating"})
-    @Roles("admin")
-    @Post('plan')
-    public async postPlanByAdmin(@Req() req, @Res() res: Response) {
-        try {
-            let token: any = await getCompaignIdFromAdminToken(req.headers['authorization']);
-            await HelperClass.isUserAdmin(token);
-            let object = await this.planFacade.getPlanObjectForAdding(req.body);
-            let entity = await this.planFacade.addPlanIntoDb(object);
-            return res.status(HttpStatus.OK).json({response: entity});
-        } catch (err) {
-            errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    @ApiBody({required: true, type: PatchPlanUser, 
-        // name: "body"
-    })
-    @ApiResponse({status: 200, description: "Successful plan deleting"})
-    @Roles("admin")
-    @Delete('plan')
-    public async deletePlanByAdmin(@Req() req, @Res() res: Response) {
-        try {
-            let token: any = await getCompaignIdFromAdminToken(req.headers['authorization']);
-            await HelperClass.isUserAdmin(token);
-            if (!req.body.id) await HelperClass.throwErrorHelper('plan:youShouldPassPlanId');
-            let plan = await this.planFacade.getPlanByPlanId(req.body.id);
-            if (!plan) await HelperClass.throwErrorHelper('plan:thisPlanIsNotExist');
-            let entity = await this.planFacade.deletePlanFromDb(req.body.id);
-            return res.status(HttpStatus.OK).json({response: entity});
         } catch (err) {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
         }

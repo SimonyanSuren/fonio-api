@@ -62,8 +62,6 @@ export class CreatePaymentReq {
   lastName: string;
   @ApiProperty()
   companyName: string;
-  @ApiProperty()
-  planID: number;
   @ApiProperty({
       type: [OrderDid],
     })

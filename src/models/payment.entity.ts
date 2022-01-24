@@ -20,6 +20,10 @@ export class Payment {
     amount: number;
 
     @ApiProperty()
+    @Column({ type: "float", name: "pay_unit_amount" })
+    unitAmount: number;
+
+    @ApiProperty()
     @Column({ name: "pay_with", enum: PaymentSystems })
     payWith: PaymentSystems;
 
@@ -62,6 +66,18 @@ export class Payment {
 
     @UpdateDateColumn({ name: "updated_on", type: "timestamp" })
     updatedOn?: Date;
+    
+    @ApiProperty()
+    @Column({ name: "plan_id" })
+    planId: number;
+
+    @ApiProperty()
+    @Column({ name: "duration" })
+    duration: number;
+
+    @ApiProperty()
+    @Column({ name: "is_month" })
+    isMonth: boolean;
 
     @ApiProperty({ type: () => Invoice })
     @OneToOne(type => Invoice)

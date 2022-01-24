@@ -9,7 +9,6 @@ export abstract class CreatePayment {
     amount?: number;
     @ApiProperty()
     paymentType: PaymentSystems;
-    // planId?: number;
     @ApiProperty()
     orderUuid: string;
     @ApiProperty()
@@ -18,6 +17,12 @@ export abstract class CreatePayment {
     register: CreatePaymentReq;
     @ApiProperty()
     numberType: PlanNumberTypes;
+    @ApiProperty()
+    planID: number;
+    @ApiProperty()
+    duration: number;
+    @ApiProperty()
+    is_month: boolean;
 };
 
 export abstract class BuyDidNumbers {
@@ -27,8 +32,16 @@ export abstract class BuyDidNumbers {
     paymentType: PaymentSystems;
     @ApiProperty()
     orderUuid: string;
-    @ApiProperty()
+    @ApiProperty({
+        type: [OrderDid],
+      })
     additionalNumbers?: OrderDid[];
     @ApiProperty()
     numberType: PlanNumberTypes;
+    @ApiProperty()
+    planID: number;
+    @ApiProperty()
+    duration: number;
+    @ApiProperty()
+    is_month: boolean;
 };

@@ -89,11 +89,11 @@ export class AuthService extends BaseService {
             user.rePassword = body.rePassword;
             user.companyName = body.companyName;
             user.userPhone = body.userPhone;
-            user.planID = (body.planID) ? body.planID : null;
-            if (user.planID) {
-                let plan = await this.planFacade.getPlanByPlanId(user.planID);
-                if (!plan) await HelperClass.throwErrorHelper('auth:planByThisIdIsNotExist');
-            }
+            // user.planID = (body.planID) ? body.planID : null;
+            // if (user.planID) {
+            //     let plan = await this.planFacade.getPlanByPlanId(user.planID);
+            //     if (!plan) await HelperClass.throwErrorHelper('auth:planByThisIdIsNotExist');
+            // }
             const response = await this.userFacade.signupUser(user, invitation);
             /* Don't need email confirmation now
             **

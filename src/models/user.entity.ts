@@ -1,5 +1,5 @@
 import {Entity, Column, PrimaryGeneratedColumn, BaseEntity, OneToMany, ManyToOne, JoinColumn, UpdateDateColumn, CreateDateColumn} from "typeorm";
-import {Plan} from "./plan.constant.entity";
+// import {Plan} from "./plan.constant.entity";
 // import {Account} from "./account.entity";
 import {ApiProperty} from '@nestjs/swagger';
 
@@ -97,9 +97,9 @@ export class User extends BaseEntity {
     @ApiProperty()
     userLastLogin?: Date;
 
-    @Column({name: "plan_id", nullable: true})
-    @ApiProperty()
-    planID?: number;
+    // @Column({name: "plan_id", nullable: true})
+    // @ApiProperty()
+    // planID?: number;
 
     @Column({name: "user_plain_text"})
     @ApiProperty()
@@ -161,7 +161,7 @@ export class User extends BaseEntity {
     @ApiProperty({description: "TOKEN JWT"})
     token?: string;
     rePassword?: string;
-    plan?: Plan;
+    // plan?: Plan;
     numbers?: any;
 
     static withId(id: number): User {

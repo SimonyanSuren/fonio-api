@@ -8,3 +8,10 @@ export class OrderDid {
     @ApiProperty()
     autorenew: boolean;
 }
+
+export class OrderDids {
+    @ApiProperty({
+        type: [OrderDid],
+      })
+    numbers: OrderDid[];
+}

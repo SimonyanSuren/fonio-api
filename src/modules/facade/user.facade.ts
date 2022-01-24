@@ -108,14 +108,6 @@ export class UserFacade {
             .execute();
     }
 
-    // async findAccountByAccountId(accountID) {
-    //     let manager = await this.entityManager;
-    //     return manager.createQueryBuilder(Account, "a")
-    //         .where("a.id = :accountID ")
-    //         .setParameters({ accountID: accountID })
-    //         .getOne();
-    // }
-
     async getAllCompaniesByUserId(userCreatorID) {
         let manager = await this.entityManager;
         return manager.createQueryBuilder(Company, "c")
@@ -201,7 +193,6 @@ export class UserFacade {
                 company.companyUuid = company_uuid;
                 company.userUuid = user.uuid
                 company.userCreatorID = user.id;
-                company.planID = user.planID;
                 company.status = true;
                 company.balance = 0;
                 company.created = new Date();
@@ -267,15 +258,6 @@ export class UserFacade {
             .getOne();
     }
 
-    // async getUserListByAccId(accountId, company) {
-    //     let query = await this.entityManager.createQueryBuilder(User, 'u')
-    //         .where('u.accountID=:accountId', { accountId: accountId })
-    //     if (company) {
-    //         query.andWhere('u.companyName=:company', { company: company })
-    //     }
-    //     return query.getMany();
-    // }
-
     async getUserListByCompId(companyId) {
         return await this.entityManager.createQueryBuilder(User, 'u')
             .where('u.companyID=:companyId', { companyId: companyId }).getMany();
@@ -329,17 +311,6 @@ export class UserFacade {
 
 
     }
-
-    // async findByIdAndAccount(accountId: number, userId: number) {
-    //     let manager = await this.entityManager;
-    //     return await manager.createQueryBuilder(User, "user")
-    //         .where("user.id = :userId ")
-    //         .andWhere("account.id = :accountId ")
-    //         .leftJoinAndSelect("user.account", "account")
-    //         .leftJoinAndSelect("user.type", "data1")
-    //         .setParameters({ userId, accountId })
-    //         .getOne();
-    // }
 
     async saveApiKey(api_key) {
         let manager = await this.entityManager;

@@ -5,13 +5,15 @@ import { MiddlewareConsumer } from "@nestjs/common";
 import { AuthMiddleware } from "../../filters/auth.middleware";
 
 
+// import { GoogleController } from './google.controller';
+
 import { AuthController } from './auth.controller';
 import { CompanyController } from './company.controller';
 // import { UploadGreetingController } from './greeting_patch_upload';
 // import { AccountController } from './account.controller';
 // import { GreetingController } from "./greeting.controller";
 import { CallFlowController } from './call_flow.controller';
-// import { PlanController } from './plan.controller';
+import { PlanController } from './plan.controller';
 // import { HangupController } from "./hangup.controller";
 import { BlackListController } from './blacklist.controller';
 // import { CreditCardController } from './credit_card.controller';
@@ -50,7 +52,7 @@ import { CommonService } from '../services/common.service';
 import { PermissionsService } from '../services/permissions.service';
 import { Repositories} from '../db/repositories';
 // import { LogController } from './log.controller';
-import { VoiceMail } from './voicemail';
+// import { VoiceMail } from './voicemail';
 
 
 @Module({
@@ -75,7 +77,7 @@ import { VoiceMail } from './voicemail';
         UploadUserImage,
         DeleteUserImage,
         DidController,
-        // PlanController,
+        PlanController,
         PublicApi,
         AdminApi,
         // KeywordsController,
@@ -92,7 +94,8 @@ import { VoiceMail } from './voicemail';
         // SmsController,
         CallerDetailsController,
         // LogController,
-        VoiceMail
+        // VoiceMail,
+        // GoogleController
     ],
     imports: [
         AuthModule, FacadeModule, EmailModule, OpentactModule, DBFactoryModule

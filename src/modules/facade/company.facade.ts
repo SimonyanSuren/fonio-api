@@ -359,7 +359,7 @@ export class CompanyFacade extends BaseService {
             new_company.parentCompanyUuid = company.companyUuid;
             new_company.userUuid = user.uuid
             new_company.userCreatorID = user.id;
-            new_company.planID = user.planID;
+            // new_company.planID = user.planID;
             new_company.status = true;
             new_company.balance = 0;
             new_company.created = new Date();

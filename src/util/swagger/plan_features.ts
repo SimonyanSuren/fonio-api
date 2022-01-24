@@ -3,8 +3,6 @@ import { PlanNumberTypes } from '../../models/plan.constant.entity';
 
 export class PatchPlan {
     @ApiProperty()
-    id: number;
-    @ApiProperty()
     monthlyAmount: number;
     @ApiProperty()
     annuallyAmount: number;
@@ -16,26 +14,19 @@ export class PatchPlan {
     status: boolean;
 }
 
-export class PatchPlanUser {
-    @ApiProperty()
-    id: number;
-}
-
 export class DeleteUserByAdmin {
     @ApiProperty()
     userUuid: string;
 }
 
-export class AssignPlanToCompany {
-    @ApiProperty()
-    planID: number;
-    @ApiProperty()
-    companyUuid: string;
-}
+// export class AssignPlanToCompany {
+//     @ApiProperty()
+//     planID: number;
+//     @ApiProperty()
+//     companyUuid: string;
+// }
 
 export class UpdatePlanStatus {
-    @ApiProperty()
-    planID: number;
     @ApiProperty()
     status: boolean;
 }
