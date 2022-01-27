@@ -84,6 +84,7 @@ export class PlanController {
     @ApiOperation({ description: "create plan.", operationId: "createPlan", summary: "Create plan" })
     public async postPlanByAdmin(@Req() req, @Res() res: Response, @Body() body) {
         try {
+            if (!body.type) return HelperClass.throwErrorHelper('plan:planTypeIsRequired');
             let object = await this.planFacade.getPlanObjectForAdding(body);
             let entity = await this.planFacade.addPlanIntoDb(object);
             return res.status(HttpStatus.OK).json({response: entity});

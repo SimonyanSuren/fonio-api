@@ -134,7 +134,7 @@ export class PlanFacade {
                 numbers: object.numbers,
                 minutes: object.minutes,
                 text: object.text,
-                status: object.status
+                type: object.type
             })
             .returning('*')
             .execute();
@@ -175,14 +175,15 @@ export class PlanFacade {
         let numbers = (body.numbers) ? body.numbers : 0;
         let minutes = (body.minutes) ? body.minutes : 0;
         let text = (body.text) ? body.text : null;
-        let status = (body.status) ? body.status : false;
+        let type = body.type;
         return {
             name,
             monthlyAmount,
             annuallyAmount,
             numbers,
             minutes,
-            text
+            text,
+            type
         };
     }
 
