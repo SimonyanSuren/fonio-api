@@ -13,11 +13,14 @@ export class PlanFacade {
     async getAllPlans(orderBy='order', orderType, offset, limit) {
         let manager = await this.entityManager;
         let query = manager.createQueryBuilder(Plan, "plan")
-        if (orderBy) {
+        let by
+        if (orderBy === 'created') by = 'creation';
+        if (orderBy === 'order') by = 'order'
+        if (by) {
             if (!orderType || "ascending" === orderType) {
-                query.orderBy(`plan.plan_${orderBy}`, "ASC");
+                query.orderBy(`plan.plan_${by}`, "ASC");
             } else if (!orderType || "descending" === orderType) {
-                query.orderBy(`plan.plan_${orderBy}`, "DESC");
+                query.orderBy(`plan.plan_${by}`, "DESC");
             }
         }
 
