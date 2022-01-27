@@ -382,7 +382,7 @@ export class AccountNumberFacade {
                 numberOnline: object.numberOnline,
                 status: true,
                 // companyUuid: object.companyUuid,
-                // companyName: object.companyName,
+                companyName: object.companyName,
                 isTextMessaging: object.isTextMessaging,
                 registerDate: new Date(),
             })
