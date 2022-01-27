@@ -308,7 +308,7 @@ export class UserController {
     public async buyDidNumber(@Req() req, @Res() res:  Response, @Body() body: BuyDidNumbers) {
         try {
 
-            const { paymentType, amount, orderUuid, additionalNumbers, planID } = body;
+            const { paymentType, amount, orderUuid, additionalNumbers, planID, duration } = body;
 
             let userID = req.user?.userId,
                 companyID = req.user?.companyId,
@@ -344,7 +344,7 @@ export class UserController {
 
             let tnArray = didNumbers.payload.request?.items||numbers;
 
-            let response = await this.paymentsService.createPayment({ paymentType, amount, companyID, planID,  numberQuantity: tnArray.length });
+            let response = await this.paymentsService.createPayment({ paymentType, amount, companyID, planID,  numberQuantity: tnArray.length, duration });
             if (response.error) {
                 return res.status(HttpStatus.BAD_REQUEST).send({ message: (response.error === '404') ? `Payment responde with status ${response.error}`: response.error });
             }
