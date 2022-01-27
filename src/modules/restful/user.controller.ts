@@ -351,7 +351,7 @@ export class UserController {
             
             company = await this.userFacade.getCompanyByUserId(userID);
 
-            await this.paymentsService.storePaymentData(response.paymentID, { paymentType, amount, planID, userID, companyID, numbers: tnArray });
+            await this.paymentsService.storePaymentData(response.paymentID, { ...rest, paymentType, amount, planID, userID, companyID, numbers: tnArray });
 
             if (tnArray) {
                 userNumbers = await this.accountNumberFacade.addDidNumbers(userID, companyID, true, tnArray, company, planID);
