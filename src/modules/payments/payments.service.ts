@@ -131,11 +131,15 @@ export class PaymentsService extends BaseService {
         }
         let defDuration
         switch (+amount) {
-            case (plan.annuallyAmount && !is_month): defDuration = 12
+            case (plan.annuallyAmount): defDuration = 12
                 break
-            case (plan.monthlyAmount && is_month): defDuration = 1
+            case (plan.monthlyAmount): defDuration = 1
                 break
             default: throw new Error("Incorrect amount");
+        }
+
+        if (defDuration === 12 && is_month) {
+            throw new Error("Incorrect amount");
         }
 
         return defDuration;
