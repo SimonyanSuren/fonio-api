@@ -137,7 +137,8 @@ export class PlanFacade {
                 numbers: object.numbers,
                 minutes: object.minutes,
                 text: object.text,
-                type: object.type
+                type: object.type,
+                status: true
             })
             .returning('*')
             .execute();
