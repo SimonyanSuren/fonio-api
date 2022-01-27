@@ -130,7 +130,6 @@ export class PaymentsService extends BaseService {
             throw new Error("No such plan");
         }
         let defDuration
-        console.log(plan, amount, is_month)
         switch (+amount) {
             case (plan.annuallyAmount): defDuration = 12
                 break
