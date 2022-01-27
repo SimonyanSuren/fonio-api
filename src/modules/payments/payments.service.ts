@@ -138,7 +138,7 @@ export class PaymentsService extends BaseService {
             default: throw new Error("Incorrect amount");
         }
 
-        if (defDuration === 12 && is_month) {
+        if ((defDuration === 12 && is_month) || (defDuration === 1 && !is_month)) {
             throw new Error("Incorrect amount");
         }
 
