@@ -396,7 +396,8 @@ export class CompanyController {
     @ApiOperation({description: "update notification status", operationId: "updateNotificationStatus", summary: "Update Notification Status"})
     @ApiBody({
         // name: "users", 
-        required: true, type: CompanyStatus})
+        required: true, type: CompanyStatus
+    })
     @ApiResponse({status: 200, description: "Add OK"})
     public async updateNotificationStatus(@Req() req, @Param("uuid") uuid: number, @Res() res: Response) {
         try {

@@ -27,7 +27,10 @@ export class CompanyUsers {
 
 export class CompanyStatus {
     @ApiProperty()
-    status: boolean;
+    remove_number_notification: boolean;
+
+    @ApiProperty()
+    add_number_notification: boolean;
 }
 
 export class CompanyUpdate {
