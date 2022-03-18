@@ -16,6 +16,6 @@ const baseOptions = {
   };
   
   module.exports = [
-    Object.assign({}, baseOptions, { name: "default", database: "foniodb" }),
+    Object.assign({}, baseOptions, { name: "default", database: "fonio" }),
   ];
   

@@ -308,11 +308,12 @@ export class CompanyFacade extends BaseService {
 
     }
 
-    async updateNotificationStatus(uuid, status) {
+    async updateNotificationStatus(uuid, remove_number_notification: boolean, add_number_notification: boolean) {
         return this.entityManager.createQueryBuilder()
             .update(Company)
             .set({
-                notification: status
+                remove_number_notification,
+                add_number_notification
             })
             .where('comp_uuid=:uuid', { uuid: uuid })
             .returning('*')

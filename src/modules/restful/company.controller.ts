@@ -403,7 +403,7 @@ export class CompanyController {
             const response = await this.companyFacade.getAllCompaniesByUserCreator(req.user.userId, uuid);
             if (!response.count) await HelperClass.throwErrorHelper('company:companyWithThisUuidDoesNotExist');
 
-            let result = await this.companyFacade.updateNotificationStatus(uuid, req.body.status);
+            let result = await this.companyFacade.updateNotificationStatus(uuid, req.body.remove_number_notification, req.body.add_number_notification);
             res.status(HttpStatus.OK).json({response: result[0]});
         } catch (err) {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
