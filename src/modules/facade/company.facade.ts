@@ -321,6 +321,18 @@ export class CompanyFacade extends BaseService {
 
     }
 
+    async updateNotice(uuid, notice: string) {
+        return this.entityManager.createQueryBuilder()
+            .update(Company)
+            .set({
+                notice
+            })
+            .where('comp_uuid=:uuid', { uuid: uuid })
+            .returning('*')
+            .execute();
+
+    }
+
     @Transactional()
     async createUser(us: User, companyUuid: string, role: string) {
         let user = new User();

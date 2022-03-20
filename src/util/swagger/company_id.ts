@@ -82,3 +82,8 @@ export class CompanySelfInfo {
     @ApiProperty({ isArray: true })
     uuids: string;
 }
+
+export class CompanyNotice {
+    @ApiProperty()
+    notice: string;
+}
