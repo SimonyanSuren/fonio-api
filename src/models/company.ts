@@ -52,7 +52,7 @@ export class Company extends BaseEntity {
     add_number_notification: boolean;
     @ApiProperty()
     @Column({name: "notice", default: '' })
-    notice: String;
+    notice: string;
     // @ApiProperty()
     // @Column({name: "plan_id", nullable: true})
     // planID?: number;
