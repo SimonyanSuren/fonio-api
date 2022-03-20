@@ -463,7 +463,7 @@ export class CompanyController {
 
     @Patch(":uuid/notice")
     @ApiParam({ name: 'uuid', description: 'company uuid', required: true, type: String })
-    @ApiOperation({ description: "Update notice" })
+    @ApiOperation({ description: "Update company notice" })
     @ApiBody({
         required: true, type: CompanyNotice
     })

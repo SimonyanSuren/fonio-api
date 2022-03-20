@@ -321,7 +321,7 @@ export class CompanyFacade extends BaseService {
 
     }
 
-    async updateNotice(uuid, notice: String) {
+    async updateNotice(uuid, notice: string) {
         return this.entityManager.createQueryBuilder()
             .update(Company)
             .set({

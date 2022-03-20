@@ -85,5 +85,5 @@ export class CompanySelfInfo {
 
 export class CompanyNotice {
     @ApiProperty()
-    name: string;
+    notice: string;
 }
