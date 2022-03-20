@@ -6,7 +6,7 @@ import {CompanyFacade} from '../facade';
 import {Company, User} from '../../models';
 import {ApiBody, ApiResponse, ApiOperation, ApiBearerAuth, ApiTags, ApiQuery, ApiParam} from '@nestjs/swagger';
 import {errorResponse} from "../../filters/errorRespone";
-import {CompanyUpdate, CompanyStatus} from '../../util/swagger/company_id';
+import { CompanyUpdate, CompanyStatus, CompanyNotice } from '../../util/swagger/company_id';
 import {HelperClass} from "../../filters/Helper";
 import { CompanyMember, CompanyMemberUpdate, InvitationReq } from '../../util/swagger';
 import { EmailService } from '../email';
@@ -458,6 +458,26 @@ export class CompanyController {
             })
         } catch (e) {
             return res.status(404).send({message: e.message});
+        }
+    }
+
+    @Patch(":uuid/notice")
+    @ApiParam({ name: 'uuid', description: 'company uuid', required: true, type: String })
+    @ApiOperation({ description: "Update notice" })
+    @ApiBody({
+        required: true, type: CompanyNotice
+    })
+    @ApiResponse({status: 200, description: "Company notice updated successfully"})
+    public async updateNotice(@Req() req, @Res() res: Response, @Param('uuid') uuid: String) {
+        try {
+            const { notice } = req.body;
+            let response = await this.companyFacade.getAllCompaniesByUserCreator(req.user.userId, uuid);
+            if (!response.count) await HelperClass.throwErrorHelper('company:companyWithThisUuidDoesNotExist');
+
+            const result = await this.companyFacade.updateNotice( uuid, req.body.notice);
+            res.status(HttpStatus.OK).json(result);
+        } catch (err) {
+            errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
         }
     }
 
