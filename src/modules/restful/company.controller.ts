@@ -303,8 +303,8 @@ export class CompanyController {
     @ApiParam({name: "uuid", description: "company uuid", required: true, type: String})
     @ApiParam({name: "userUuid", description: "user uuid", required: true, type: String})
     @ApiBody({
-        // name: "user", 
-        required: true, type: CompanyMemberUpdate})
+        required: true, type: CompanyMemberUpdate
+    })
     @ApiOperation({description: "Edit user.", operationId: "editUser", summary: "Edit user"})
     public async editSelfUser(@Req() req, @Res() res: Response, 
         @Body() body: CompanyMemberUpdate,
@@ -312,12 +312,8 @@ export class CompanyController {
         @Param('userUuid') userUuid: string
     ) {
         try {
-            let response = await this.companyFacade.getAllCompaniesByUserCreator(req.user.userId, uuid);
-            if (!response.count) await HelperClass.throwErrorHelper('company:companyWithThisUuidDoesNotExist');
-            let user_exist = await this.companyFacade.getUserUuidByCompanyUuid(uuid, userUuid);
-            if (!user_exist) await HelperClass.throwErrorHelper('company:userWithThisUuidDoesNotExist');
-
             const user = new User();
+
             if (body.phone) user.userPhone = body.phone;
             if (body.firstName) user.firstName = body.firstName;
             if (body.lastName) user.lastName = body.lastName;
