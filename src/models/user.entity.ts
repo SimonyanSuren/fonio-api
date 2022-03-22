@@ -164,6 +164,10 @@ export class User extends BaseEntity {
     // plan?: Plan;
     numbers?: any;
 
+    @Column({name: "purged", default: false})
+    @ApiProperty()
+    purged?: boolean;
+
     static withId(id: number): User {
         let us = new User();
         us.id = id;

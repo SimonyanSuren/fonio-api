@@ -412,4 +412,17 @@ export class CompanyFacade extends BaseService {
 
         return await invitation.save();
     }
+
+    async updateUserPurged(companyUuid, userUuid) {
+        await this.entityManager.createQueryBuilder()
+            .update(User)
+            .set({
+                purged: false
+            })
+            .where('companyUuid=:companyUuid', { companyUuid: companyUuid })
+            .andWhere('uuid=:userUuid', { userUuid: userUuid })
+            .execute();
+
+        return await this.userFacade.getUserByUuid(userUuid);
+    }
 }

@@ -477,4 +477,26 @@ export class CompanyController {
         }
     }
 
+    @Delete(':companyUuid/members/:memberUuid')
+    @ApiParam({name: 'companyUuid', description: 'company uuid'})
+    @ApiParam({name: 'memberUuid', description: 'member uuid'})
+    @ApiResponse({ status: 200, description: "companies OK", type: String })
+    @ApiOperation({description: "delete company member by uuid", operationId: "deleteCompanyMemberByUuid", summary: "Delete Company member By Uuid"})
+    public async deleteCompanyMemberByUuid(@Req() req, @Res() res: Response,
+        @Param("companyUuid") companyUuid: string,
+        @Param("memberUuid") memberUuid: string
+    ) {
+        try {
+            const company = await this.companyFacade.getCompanyByUuid(companyUuid);
+
+            if (!company)
+                await HelperClass.throwErrorHelper('company:companyWithThisUuidDoesNotExist');
+
+            await this.companyFacade.updateUserPurged(companyUuid, memberUuid);
+
+            res.status(HttpStatus.OK).json({ message: 'Member was successfuly removed'});
+        } catch (err) {
+            errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
+        }
+    }
 }
