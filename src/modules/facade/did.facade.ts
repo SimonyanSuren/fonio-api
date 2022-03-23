@@ -161,4 +161,18 @@ export class DidFacade {
             .setParameters({number})
             .getOne();
     }
+
+    async getDidNumbers(companyId: number, offset: number, limit: number, filterByNumber: any, order_by: string, order_dir: string) {
+        const manager = await this.entityManager;
+        const orderDir = order_dir == 'ASC' ? 'ASC' : 'DESC'
+        const orderBy = order_by == 'number' ? 'did_number' : 'created_on'
+
+        return manager.createQueryBuilder(Did, "did")
+            .offset(offset)
+            .limit(limit)
+            .where("did.company_id=:companyId", { companyId: companyId })
+            .andWhere('did.did_status=:status', { status: true })
+            .orderBy(`did.${orderBy}`, orderDir)
+            .getMany();
+    }
 }
