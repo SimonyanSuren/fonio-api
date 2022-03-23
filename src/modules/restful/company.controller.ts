@@ -422,11 +422,16 @@ export class CompanyController {
             const invitation = await this.companyFacade.storeInvitationData(body);
             if(!invitation) return res.status(HttpStatus.BAD_REQUEST).json({ response: 'Invitation was not created.' });
 
+            const company = await this.companyFacade.getCompanyByUuid(body.companyUuid)
+            if (!company) await HelperClass.throwErrorHelper('company:companyWithThisUuidDoesNotExist');
+
             await this.emailService.sendMail("user:invite", body.email, {
                 FIRST_NAME: body.firstName,
                 LAST_NAME: body.lastName,
-                LINK: `${constants.FONIO_DOMAIN}/#/invitation-company-${body.type ? 'admin' : 'user'}?invitationUuid=${invitation.uuid}&&type=${invitation.type}`
+                LINK: `${constants.FONIO_DOMAIN}/#/invitation-company-${body.type ? 'admin' : 'user'}?invitationUuid=${invitation.uuid}&&type=${invitation.type}`,
+                COMPANY_NAME: company?.companyName
             });
+
             return res.status(HttpStatus.OK).json({ response: 'Invitation has been sent successfully.' });
         } catch (err) {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
