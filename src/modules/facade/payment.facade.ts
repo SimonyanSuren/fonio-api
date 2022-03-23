@@ -78,4 +78,21 @@ export class PaymentFacade {
         return query.getManyAndCount();
     }
 
+    // async getPayments(start_time = 0, end_time = 0, limit=10) {
+    //     const manager = await this.entityManager;
+
+    //     const start = moment(start_time);
+    //     const end = moment(end_time);
+        
+    //     const query = manager.createQueryBuilder(Payment, "payment");
+
+    //     query.where(`payment.pay_on between :val1 and :val2`, {
+    //         val1: start,
+    //         val2: end
+    //     });
+
+    //     query.limit(limit);
+
+    //     return await query.getManyAndCount();
+    // }
 }
