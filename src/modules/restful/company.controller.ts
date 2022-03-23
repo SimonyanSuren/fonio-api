@@ -13,6 +13,7 @@ import { EmailService } from '../email';
 import constants from '../../constants';
 import { ContactReq } from '../../util/swagger/contact_req';
 import { join } from 'path';
+
 const CreateRoles: string[] = ['user', 'company'];
 
 @Controller("company")

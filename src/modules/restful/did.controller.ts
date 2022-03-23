@@ -74,18 +74,22 @@ export class DidController {
         @Query('order_dir') order_dir = order_dir_enum[0],
     ) {
         const where = { companyID: req.user.companyId }
-        if(filterByNumber) where['number'] = filterByNumber
-        console.log('where',where)
+
+        if (filterByNumber) where['number'] = filterByNumber
+
+        console.log(this.Repositories.DID)
+        
         const response = await this.commonService.getEntities(this.Repositories.DID, {
             pageSize: limit,
             page: offset > 0 ? offset / limit : 0,
             where,
             relations:["callFlow"],
         }, { [order_by]: order_dir })
+
         res.status(HttpStatus.OK).json({
             success: true,
-            payload:response}
-        );
+            payload:response
+        });
     }
 
     @Get("list/searchBy/:did_id")
