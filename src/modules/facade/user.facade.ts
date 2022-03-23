@@ -16,11 +16,11 @@ import { errorMessagesConfig } from "../../util/error";
 @EntityRepository()
 @Injectable()
 export class UserFacade {
-
-    constructor(private entityManager: EntityManager,
+    
+    constructor(
+        private entityManager: EntityManager,
         private emailService: EmailService,
-        private opentactService: OpentactService,
-        
+        private opentactService: OpentactService
     ) {
         // super()
     }

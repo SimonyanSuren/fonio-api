@@ -21,8 +21,11 @@ import { BuyDidNumbers, PaymentsService } from '../payments';
 import { SendSmsReq } from '../../util/swagger/send_sms';
 import { OpentactAuth } from '../opentact';
 import { OrderDids } from '../../util/swagger/order_did';
-
-
+import { UpdatePassword, ChangeUserPassword } from '../../util/swagger';
+import { PasswordHelper } from '../../util/helper';
+import { compare as comparePassword, genSaltSync, hashSync } from "bcrypt";
+import { Config } from '../../util/config';
+import { UserTypes } from "../../models/user.entity";
 
 @Controller("user")
 @ApiTags("User")
@@ -386,6 +389,84 @@ export class UserController {
         } catch (e) {
             console.log(e)
             return res.status(400).send({ message: e.message });
+        }
+    }
+
+    @ApiBody({
+        required: true, type: UpdatePassword,
+    })
+    @ApiResponse({ status: 200, description: "Password successfully changed" })
+    @Patch('password')
+    public async setPassword(@Req() req, @Res() res: Response) {
+        try {
+            const { originalPassword, newPassword, rePassword } = req.body;
+            
+            if (!originalPassword) await HelperClass.throwErrorHelper('You should pass original password');
+            if (!newPassword) await HelperClass.throwErrorHelper('You should pass new password');
+            if (newPassword !== rePassword) await HelperClass.throwErrorHelper('Password does not match');
+            
+            const user = await this.userFacade.getUserByUuid(req.user.userUuid)
+
+            if (!user) {
+                await HelperClass.throwErrorHelper('user:userWithThisUuidIsNotExist');
+            }
+
+            const isEqual = await await comparePassword(originalPassword, user?.password ? user.password : '');
+            
+            if (!isEqual) await HelperClass.throwErrorHelper('Original password is incorrect');
+            
+            await PasswordHelper.validatePassword(newPassword);
+
+            const salt = genSaltSync(Config.number("BCRYPT_SALT_ROUNDS", 10));
+            const hash = hashSync(newPassword, salt);
+
+            await this.userFacade.updatePassword(hash, req.user.userUuid);
+
+            return res.status(200).json({
+                response: {
+                    message: 'Successfully updated'
+                }
+            });
+        } catch (err) {
+            errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @ApiBody({
+        required: true, type: ChangeUserPassword,
+    })
+    @ApiResponse({ status: 200, description: "Password successfully changed" })
+    @ApiParam({ name: "uuid", description: "user uuid", required: true, type: String })
+    @Patch('user/:uuid/password')
+    public async setCompanyUserPassword(
+        @Req() req,
+        @Res() res: Response,
+        @Param('uuid') uuid: string
+    ) {
+        try {
+            const { newPassword, rePassword } = req.body;
+            
+            if (!newPassword) await HelperClass.throwErrorHelper('You should pass new password');
+            if (newPassword !== rePassword) await HelperClass.throwErrorHelper('Password does not match');
+            
+            if (req.user.userType != UserTypes.COMPANY_ADMIN) {
+                await HelperClass.throwErrorHelper('User is not company admin');
+            }
+
+            await PasswordHelper.validatePassword(newPassword);
+
+            const salt = genSaltSync(Config.number("BCRYPT_SALT_ROUNDS", 10));
+            const hash = hashSync(newPassword, salt);
+
+            await this.userFacade.updatePassword(hash, uuid);
+
+            return res.status(200).json({
+                response: {
+                    message: 'Successfully updated'
+                }
+            });
+        } catch (err) {
+            errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
         }
     }
 }
