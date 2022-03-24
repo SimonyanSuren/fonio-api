@@ -166,9 +166,13 @@ export class UserFacade {
             if (!user.password) throw new Error(errorMessagesConfig['auth:signup:missingPassword'].errorMessage);
             if (!user.rePassword) throw new Error(errorMessagesConfig['auth:signup:missinRePassword'].errorMessage);
             if (user.password !== user.rePassword) throw new Error(errorMessagesConfig['auth:signup:passwordMatch'].errorMessage);
+            
             await PasswordHelper.validatePassword(user.password);
+            
             const found = await this.findByEmail(user.email);
+
             if (found) throw new Error(errorMessagesConfig['user:alreadyExists'].errorMessage);
+            
             let company = new Company();
             user.uuid = v4();
             user.plaintText = true;
@@ -185,12 +189,12 @@ export class UserFacade {
             user.userIdentityOpenTact = false;
 
             let companyResponse;
-            let company_uuid = v4();
+            // let company_uuid = v4();
             let userEntity = await user.save();
             
             if (user.companyName && (!invitation || invitation?.type === UserTypes.COMPANY_ADMIN)) {
                 company.companyName = user.companyName;
-                company.companyUuid = company_uuid;
+                company.companyUuid = invitation ? invitation.companyUuid : v4();
                 company.userUuid = user.uuid
                 company.userCreatorID = user.id;
                 company.status = true;
