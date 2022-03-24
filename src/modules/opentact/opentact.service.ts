@@ -28,7 +28,7 @@ export class OpentactService extends BaseService {
             httpsAgent: new https.Agent({
                 rejectUnauthorized: false
             }),
-            baseURL: `${process.env.OPENTACT_API}`,
+            baseURL: `${process.env.OPENTACT_REST_API}`,
             headers: {
                 common: {
                     'Content-Type': 'application/json',
@@ -261,7 +261,14 @@ export class OpentactService extends BaseService {
     }
 
     async createSipUser(data) {
-        const response = await this.axios.post(`/sip/domain/${constants.OPENTACT_SIP_DOMAIN}/user`, data)
+        const userToken = await this.getToken();
+        const response = await this.axios.post(`/sip/domain/${constants.OPENTACT_SIP_DOMAIN}/user`, data, {
+            headers: {
+                "X-Auth-Token": userToken.payload.token,
+                "Content-Type": 'application/json'
+            }
+        })
+        
         return response.data;
     }
 

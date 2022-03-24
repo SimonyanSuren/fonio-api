@@ -416,10 +416,11 @@ export class CompanyController {
     public async invite(@Req() req, @Res() res: Response) {
         try {
             const body = req.body;
-            const response = await this.companyFacade.getAllCompaniesByUserCreator(req.user.userId, body.companyUuid);
-            if (!response.count) await HelperClass.throwErrorHelper('company:companyWithThisUuidDoesNotExist');
+            // const response = await this.companyFacade.getAllCompaniesByUserCreator(req.user.userId, body.companyUuid);
+            // if (!response.count) await HelperClass.throwErrorHelper('company:companyWithThisUuidDoesNotExist');
 
             const invitation = await this.companyFacade.storeInvitationData(body);
+            
             if(!invitation) return res.status(HttpStatus.BAD_REQUEST).json({ response: 'Invitation was not created.' });
 
             const company = await this.companyFacade.getCompanyByUuid(body.companyUuid)
