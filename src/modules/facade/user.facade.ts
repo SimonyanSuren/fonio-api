@@ -194,7 +194,7 @@ export class UserFacade {
             
             if (user.companyName && (!invitation || invitation?.type === UserTypes.COMPANY_ADMIN)) {
                 company.companyName = user.companyName;
-                company.companyUuid = invitation ? invitation.companyUuid : v4();
+                company.companyUuid = v4();
                 company.userUuid = user.uuid
                 company.userCreatorID = user.id;
                 company.status = true;

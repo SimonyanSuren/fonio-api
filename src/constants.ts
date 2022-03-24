@@ -10,7 +10,7 @@ const constants = {
     EMAIL_SMTP_PASSWORD: process.env.EMAIL_SMTP_PASSWORD || "LKDJFFH!!!hrm",
 
     OPENTACT_API: process.env.OPENTACT_API || "https://api.stage.opentact.org/rest",
-    OPENTACT_SIP_DOMAIN: process.env.OPENTACT_SIP_DOMAIN || "fonio2.sip.opentact.org",
+    OPENTACT_SIP_DOMAIN: process.env.OPENTACT_SIP_DOMAIN || "fonio.sip.stage.opentact.org",
     OPENTACT_USER: process.env.OPENTACT_USER || "leon229@yandex.ru",
     OPENTACT_PASSWORD: process.env.OPENTACT_PASSWORD || "123",
     OPENTACT_SIP_APP_UUID: process.env.OPENTACT_SIP_APP_UUID || "08b731d5-ab4a-4e01-b4b1-d961df6984e0",
