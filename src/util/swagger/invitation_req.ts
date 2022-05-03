@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Column } from 'typeorm';
 
 export class InvitationReq {
     @ApiProperty()
@@ -12,9 +13,11 @@ export class InvitationReq {
 
     @ApiProperty()
     type: boolean;
+}
 
+export class AcceptInvitationReq {
     @ApiProperty()
-    companyUuid: string;
+    password: string;
 }
 
 export class InvitationData {
@@ -26,6 +29,32 @@ export class InvitationData {
 
     @ApiProperty()
     type: boolean;
+
+    @ApiProperty()
+    companyUuid: string;
+}
+
+export class InvitationLogData {
+    @ApiProperty()
+    email: string;
+
+    @ApiProperty()
+    invitationId: string;
+
+    @ApiProperty()
+    firstName: string;
+
+    @ApiProperty()
+    lastName: string;
+
+    @ApiProperty()
+    CreatedAt: Date;
+
+    @ApiProperty()
+    ExpiredAt: Date;
+
+    @ApiProperty()
+    AcceptedOn: Date;
 
     @ApiProperty()
     companyUuid: string;

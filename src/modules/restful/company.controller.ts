@@ -1,8 +1,21 @@
 'use strict';
 
-import {Controller, Get, Post, Patch, HttpStatus, Req, Res, Query, Param, Body, Delete} from '@nestjs/common';
+import {
+    Controller,
+    Get,
+    Post,
+    Patch,
+    HttpStatus,
+    Req,
+    Res,
+    Query,
+    Param,
+    Body,
+    Delete,
+    NotFoundException,
+} from '@nestjs/common';
 import {Response} from 'express';
-import {CompanyFacade} from '../facade';
+import { CompanyFacade, UserFacade } from '../facade';
 import {Company, User} from '../../models';
 import {ApiBody, ApiResponse, ApiOperation, ApiBearerAuth, ApiTags, ApiQuery, ApiParam} from '@nestjs/swagger';
 import {errorResponse} from "../../filters/errorRespone";
@@ -13,6 +26,7 @@ import { EmailService } from '../email';
 import constants from '../../constants';
 import { ContactReq } from '../../util/swagger/contact_req';
 import { join } from 'path';
+import { AcceptInvitationReq } from '../../util/swagger/invitation_req';
 
 const CreateRoles: string[] = ['user', 'company'];
 
@@ -23,6 +37,7 @@ export class CompanyController {
     constructor(
         private companyFacade: CompanyFacade,
         private emailService: EmailService,
+        private userService: UserFacade
     ) {
     }
 
@@ -46,7 +61,7 @@ export class CompanyController {
     @ApiQuery({name: 'firstName', description: 'contact firstName', required: false})
     @ApiResponse({status: 200, description: "companies OK", type: Company, isArray: true})
     @ApiOperation({description: "get All company contacts", operationId: "getContacts", summary: "Companies Contacts"})
-    public async contactsList(@Req() req, @Res() res: Response, 
+    public async contactsList(@Req() req, @Res() res: Response,
         @Param("companyUuid") companyUuid: string,
         @Query("userUuid") userUuid: string,
         @Query("firstName") firstName: string
@@ -73,7 +88,7 @@ export class CompanyController {
     @ApiParam({name: 'id', description: 'contact id'})
     @ApiResponse({status: 200, description: "companies OK", type: Company, isArray: true})
     @ApiOperation({description: "get company contact by id", operationId: "getContactById", summary: "Companies Contact By Id"})
-    public async companyContact(@Req() req, @Res() res: Response, 
+    public async companyContact(@Req() req, @Res() res: Response,
         @Param("companyUuid") companyUuid: string,
         @Param("id") id: string
     ) {
@@ -101,7 +116,7 @@ export class CompanyController {
     })
     @ApiResponse({status: 200, description: "companies OK", type: Company, isArray: true})
     @ApiOperation({description: "update company contact", operationId: "updateCompanyContact", summary: "Update company contact"})
-    public async contactEdit(@Req() req, @Res() res: Response, 
+    public async contactEdit(@Req() req, @Res() res: Response,
         @Param("companyUuid") companyUuid: string,
         @Param("id") id: string,
         @Body() body: ContactReq
@@ -123,7 +138,7 @@ export class CompanyController {
     @ApiParam({name: 'id', description: 'contact id'})
     @ApiResponse({status: 200, description: "companies OK", type: Company, isArray: true})
     @ApiOperation({description: "delete company contact by id", operationId: "deleteContactById", summary: "Delete Companies Contact By Id"})
-    public async deleteCompanyContact(@Req() req, @Res() res: Response, 
+    public async deleteCompanyContact(@Req() req, @Res() res: Response,
         @Param("companyUuid") companyUuid: string,
         @Param("id") id: string
     ) {
@@ -148,7 +163,7 @@ export class CompanyController {
     })
     @ApiResponse({status: 200, description: "companies OK", type: Company, isArray: true})
     @ApiOperation({description: "assign user contact", operationId: "assignUserContact", summary: "Assign user contact"})
-    public async assignContact(@Req() req, @Res() res: Response, 
+    public async assignContact(@Req() req, @Res() res: Response,
         @Param("companyUuid") companyUuid: string,
         @Param("userUuid") userUuid: string,
         @Body() body: ContactReq
@@ -159,7 +174,7 @@ export class CompanyController {
 
             let user = await this.companyFacade.getUserUuidByCompanyUuid(companyUuid, userUuid);
             if (!user) await HelperClass.throwErrorHelper('user:companyMemberWithThisUuidDoesNotExist');
-            
+
             let contact = await this.companyFacade.assignUserContact(user?.id, req.user.userId, response.result[0].company_comp_id, body);
 
             res.status(HttpStatus.OK).json(contact);
@@ -167,14 +182,14 @@ export class CompanyController {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
         }
     }
-    
+
     @Post(':companyUuid/:userUuid/contacts/:contactId')
     @ApiParam({name: 'companyUuid', description: 'company uuid'})
     @ApiParam({name: 'userUuid', description: 'user uuid'})
     @ApiParam({name: 'contactId', description: 'contact id'})
     @ApiResponse({status: 200, description: "companies OK", type: Company, isArray: true})
     @ApiOperation({description: "reassign user contact", operationId: "reassignUserContact", summary: "Reassign user contact"})
-    public async reassignContact(@Req() req, @Res() res: Response, 
+    public async reassignContact(@Req() req, @Res() res: Response,
         @Param("companyUuid") companyUuid: string,
         @Param("userUuid") userUuid: string,
         @Param("contactId") contactId: string
@@ -185,7 +200,7 @@ export class CompanyController {
 
             let user = await this.companyFacade.getUserUuidByCompanyUuid(companyUuid, userUuid);
             if (!user) await HelperClass.throwErrorHelper('user:companyMemberWithThisUuidDoesNotExist');
-            
+
             let contact = await this.companyFacade.reassignUserContact(user?.id, req.user.userId, contactId, response.result[0].company_comp_id);
 
             res.status(HttpStatus.OK).json(contact);
@@ -201,7 +216,7 @@ export class CompanyController {
     @ApiQuery({ name: 'orderType', required: false, enum: ['asc', 'desc'] })
     @ApiResponse({status: 200, description: "companies OK", type: Company, isArray: true})
     @ApiOperation({description: "get All members of company", operationId: "getMembers", summary: "Company Members"})
-    public async findByCompany(@Req() req, @Res() res: Response, 
+    public async findByCompany(@Req() req, @Res() res: Response,
         @Param("uuid") uuid: string,
         @Param("role") role: string,
         @Query('orderBy') orderBy: string,
@@ -235,7 +250,7 @@ export class CompanyController {
     @ApiParam({name: "userUuid", description: "member uuid", required: true, type: String })
     @ApiResponse({status: 200, description: "companies OK", type: Company, isArray: true})
     @ApiOperation({description: "get a member of company", operationId: "getMember", summary: "Company Member"})
-    public async findUserByCompany(@Req() req, @Res() res: Response, 
+    public async findUserByCompany(@Req() req, @Res() res: Response,
         @Param("uuid") uuid: string,
         @Param("userUuid") userUuid: string,
     ) {
@@ -256,10 +271,10 @@ export class CompanyController {
     @ApiParam({name: "uuid", description: "company uuid", required: true, type: String})
     @ApiParam({name: "role", description: "member role", required: true, enum: CreateRoles })
     @ApiBody({
-        // name: "user", 
+        // name: "user",
         required: true, type: CompanyMember})
     @ApiOperation({description: "Create member.", operationId: "createMember", summary: "Create member"})
-    public async createSelfUser(@Req() req, @Res() res: Response, 
+    public async createSelfUser(@Req() req, @Res() res: Response,
         @Param('uuid') uuid: string,
         @Param('role') role: string
     ) {
@@ -276,7 +291,7 @@ export class CompanyController {
             user.companyName = body.companyName;
             let response = await this.companyFacade.getAllCompaniesByUserCreator(req.user.userId, uuid);
             if (!response.count) await HelperClass.throwErrorHelper('company:companyWithThisUuidDoesNotExist');
-            
+
             // user.userLastLogin = body.userLastLogin;
             await this.companyFacade.createUser(user, uuid, role);
             const us = await this.companyFacade.getUserListByCompanyUuid(uuid);
@@ -293,7 +308,7 @@ export class CompanyController {
                     MESSAGE: `You'r account has been added.`
                 });
             }
-            
+
             res.status(HttpStatus.OK).json(us);
         } catch (err) {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
@@ -307,7 +322,7 @@ export class CompanyController {
         required: true, type: CompanyMemberUpdate
     })
     @ApiOperation({description: "Edit user.", operationId: "editUser", summary: "Edit user"})
-    public async editSelfUser(@Req() req, @Res() res: Response, 
+    public async editSelfUser(@Req() req, @Res() res: Response,
         @Body() body: CompanyMemberUpdate,
         @Param('uuid') uuid: string,
         @Param('userUuid') userUuid: string
@@ -326,7 +341,7 @@ export class CompanyController {
                 updatedUser.password = undefined;
                 updatedUser.salt = undefined;
             }
-            
+
             res.status(HttpStatus.OK).json(updatedUser);
         } catch (err) {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
@@ -337,7 +352,7 @@ export class CompanyController {
     @ApiParam({name: "uuid", description: "company uuid", required: true, type: String})
     @ApiOperation({description: "Change company information", operationId: "changeCompany", summary: "Change company information"})
     @ApiBody({
-        // name: "company", 
+        // name: "company",
         required: true, type: CompanyUpdate})
     @ApiResponse({status: 200, description: "Add OK"})
     public async changeCompany(@Req() req, @Param("uuid") uuid: string, @Res() res: Response) {
@@ -372,7 +387,7 @@ export class CompanyController {
     @ApiParam({name: "id", description: "company id", required: true, type: Number})
     @ApiOperation({description: "update status", operationId: "updateStatus", summary: "Update Status"})
     @ApiBody({
-        // name: "users", 
+        // name: "users",
         required: true, type: CompanyStatus})
     @ApiResponse({status: 200, description: "Add OK"})
     public async updateStatus(@Req() req, @Param("id") id: number, @Res() res: Response) {
@@ -392,7 +407,7 @@ export class CompanyController {
     @ApiParam({name: "uuid", description: "company uuid", required: true, type: String})
     @ApiOperation({description: "update notification status", operationId: "updateNotificationStatus", summary: "Update Notification Status"})
     @ApiBody({
-        // name: "users", 
+        // name: "users",
         required: true, type: CompanyStatus
     })
     @ApiResponse({status: 200, description: "Add OK"})
@@ -420,17 +435,19 @@ export class CompanyController {
             // if (!response.count) await HelperClass.throwErrorHelper('company:companyWithThisUuidDoesNotExist');
 
             const invitation = await this.companyFacade.storeInvitationData(body);
-            
+
             if(!invitation) return res.status(HttpStatus.BAD_REQUEST).json({ response: 'Invitation was not created.' });
 
-            const company = await this.companyFacade.getCompanyByUuid(body.companyUuid)
-            if (!company) await HelperClass.throwErrorHelper('company:companyWithThisUuidDoesNotExist');
+            await this.userService.storeInvitationLogData({
+                ...body,
+                invitationId: invitation.uuid
+            });
 
             await this.emailService.sendMail("user:invite", body.email, {
                 FIRST_NAME: body.firstName,
                 LAST_NAME: body.lastName,
                 LINK: `${constants.FONIO_DOMAIN}/#/invitation-company-${body.type ? 'admin' : 'user'}?invitationUuid=${invitation.uuid}&&type=${invitation.type}`,
-                COMPANY_NAME: company?.companyName
+                // COMPANY_NAME: company?.companyName
             });
 
             return res.status(HttpStatus.OK).json({ response: 'Invitation has been sent successfully.' });
@@ -444,8 +461,8 @@ export class CompanyController {
     @ApiParam({ name: 'image', description: 'image name' })
     @ApiOperation({ description: "Get user image" })
     public async getUserImage(
-        @Req() req, 
-        @Res() res: Response, 
+        @Req() req,
+        @Res() res: Response,
         @Param('uuid') uuid: string,
         @Param('image') image: string,
     ) {
@@ -502,6 +519,37 @@ export class CompanyController {
             await this.companyFacade.updateUserPurged(companyUuid, memberUuid);
 
             res.status(HttpStatus.OK).json({ message: 'Member was successfuly removed'});
+        } catch (err) {
+            errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @Post('accept_invitation/:id')
+    @ApiBody({
+        required: true, type: AcceptInvitationReq
+    })
+    @ApiResponse({ status: 200, description: "Accept Invitation successful" })
+    public async acceptInvitation(@Req() req, @Res() res: Response) {
+        try {
+            const { password } = req.body;
+            const { id } = req.params;
+
+            if (!id) {
+                return res.status(HttpStatus.NOT_FOUND).json({ response: 'Invitation id not found.'});
+            }
+
+            const invitationLog = await this.userService.getInvitationLogByUuid(id);
+
+            if(!invitationLog) return res.status(HttpStatus.NOT_FOUND).json({ response: 'Invitation log was not found.' });
+
+            await this.userService.insertUser({
+                ...invitationLog,
+                password
+            });
+
+            await this.userService.updateInvitationLog(id);
+
+            return res.status(HttpStatus.OK).json({ response: 'Invitation accepted successfully.' });
         } catch (err) {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
         }

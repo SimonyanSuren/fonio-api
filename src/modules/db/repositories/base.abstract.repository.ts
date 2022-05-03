@@ -1,7 +1,7 @@
 import {
     Repository, FindConditions,
     FindManyOptions,
-    FindOneOptions,
+    FindOneOptions, DeepPartial,
 } from 'typeorm';
 
 export abstract class BaseAbstractRepository<T>  {
@@ -39,7 +39,8 @@ export abstract class BaseAbstractRepository<T>  {
         return response
     }
 
-    public async update(data: T): Promise<T> {
+    public async update(data: T): Promise<(DeepPartial<T> & T)[]> {
+        // @ts-ignore
         return await this.execute(() => this.repo.save(data));
     }
 
