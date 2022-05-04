@@ -17,7 +17,7 @@ export class Invitation extends BaseEntity {
     lastName: string;
 
     @ApiProperty()
-    @Column({ name: "company_uuid" })
+    @Column({ name: "company_uuid", nullable: true })
     companyUuid: string;
 
     @ApiProperty()
