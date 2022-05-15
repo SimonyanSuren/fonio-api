@@ -169,7 +169,6 @@ export class UserFacade {
             await PasswordHelper.validatePassword(user.password);
             const found = await this.findByEmail(user.email);
             if (found) throw new Error(errorMessagesConfig['user:alreadyExists'].errorMessage);
-            let company = new Company();
             user.uuid = v4();
             user.plaintText = true;
             user.invoiceEmail = false;
@@ -183,12 +182,15 @@ export class UserFacade {
             user.emailConfirmed = true; // Email confirmed is not being used now
             user.salt = salt;
             user.userIdentityOpenTact = false;
-
-            let companyResponse;
-            let company_uuid = v4();
+				
             let userEntity = await user.save();
+				
+				let company = new Company();
+				let company_uuid = v4();
+				let companyResponse
             
             if (user.companyName && (!invitation || invitation?.type === UserTypes.COMPANY_ADMIN)) {
+			
                 company.companyName = user.companyName;
                 company.companyUuid = company_uuid;
                 company.userUuid = user.uuid
@@ -196,7 +198,8 @@ export class UserFacade {
                 company.status = true;
                 company.balance = 0;
                 company.created = new Date();
-                
+                console.log(invitation);
+					 
                 if (invitation) {
                     company.parentCompanyUuid = invitation.companyUuid;
                 }
@@ -204,10 +207,11 @@ export class UserFacade {
                 companyResponse = await company.save();
             }
 
-            const sipUser = await this.opentactService.createSipUser({
-                login: sipLogin,
-                password: sipPassword,
-            });
+			
+            //const sipUser = await this.opentactService.createSipUser({
+            //    login: sipLogin,
+            //    password: sipPassword,
+            //});
 
             return {
                 user: userEntity,

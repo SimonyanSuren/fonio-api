@@ -39,7 +39,7 @@ export abstract class BaseAbstractRepository<T>  {
         return response
     }
 
-    public async update(data: T): Promise<T> {
+    public async update(data: T|any): Promise<T> {
         return await this.execute(() => this.repo.save(data));
     }
 

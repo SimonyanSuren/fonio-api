@@ -402,14 +402,25 @@ export class CompanyFacade extends BaseService {
     }
 
     public async storeInvitationData(data: InvitationData) {
+		  
         const invitation = new Invitation();
 
         invitation.uuid = v4();
         invitation.firstName = data.firstName;
         invitation.lastName = data.lastName;
+		  invitation.email = data.email;
         invitation.companyUuid = data.companyUuid;
         invitation.type = data.type ? UserTypes.COMPANY_ADMIN : UserTypes.COMPANY_USER;
+		  invitation.expiredOn =new Date(Date.now()+24*3600*1000)
 
         return await invitation.save();
     }
+
+	 public async updateInvitationData(data: Invitation) {
+		const invitation = data
+		invitation.acceptedOn = new Date()
+
+		return await invitation.save();
+  }
 }
+

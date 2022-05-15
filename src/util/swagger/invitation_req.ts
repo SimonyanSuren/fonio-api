@@ -1,32 +1,42 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class InvitationReq {
-    @ApiProperty()
-    firstName: string;
+  @ApiProperty()
+  firstName: string;
 
-    @ApiProperty()
-    lastName: string;
+  @ApiProperty()
+  lastName: string;
 
-    @ApiProperty()
-    email: string;
+  @ApiProperty()
+  email: string;
 
-    @ApiProperty()
-    type: boolean;
+  @ApiProperty()
+  type: boolean;
 
-    @ApiProperty()
-    companyUuid: string;
+  @ApiProperty()
+  companyUuid: string;
+}
+
+export class AcceptInvitationReq {
+  @ApiProperty()
+  password: string;
+  @ApiProperty()
+  rePassword: string;
 }
 
 export class InvitationData {
-    @ApiProperty()
-    firstName: string;
+  @ApiProperty()
+  firstName: string;
 
-    @ApiProperty()
-    lastName: string;
+  @ApiProperty()
+  lastName: string;
 
-    @ApiProperty()
-    type: boolean;
+  @ApiProperty()
+  email: string;
 
-    @ApiProperty()
-    companyUuid: string;
+  @ApiProperty()
+  type: boolean;
+
+  @ApiProperty()
+  companyUuid: string;
 }
