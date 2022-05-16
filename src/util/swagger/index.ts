@@ -8,7 +8,7 @@ export {ChangePassword} from './hash';
 export {CompanyDID} from './company_did';
 export {CompanyId} from './company_id';
 export {CompanyUser} from './company_user';
-export {ResetPassword} from './reset_password';
+export { ResetPassword, UpdatePassword, ChangeUserPassword } from './reset_password';
 export {AccountNumberTiny} from './account_number_tiny';
 export {IdentityId} from './identity_id';
 export {LeadCreate} from './lead_create';

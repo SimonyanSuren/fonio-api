@@ -14,8 +14,8 @@ const baseOptions = {
     logging:true,
     //"synchronize": true,
   };
-  
+
   module.exports = [
-    Object.assign({}, baseOptions, { name: "default", database: "fonio" }),
+    Object.assign({}, baseOptions, { name: "default", database: process.env.DB_NAME }),
   ];
   

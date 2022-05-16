@@ -4,7 +4,7 @@ import { EmailService } from '../email';
 import { Config } from '../../util/config';
 import { PasswordHelper } from '../../util/helper';
 import { genSaltSync, hashSync } from 'bcrypt';
-import { v4 } from 'uuid';
+import { v1, v4 } from 'uuid';
 import { EntityRepository, EntityManager } from "typeorm";
 import * as jwt from 'jsonwebtoken';
 import * as fs from "fs";
@@ -12,15 +12,16 @@ import { OpentactService } from "../opentact/";
 import { UserTypes } from "../../models/user.entity";
 import constants from "../../constants";
 import { errorMessagesConfig } from "../../util/error";
+import { InvitationData, AcceptInvitationReq } from '../../util/swagger/invitation_req';
 
 @EntityRepository()
 @Injectable()
 export class UserFacade {
 
-    constructor(private entityManager: EntityManager,
+    constructor(
+        private entityManager: EntityManager,
         private emailService: EmailService,
-        private opentactService: OpentactService,
-        
+        private opentactService: OpentactService
     ) {
         // super()
     }
@@ -42,7 +43,7 @@ export class UserFacade {
             })
             .where('email=:email', { email })
             .execute();
-        
+
         return hash;
     }
 
@@ -157,7 +158,7 @@ export class UserFacade {
             } else {
                 user.type = UserTypes.COMPANY_ADMIN;
             }
-            
+
             if (!user) throw new Error(errorMessagesConfig['auth:signup:missingInformation'].errorMessage);
             if (!user.firstName) throw new Error(errorMessagesConfig['auth:signup:missingFirstName'].errorMessage);
             if (!user.lastName) throw new Error(errorMessagesConfig['auth:signup:missingLastName'].errorMessage);
@@ -166,9 +167,14 @@ export class UserFacade {
             if (!user.password) throw new Error(errorMessagesConfig['auth:signup:missingPassword'].errorMessage);
             if (!user.rePassword) throw new Error(errorMessagesConfig['auth:signup:missinRePassword'].errorMessage);
             if (user.password !== user.rePassword) throw new Error(errorMessagesConfig['auth:signup:passwordMatch'].errorMessage);
+
             await PasswordHelper.validatePassword(user.password);
+
             const found = await this.findByEmail(user.email);
+
             if (found) throw new Error(errorMessagesConfig['user:alreadyExists'].errorMessage);
+
+            let company = new Company();
             user.uuid = v4();
             user.plaintText = true;
             user.invoiceEmail = false;
@@ -182,24 +188,20 @@ export class UserFacade {
             user.emailConfirmed = true; // Email confirmed is not being used now
             user.salt = salt;
             user.userIdentityOpenTact = false;
-				
+
+            let companyResponse;
+            // let company_uuid = v4();
             let userEntity = await user.save();
-				
-				let company = new Company();
-				let company_uuid = v4();
-				let companyResponse
-            
+
             if (user.companyName && (!invitation || invitation?.type === UserTypes.COMPANY_ADMIN)) {
 			
                 company.companyName = user.companyName;
-                company.companyUuid = company_uuid;
+                company.companyUuid = v4();
                 company.userUuid = user.uuid
                 company.userCreatorID = user.id;
                 company.status = true;
                 company.balance = 0;
                 company.created = new Date();
-                console.log(invitation);
-					 
                 if (invitation) {
                     company.parentCompanyUuid = invitation.companyUuid;
                 }
@@ -409,10 +411,32 @@ export class UserFacade {
             .getOne();
     }
 
+    public async storeInvitationLogData(data: InvitationData) {
+        const invitation = new InvitationLog();
+
+        invitation.invitationUuid = data.invitationId;
+        invitation.firstName = data.firstName;
+        invitation.lastName = data.lastName;
+        invitation.email = data.email;
+        invitation.companyUuid = data.companyUuid;
+        invitation.expiredAt = new Date(Date.now() + 60 * 60 * 24 * 1000);
+
+        return await invitation.save();
+    }
+
+    async getInvitationLogByUuid(uuid: string) {
+        return await this.entityManager.createQueryBuilder(InvitationLog, 'invLog')
+          .where('invLog.invitationUuid = :uuid', { uuid })
+          .getOne();
+    }
+
+
+
+
     // async cancelAccount(account_Id) {
     //     try {
     //         let removed_tn_leases: any,
-    //             numbers_array: Array<number> = [], 
+    //             numbers_array: Array<number> = [],
     //             user_account = await this.entityManager.createQueryBuilder()
     //                 .update(Account)
     //                 .set({
@@ -422,7 +446,7 @@ export class UserFacade {
     //                 .andWhere('account.acco_id=:account_Id', { account_Id })
     //                 .returning('*')
     //                 .execute();
-    
+
     //         if (user_account.affected) {
     //             numbers_array = (await this.entityManager.query(`select array(select number from tracking_numbers where acco_id=$1)`,
     //                 [account_Id]))[0].array;

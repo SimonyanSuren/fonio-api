@@ -2,7 +2,7 @@
 
 import { Inject, Controller, Get, HttpStatus, Req, Res, Param, Patch, Delete, Query, Body } from '@nestjs/common';
 import { Response } from 'express';
-import { ApiParam, ApiResponse, ApiBearerAuth, ApiBody, ApiTags, ApiQuery } from '@nestjs/swagger';
+import { ApiParam, ApiResponse, ApiBearerAuth, ApiBody, ApiTags, ApiQuery, ApiOperation } from '@nestjs/swagger';
 import { OpentactService } from '../opentact';
 import { DidFacade } from '../facade/';
 import { DisableEnableDid, IUpdateDid } from '../../util/swagger/did.dto';
@@ -66,6 +66,10 @@ export class DidController {
     @ApiQuery({ name: 'order_dir', example: 'ASC', required: false, enum: order_dir_enum })
     @ApiQuery({ name: 'filterByNumber', required: false })
     @ApiResponse({ status: 200, description: "Did list" })
+    @ApiOperation({
+        description: "Get did list",
+        summary: "Get did list"
+    })
     public async didlist(@Req() req, @Res() res: Response,
         @Query("offset") offset: number = 0,
         @Query("limit") limit: number = 10,
@@ -73,19 +77,12 @@ export class DidController {
         @Query('order_by') order_by = order_by_enum[0],
         @Query('order_dir') order_dir = order_dir_enum[0],
     ) {
-        const where = { companyID: req.user.companyId }
-        if(filterByNumber) where['number'] = filterByNumber
-        console.log('where',where)
-        const response = await this.commonService.getEntities(this.Repositories.DID, {
-            pageSize: limit,
-            page: offset > 0 ? offset / limit : 0,
-            where,
-            relations:["callFlow"],
-        }, { [order_by]: order_dir })
+        const response = await this.didFacade.getDidNumbers(req.user.companyId, offset, limit, filterByNumber, order_by, order_dir)
+
         res.status(HttpStatus.OK).json({
             success: true,
-            payload:response}
-        );
+            payload: response
+        });
     }
 
     @Get("list/searchBy/:did_id")

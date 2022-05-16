@@ -42,6 +42,7 @@ export class BaseService {
     ): Promise<T> {
         try {
             const entity = await this.getEntity(repository, where)
+            // @ts-ignore
             return await repository.update({
                 ...entity,
                 ...body
