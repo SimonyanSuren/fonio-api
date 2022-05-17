@@ -12,32 +12,31 @@ import {
     Param,
     Body,
     Delete,
-    NotFoundException,
 } from '@nestjs/common';
-import {Response} from 'express';
-import { CompanyFacade, UserFacade } from '../facade';
-import {Company, User} from '../../models';
 import {ApiBody, ApiResponse, ApiOperation, ApiBearerAuth, ApiTags, ApiQuery, ApiParam} from '@nestjs/swagger';
+import {Response} from 'express';
+import {Company, User} from '../../models';
+import { CompanyFacade, UserFacade } from '../facade';
+import { AuthService } from '../auth';
+import {HelperClass} from "../../filters/Helper";
 import {errorResponse} from "../../filters/errorRespone";
 import { CompanyUpdate, CompanyStatus, CompanyNotice } from '../../util/swagger/company_id';
-import {HelperClass} from "../../filters/Helper";
-import { CompanyMember, CompanyMemberUpdate, InvitationReq } from '../../util/swagger';
+import { CompanyMember, CompanyMemberUpdate, InvitationReq,AcceptInvitationReq,ContactReq} from '../../util/swagger';
 import { EmailService } from '../email';
 import constants from '../../constants';
-import { ContactReq } from '../../util/swagger/contact_req';
+import { Config } from '../../util/config';
 import { join } from 'path';
-import { AcceptInvitationReq } from '../../util/swagger/invitation_req';
 
 const CreateRoles: string[] = ['user', 'company'];
 
 @Controller("company")
-@ApiBearerAuth()
+//@ApiBearerAuth()
 @ApiTags("company")
 export class CompanyController {
     constructor(
         private companyFacade: CompanyFacade,
         private emailService: EmailService,
-        private userService: UserFacade
+        private authService: AuthService,
     ) {
     }
 
@@ -423,38 +422,146 @@ export class CompanyController {
         }
     }
 
-    @Post('invite')
-    @ApiBody({
-        required: true, type: InvitationReq,
-    })
-    @ApiResponse({ status: 200, description: "Invitation successful" })
-    public async invite(@Req() req, @Res() res: Response) {
-        try {
-            const body = req.body;
-            // const response = await this.companyFacade.getAllCompaniesByUserCreator(req.user.userId, body.companyUuid);
-            // if (!response.count) await HelperClass.throwErrorHelper('company:companyWithThisUuidDoesNotExist');
+	 @Post('invite')
+	 @ApiBody({
+		required: true,
+		type: InvitationReq,
+	 })
+	 @ApiResponse({ status: 200, description: 'Invitation successful' })
+	 public async invite(
+		@Req() req,
+		@Res() res: Response,
+	 ): Promise<Response<any, Record<string, any>> | undefined> {
+		try {
+  
+		  const response = await this.companyFacade.getAllCompaniesByUserCreator(
+			 req.user.userId
+		  );
+  
+		  if (!response.count)
+			 await HelperClass.throwErrorHelper(
+				'company:companyWithThisUuidDoesNotExist',
+			 );
+  
+		  const body = req.body;
+		  body.companyUuid = response.result[0].company_comp_uuid;
+  
+		  const invitation = await this.companyFacade.storeInvitationData(body);
 
-            const invitation = await this.companyFacade.storeInvitationData(body);
+		  if (!invitation)
+			 return res
+				.status(HttpStatus.BAD_REQUEST)
+				.json({ response: 'Invitation was not created.' }); 
+  
+		//  await this.emailService.sendMail('user:invite', body.email, {
+		//	 FIRST_NAME: body.firstName,
+		//	 LAST_NAME: body.lastName,
+		//	 LINK: `${constants.FONIO_DOMAIN}/#/invitation-company-${
+		//		body.type ? 'admin' : 'user'
+		//	 }?invitationUuid=${invitation.uuid}&&type=${invitation.type}`,
+		//  });
 
-            if(!invitation) return res.status(HttpStatus.BAD_REQUEST).json({ response: 'Invitation was not created.' });
+		  return res
+			 .status(HttpStatus.OK)
+			 .json({ response: 'Invitation has been sent successfully.' });
+		} catch (err) {
+		  errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
+		}
+	 }
+  
+	 @Post('acceptInvitation')
+	 @ApiParam({
+		name: 'invitationUuid',
+		description: 'invitation uuid',
+		required: true,
+		type: String,
+	 })
+	 @ApiBody({
+		required: true,
+		type: AcceptInvitationReq,
+	 })
+	 @ApiOperation({
+		description: 'Create user after accepted invitation',
+		operationId: 'createUserFromInvitation',
+		summary: 'Create user from invitation',
+	 })
+	 @ApiResponse({ status: 200, description: 'Invitation accepted successful. User created.' })
+	 public async acceptInvitation(
+		@Req() req,
+		@Res() res: Response,
+		@Query('invitationUuid') invitationUuid: string,
+		@Query('type') userType: string,
+	 ): Promise<Response<any, Record<string, any>> | undefined> {
+		try {
+  
+		  let invitation;
+		  invitation = await this.companyFacade.getInvitationByUuid(
+			 invitationUuid,
+		  ) 
+		  
+		  if (!invitation) {
+			 await HelperClass.throwErrorHelper(
+				'invitation:invitationWithThisUuidDoesNotExist',
+			 );
+		  }
+  
+		  const invitationExpire = Date.now()>invitation.expiredOn
+		  if (invitationExpire) {
+			 return res
+				.status(HttpStatus.BAD_REQUEST)
+				.json({ response: 'Invitation was expired.' });
+		  }
+		  
+		  let company;
+		  company= await this.companyFacade.getCompanyByUuid(invitation.companyUuid) 
+		  const userData = Object.assign({}, invitation, req.body, {companyName:company.companyName})
+		  userData.invitationUuid = invitation.uuid
 
-            await this.userService.storeInvitationLogData({
-                ...body,
-                invitationId: invitation.uuid
-            });
+		  const userSign = await this.authService.signUp(userData);
 
-            await this.emailService.sendMail("user:invite", body.email, {
-                FIRST_NAME: body.firstName,
-                LAST_NAME: body.lastName,
-                LINK: `${constants.FONIO_DOMAIN}/#/invitation-company-${body.type ? 'admin' : 'user'}?invitationUuid=${invitation.uuid}&&type=${invitation.type}`,
-                // COMPANY_NAME: company?.companyName
-            });
-
-            return res.status(HttpStatus.OK).json({ response: 'Invitation has been sent successfully.' });
-        } catch (err) {
-            errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
-        }
-    }
+		  if (!userSign) return res.status(HttpStatus.BAD_REQUEST).json(userSign);
+		  if (userSign.error) return res.status(HttpStatus.BAD_REQUEST).json(userSign);
+  
+		  // /* Don't need email confirmation now
+		  // **
+		  //if (userSign.user) {
+		  //  await this.emailService.sendMail('auth:success', userSign.user.email, {
+		  //    FIRST_NAME: userSign.user.firstName,
+		  //    LAST_NAME: userSign.user.lastName,
+		  //    LOGO: `${
+		  //      process.env.BASE_URL || process.env.FONIO_URL
+		  //    }/public/assets/logo.png`,
+		  //  });
+		  //}
+  
+			await this.companyFacade.updateInvitationData(invitation)
+		  // */
+	
+		  /* Email confirmation is not being used */
+		  let userAgent = req.headers['user-agent'];
+		  let remoteAddress =
+			 req.headers['X-Forwarded-For'] ||
+			 req.headers['x-forwarded-for'] ||
+			 req.client.remoteAddress;
+  
+		  const user: any = await this.authService.signIn(
+			 userSign.user,
+			 remoteAddress,
+			 userAgent,
+			 true,
+		  );
+		  if (user.user.avatar) {
+			 user.user.avatar = Config.string('CDN_HOST', '') + user.avatar;
+		  }
+		  return res.status(HttpStatus.OK).json(user);
+		  /* */
+  
+		  /* Don't need email confirmation now
+		res.status(HttpStatus.OK).json(userSign); */
+		} catch (err) {
+		  errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
+		}
+	 }
 
     @Get(":uuid/user/image/:image")
     @ApiParam({ name: 'uuid', description: 'company uuid' })
@@ -524,34 +631,4 @@ export class CompanyController {
         }
     }
 
-    @Post('accept_invitation/:id')
-    @ApiBody({
-        required: true, type: AcceptInvitationReq
-    })
-    @ApiResponse({ status: 200, description: "Accept Invitation successful" })
-    public async acceptInvitation(@Req() req, @Res() res: Response) {
-        try {
-            const { password } = req.body;
-            const { id } = req.params;
-
-            if (!id) {
-                return res.status(HttpStatus.NOT_FOUND).json({ response: 'Invitation id not found.'});
-            }
-
-            const invitationLog = await this.userService.getInvitationLogByUuid(id);
-
-            if(!invitationLog) return res.status(HttpStatus.NOT_FOUND).json({ response: 'Invitation log was not found.' });
-
-            await this.userService.insertUser({
-                ...invitationLog,
-                password
-            });
-
-            await this.userService.updateInvitationLog(id);
-
-            return res.status(HttpStatus.OK).json({ response: 'Invitation accepted successfully.' });
-        } catch (err) {
-            errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
-        }
-    }
 }

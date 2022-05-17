@@ -12,8 +12,7 @@ import { OpentactService } from "../opentact/";
 import { UserTypes } from "../../models/user.entity";
 import constants from "../../constants";
 import { errorMessagesConfig } from "../../util/error";
-import { InvitationData, InvitationLogData } from '../../util/swagger/invitation_req';
-import { InvitationLog } from '../../models/invitation_log';
+import { InvitationData, AcceptInvitationReq } from '../../util/swagger/invitation_req';
 
 @EntityRepository()
 @Injectable()
@@ -195,6 +194,7 @@ export class UserFacade {
             let userEntity = await user.save();
 
             if (user.companyName && (!invitation || invitation?.type === UserTypes.COMPANY_ADMIN)) {
+			
                 company.companyName = user.companyName;
                 company.companyUuid = v4();
                 company.userUuid = user.uuid
@@ -202,7 +202,6 @@ export class UserFacade {
                 company.status = true;
                 company.balance = 0;
                 company.created = new Date();
-
                 if (invitation) {
                     company.parentCompanyUuid = invitation.companyUuid;
                 }
@@ -210,10 +209,11 @@ export class UserFacade {
                 companyResponse = await company.save();
             }
 
-            const sipUser = await this.opentactService.createSipUser({
-                login: sipLogin,
-                password: sipPassword,
-            });
+			
+            //const sipUser = await this.opentactService.createSipUser({
+            //    login: sipLogin,
+            //    password: sipPassword,
+            //});
 
             return {
                 user: userEntity,
@@ -403,51 +403,6 @@ export class UserFacade {
             .returning('*')
             .execute();
 
-    }
-
-    async getInvitationByUuid(uuid: string) {
-        return await this.entityManager.createQueryBuilder(Invitation, 'inv')
-            .where('inv.uuid = :uuid', { uuid })
-            .getOne();
-    }
-
-    public async storeInvitationLogData(data: InvitationLogData) {
-        const invitationLog = new InvitationLog();
-
-        invitationLog.invitationUuid = data.invitationId;
-        invitationLog.firstName = data.firstName;
-        invitationLog.lastName = data.lastName;
-        invitationLog.email = data.email;
-        invitationLog.companyUuid = data.companyUuid;
-        invitationLog.expiredAt = new Date(Date.now() + 60 * 60 * 24 * 1000);
-
-        return await invitationLog.save();
-    }
-
-    async getInvitationLogByUuid(uuid: string) {
-        return await this.entityManager.createQueryBuilder(InvitationLog, 'invLog')
-          .where('invLog.invitationUuid = :uuid', { uuid })
-          .getOne();
-    }
-
-    async insertUser(data) {
-        const user = new User();
-
-        const salt = genSaltSync(Config.number("BCRYPT_SALT_ROUNDS", 10));
-        user.password = await hashSync(user.password, salt);
-
-        user.firstName = data.firstName;
-        user.lastName = data.lastName;
-        user.email = data.email;
-
-        return await user.save();
-    }
-
-    async updateInvitationLog(uuid: string) {
-        return await this.entityManager.createQueryBuilder(InvitationLog, 'invLog')
-          .update(InvitationLog, {acceptedOn: `${new Date()}`})
-          .where('invLog.invitationUuid = :uuid', { uuid })
-          .execute();
     }
 
     // async cancelAccount(account_Id) {

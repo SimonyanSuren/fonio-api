@@ -2,7 +2,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { JWTHelper } from '../../util/jwt';
-import { UserFacade, PlanFacade } from '../facade';
+import { UserFacade, PlanFacade, CompanyFacade } from '../facade';
 import { User, ApiKey } from '../../models';
 import { compare as comparePassword } from 'bcrypt';
 import { OpentactService } from '../opentact';
@@ -17,7 +17,7 @@ export class AuthService extends BaseService {
     private userFacade: UserFacade,
         private opentactAuth: OpentactAuth,
         private opentactService: OpentactService,
-        private planFacade: PlanFacade,
+        private companyFacade: CompanyFacade,
     ) {
         super()
     }
@@ -79,7 +79,7 @@ export class AuthService extends BaseService {
         try {
             let invitation;
             if (body.invitationUuid) {
-                invitation = await this.userFacade.getInvitationByUuid(body.invitationUuid);
+                invitation = await this.companyFacade.getInvitationByUuid(body.invitationUuid);
             }
             const user = new User();
             user.email = body.email;

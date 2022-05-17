@@ -19,5 +19,5 @@ export {CallFlowReq} from './call_flow_req';
 export {AccountNumberReq} from './account_number';
 export {TagRes} from './tagRes';
 export {ContactReq} from './contact_req';
-export {InvitationReq} from './invitation_req';
+export {InvitationReq, AcceptInvitationReq} from './invitation_req';
 export {SmsReadStatus} from './sms_read_status';

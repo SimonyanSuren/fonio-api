@@ -11,7 +11,6 @@ import { UserPatchMethod } from "../../util/swagger/user";
 import { MessageCodeError } from '../../util/error';
 import { AccountNumberFacade } from '../facade';
 import { EmailService } from '../email';
-import { InvitationReq } from '../../util/swagger';
 import { CommonService } from '../services/common.service';
 import { PermissionsService } from '../services/permissions.service';
 import { Repositories} from '../db/repositories';
