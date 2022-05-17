@@ -45,6 +45,7 @@ export class AuthMiddleware implements NestMiddleware {
                 || url.includes("/plan")
                 || url.includes("/google/redirect")
                 || url.includes("/socket.io")
+                || url.includes("/company/acceptInvitation")
                 || url === "/"
                 || url === "/google"
                 || url === "/tracking_numbers"

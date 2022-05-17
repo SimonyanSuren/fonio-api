@@ -416,12 +416,20 @@ export class CompanyFacade extends BaseService {
         return await invitation.save();
     }
 
+	 async getInvitationByUuid(uuid: string) {
+		return await this.entityManager.createQueryBuilder(Invitation, 'inv')
+			 .where('inv.uuid = :uuid', { uuid })
+			 .getOne();
+  }
+
+
 	 public async updateInvitationData(data: Invitation) {
 		const invitation = data
 		invitation.acceptedOn = new Date()
 
 		return await invitation.save();
   }
+
     async updateUserPurged(companyUuid, userUuid) {
         await this.entityManager.createQueryBuilder()
             .update(User)

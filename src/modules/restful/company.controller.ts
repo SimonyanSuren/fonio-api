@@ -12,32 +12,31 @@ import {
     Param,
     Body,
     Delete,
-    NotFoundException,
 } from '@nestjs/common';
-import {Response} from 'express';
-import { CompanyFacade, UserFacade } from '../facade';
-import {Company, User} from '../../models';
 import {ApiBody, ApiResponse, ApiOperation, ApiBearerAuth, ApiTags, ApiQuery, ApiParam} from '@nestjs/swagger';
+import {Response} from 'express';
+import {Company, User} from '../../models';
+import { CompanyFacade, UserFacade } from '../facade';
+import { AuthService } from '../auth';
+import {HelperClass} from "../../filters/Helper";
 import {errorResponse} from "../../filters/errorRespone";
 import { CompanyUpdate, CompanyStatus, CompanyNotice } from '../../util/swagger/company_id';
-import {HelperClass} from "../../filters/Helper";
-import { CompanyMember, CompanyMemberUpdate, InvitationReq } from '../../util/swagger';
+import { CompanyMember, CompanyMemberUpdate, InvitationReq,AcceptInvitationReq,ContactReq} from '../../util/swagger';
 import { EmailService } from '../email';
 import constants from '../../constants';
-import { ContactReq } from '../../util/swagger/contact_req';
+import { Config } from '../../util/config';
 import { join } from 'path';
-import { AcceptInvitationReq } from '../../util/swagger/invitation_req';
 
 const CreateRoles: string[] = ['user', 'company'];
 
 @Controller("company")
-@ApiBearerAuth()
+//@ApiBearerAuth()
 @ApiTags("company")
 export class CompanyController {
     constructor(
         private companyFacade: CompanyFacade,
         private emailService: EmailService,
-        private userService: UserFacade
+        private authService: AuthService,
     ) {
     }
 
@@ -436,8 +435,7 @@ export class CompanyController {
 		try {
   
 		  const response = await this.companyFacade.getAllCompaniesByUserCreator(
-			 req.user.userId,
-			 req.user.companyUuid,
+			 req.user.userId
 		  );
   
 		  if (!response.count)
@@ -446,23 +444,23 @@ export class CompanyController {
 			 );
   
 		  const body = req.body;
-		  body.companyUuid = req.user.companyUuid
-			 ? req.user.companyUuid
-			 : response.result[0].company_comp_uuid;
+		  body.companyUuid = response.result[0].company_comp_uuid;
   
 		  const invitation = await this.companyFacade.storeInvitationData(body);
+
 		  if (!invitation)
 			 return res
 				.status(HttpStatus.BAD_REQUEST)
 				.json({ response: 'Invitation was not created.' }); 
   
-		  await this.emailService.sendMail('user:invite', body.email, {
-			 FIRST_NAME: body.firstName,
-			 LAST_NAME: body.lastName,
-			 LINK: `${constants.FONIO_DOMAIN}/#/invitation-company-${
-				body.type ? 'admin' : 'user'
-			 }?invitationUuid=${invitation.uuid}&&type=${invitation.type}`,
-		  });
+		//  await this.emailService.sendMail('user:invite', body.email, {
+		//	 FIRST_NAME: body.firstName,
+		//	 LAST_NAME: body.lastName,
+		//	 LINK: `${constants.FONIO_DOMAIN}/#/invitation-company-${
+		//		body.type ? 'admin' : 'user'
+		//	 }?invitationUuid=${invitation.uuid}&&type=${invitation.type}`,
+		//  });
+
 		  return res
 			 .status(HttpStatus.OK)
 			 .json({ response: 'Invitation has been sent successfully.' });
@@ -485,9 +483,9 @@ export class CompanyController {
 	 @ApiOperation({
 		description: 'Create user after accepted invitation',
 		operationId: 'createUserFromInvitation',
-		summary: 'Create user',
+		summary: 'Create user from invitation',
 	 })
-	 @ApiResponse({ status: 200, description: 'Invitation accepted successful' })
+	 @ApiResponse({ status: 200, description: 'Invitation accepted successful. User created.' })
 	 public async acceptInvitation(
 		@Req() req,
 		@Res() res: Response,
@@ -497,7 +495,7 @@ export class CompanyController {
 		try {
   
 		  let invitation;
-		  invitation = await this.userFacade.getInvitationByUuid(
+		  invitation = await this.companyFacade.getInvitationByUuid(
 			 invitationUuid,
 		  ) 
 		  
@@ -516,14 +514,14 @@ export class CompanyController {
 		  
 		  let company;
 		  company= await this.companyFacade.getCompanyByUuid(invitation.companyUuid) 
-		  console.log('SSN COMP', company, company.companyName)
 		  const userData = Object.assign({}, invitation, req.body, {companyName:company.companyName})
 		  userData.invitationUuid = invitation.uuid
+
 		  const userSign = await this.authService.signUp(userData);
+
 		  if (!userSign) return res.status(HttpStatus.BAD_REQUEST).json(userSign);
+		  if (userSign.error) return res.status(HttpStatus.BAD_REQUEST).json(userSign);
   
-		  if (userSign.error)
-			 return res.status(HttpStatus.BAD_REQUEST).json(userSign);
 		  // /* Don't need email confirmation now
 		  // **
 		  //if (userSign.user) {
@@ -564,7 +562,7 @@ export class CompanyController {
 		  errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
 		}
 	 }
-	 
+
     @Get(":uuid/user/image/:image")
     @ApiParam({ name: 'uuid', description: 'company uuid' })
     @ApiParam({ name: 'image', description: 'image name' })

@@ -405,34 +405,6 @@ export class UserFacade {
 
     }
 
-    async getInvitationByUuid(uuid: string) {
-        return await this.entityManager.createQueryBuilder(Invitation, 'inv')
-            .where('inv.uuid = :uuid', { uuid })
-            .getOne();
-    }
-
-    public async storeInvitationLogData(data: InvitationData) {
-        const invitation = new InvitationLog();
-
-        invitation.invitationUuid = data.invitationId;
-        invitation.firstName = data.firstName;
-        invitation.lastName = data.lastName;
-        invitation.email = data.email;
-        invitation.companyUuid = data.companyUuid;
-        invitation.expiredAt = new Date(Date.now() + 60 * 60 * 24 * 1000);
-
-        return await invitation.save();
-    }
-
-    async getInvitationLogByUuid(uuid: string) {
-        return await this.entityManager.createQueryBuilder(InvitationLog, 'invLog')
-          .where('invLog.invitationUuid = :uuid', { uuid })
-          .getOne();
-    }
-
-
-
-
     // async cancelAccount(account_Id) {
     //     try {
     //         let removed_tn_leases: any,
