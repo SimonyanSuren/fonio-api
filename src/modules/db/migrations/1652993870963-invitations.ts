@@ -1,11 +1,9 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class invitations1652929606040 implements MigrationInterface {
-  name = 'invitations1652929606040';
+export class invitations1652993870963 implements MigrationInterface {
+  name = 'invitations1652993870963';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP TABLE IF EXISTS "invitations" CASCADE`);
-
     await queryRunner.query(
       `CREATE TYPE "public"."invitations_type_enum" AS ENUM('company_admin', 'company_user')`,
     );
