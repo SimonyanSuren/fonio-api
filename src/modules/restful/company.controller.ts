@@ -845,19 +845,22 @@ export class CompanyController {
       body.companyUuid = response.result[0].company_comp_uuid;
 
       const invitation = await this.companyFacade.storeInvitationData(body);
-
-      if (!invitation)
+       if (!invitation)
         return res
           .status(HttpStatus.BAD_REQUEST)
           .json({ response: 'Invitation was not created.' });
 
-      //  await this.emailService.sendMail('user:invite', body.email, {
-      //	 FIRST_NAME: body.firstName,
-      //	 LAST_NAME: body.lastName,
-      //	 LINK: `${constants.FONIO_DOMAIN}/#/invitation-company-${
-      //		body.type ? 'admin' : 'user'
-      //	 }?invitationUuid=${invitation.uuid}&&type=${invitation.type}`,
-      //  });
+        await this.emailService.sendMail('user:invite', body.email, 
+		  {
+      	 FIRST_NAME: body.firstName,
+      	 LAST_NAME: body.lastName,
+			 COMPANY_NAME:response.result[0].company_comp_name,
+      	 LINK: `${constants.FONIO_DOMAIN}/#/invitation-company-${
+      		body.type ? 'admin' : 'user'
+      	 }?invitationUuid=${invitation.uuid}&&type=${invitation.type}`,
+        }
+		  );
+		  
 
       return res.status(HttpStatus.OK).json({
         response: 'Invitation has been sent successfully.',
@@ -930,21 +933,21 @@ export class CompanyController {
       const userSign = await this.authService.signUp(userData);
 
       if (!userSign) return res.status(HttpStatus.BAD_REQUEST).json(userSign);
+		
       if (userSign.error)
         return res.status(HttpStatus.BAD_REQUEST).json(userSign);
 
       await this.companyFacade.updateInvitationData(invitation);
 
-      /* Email confirmation is not being used */
-      //if (userSign.user) {
-      //  await this.emailService.sendMail('auth:success', userSign.user.email, {
-      //    FIRST_NAME: userSign.user.firstName,
-      //    LAST_NAME: userSign.user.lastName,
-      //    LOGO: `${
-      //      process.env.BASE_URL || process.env.FONIO_URL
-      //    }/public/assets/logo.png`,
-      //  });
-      //}
+      if (userSign.user) {
+        await this.emailService.sendMail('auth:success', userSign.user.email, {
+          FIRST_NAME: userSign.user.firstName,
+          LAST_NAME: userSign.user.lastName,
+          LOGO: `${
+            process.env.BASE_URL || process.env.FONIO_URL
+          }/public/assets/logo.png`,
+        });
+      }
 
       let userAgent = req.headers['user-agent'];
       let remoteAddress =

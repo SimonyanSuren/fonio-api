@@ -5,7 +5,7 @@ const constants = {
 
     // Constants for email.
     EMAIL_SMTP_HOST: process.env.EMAIL_SMTP_HOST || "mail.denovolab.com",
-    EMAIL_SMTP_PORT: process.env.EMAIL_SMTP_PORT || 25,
+    EMAIL_SMTP_PORT: process.env.EMAIL_SMTP_PORT || 587,
     EMAIL_SMTP_USER: process.env.EMAIL_SMTP_USER || "noreply@denovolab.com",
     EMAIL_SMTP_PASSWORD: process.env.EMAIL_SMTP_PASSWORD || "LKDJFFH!!!hrm",
 
