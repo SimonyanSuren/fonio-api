@@ -1,4 +1,3 @@
-import { Data } from '../../models'
 import { IdentityId } from './identity_id'
 import { ApiProperty } from '@nestjs/swagger';
 

@@ -1,20 +1,19 @@
-import { Company, Contact, Invitation, User } from '../../models';
 import { Injectable } from '@nestjs/common';
-import { Config } from '../../util/config';
-import { v4 } from 'uuid';
 import { EntityRepository, EntityManager } from 'typeorm';
-import { UserFacade } from './user.facade';
-import { HelperClass } from '../../filters/Helper';
-import { Transactional } from 'typeorm-transactional-cls-hooked';
-import { PasswordHelper } from '../../util/helper';
 import { genSaltSync, hashSync } from 'bcrypt';
-import { OpentactService } from '../opentact';
 const CryptoJS = require('crypto-js');
-import constants from '../../constants';
+import { Transactional } from 'typeorm-transactional-cls-hooked';
+import { OpentactService } from '../opentact';
+import { v4 } from 'uuid';
+import { Company, Contact, Invitation, User, UserTypes } from '../../models';
 import { BaseService } from '../services/base.service';
 import { Repositories } from '../db/repositories';
-import { UserTypes } from '../../models/user.entity';
+import { UserFacade } from './user.facade';
+import { Config } from '../../util/config';
+import { HelperClass } from '../../filters/Helper';
+import { PasswordHelper } from '../../util/helper';
 import { InvitationData } from '../../util/swagger/invitation_req';
+import constants from '../../constants';
 
 @EntityRepository()
 @Injectable()
@@ -83,12 +82,12 @@ export class CompanyFacade extends BaseService {
     return await request.getMany();
   }
 
-  async getCompanyListByParentCompanyUuid(companyUuid) {
-    return await this.entityManager
-      .createQueryBuilder(Company, 'c')
-      .where('c.parentCompanyUuid=:companyUuid', { companyUuid: companyUuid })
-      .getMany();
-  }
+  //  async getCompanyListByParentCompanyUuid(companyUuid) {
+  //    return await this.entityManager
+  //      .createQueryBuilder(Company, 'c')
+  //      .where('c.parentCompanyUuid=:companyUuid', { companyUuid: companyUuid })
+  //      .getMany();
+  //  }
 
   async getUserUuidByCompanyUuid(companyUuid, userUuid) {
     return await this.entityManager
@@ -402,7 +401,7 @@ export class CompanyFacade extends BaseService {
       let new_company = new Company();
       new_company.companyName = us.companyName;
       new_company.companyUuid = v4();
-      new_company.parentCompanyUuid = company.companyUuid;
+      //new_company.parentCompanyUuid = company.companyUuid;
       new_company.userUuid = user.uuid;
       new_company.userCreatorID = user.id;
       // new_company.planID = user.planID;

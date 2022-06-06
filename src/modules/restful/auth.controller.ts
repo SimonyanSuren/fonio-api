@@ -8,6 +8,7 @@ import {
   Res,
   Patch,
   Get,
+  Body
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import {
@@ -65,22 +66,22 @@ export class AuthController {
   })
   @ApiResponse({ status: 200, description: 'Sign up successful' })
   @Post('signup')
-  public async signup(@Req() req, @Res() res: Response) {
+  public async signup(@Req() req, @Body() body:SignupReq, @Res() res: Response) {
     try {
-      const userSign = await this.authService.signUp(req.body);
+		 const signUpData = body
+      const userSign = await this.authService.signUp(signUpData);
       if (!userSign) return res.status(HttpStatus.BAD_REQUEST).json(userSign);
 
       if (userSign.error)
         return res.status(HttpStatus.BAD_REQUEST).json(userSign);
 
-      /* Email confirmation is not being used */
-      //if (userSign.user) {
-      //    await this.emailService.sendMail("auth:success", userSign.user.email, {
-      //        FIRST_NAME: userSign.user.firstName,
-      //        LAST_NAME: userSign.user.lastName,
-      //        LOGO: `${process.env.BASE_URL||process.env.FONIO_URL}/public/assets/logo.png`
-      //    });
-      //}
+      if (userSign.user) {
+          await this.emailService.sendMail("auth:success", userSign.user.email, {
+              FIRST_NAME: userSign.user.firstName,
+              LAST_NAME: userSign.user.lastName,
+              LOGO: `${process.env.BASE_URL||process.env.FONIO_URL}/public/assets/logo.png`
+          });
+      }
 
       let userAgent = req.headers['user-agent'];
       let remoteAddress =

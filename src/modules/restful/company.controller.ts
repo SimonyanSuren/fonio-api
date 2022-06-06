@@ -122,6 +122,8 @@ export class CompanyController {
         req.user.userId,
         companyUuid,
       );
+      console.log(response);
+
       if (!response.count)
         await HelperClass.throwErrorHelper(
           'company:companyWithThisUuidDoesNotExist',
@@ -454,11 +456,12 @@ export class CompanyController {
           item.password = undefined;
           item.salt = undefined;
         });
-      } else if (role === 'company') {
-        members = await this.companyFacade.getCompanyListByParentCompanyUuid(
-          uuid,
-        );
       }
+      //else if (role === 'company') {
+      //  members = await this.companyFacade.getCompanyListByParentCompanyUuid(
+      //    uuid,
+      //  );
+      //}
 
       res.status(HttpStatus.OK).json(members);
     } catch (err) {
@@ -815,10 +818,12 @@ export class CompanyController {
   @ApiResponse({ status: 200, description: 'Invitation successful' })
   public async invite(
     @Req() req,
+    @Body() body: InvitationReq,
     @Res() res: Response,
   ): Promise<Response<any, Record<string, any>> | undefined> {
     try {
-      const { email } = req.body;
+
+      const { email } = body;
 
       const invitationAlraedyExist: any =
         await this.companyFacade.getInvitationByEmail(email);
@@ -841,31 +846,30 @@ export class CompanyController {
           'company:companyWithThisUuidDoesNotExist',
         );
 
-      const body = req.body;
-      body.companyUuid = response.result[0].company_comp_uuid;
+      const invData: any = body;
+      invData.companyUuid = response.result[0].company_comp_uuid;
 
-      const invitation = await this.companyFacade.storeInvitationData(body);
-       if (!invitation)
+      const invitation = await this.companyFacade.storeInvitationData(invData);
+
+      if (!invitation)
         return res
           .status(HttpStatus.BAD_REQUEST)
           .json({ response: 'Invitation was not created.' });
 
-        await this.emailService.sendMail('user:invite', body.email, 
-		  {
-      	 FIRST_NAME: body.firstName,
-      	 LAST_NAME: body.lastName,
-			 COMPANY_NAME:response.result[0].company_comp_name,
-      	 LINK: `${constants.FONIO_DOMAIN}/#/invitation-company-${
-      		body.type ? 'admin' : 'user'
-      	 }?invitationUuid=${invitation.uuid}&&type=${invitation.type}`,
-        }
-		  );
-		  
+      await this.emailService.sendMail('user:invite', invData.email, {
+        FIRST_NAME: invData.firstName,
+        LAST_NAME: invData.lastName,
+        COMPANY_NAME: response.result[0].company_comp_name,
+        LINK: `${constants.FONIO_DOMAIN}/#/invitation-company-${
+          invData.type ? 'admin' : 'user'
+        }?invitationUuid=${invitation.uuid}&&type=${invitation.type}`,
+      });
 
       return res.status(HttpStatus.OK).json({
         response: 'Invitation has been sent successfully.',
         invitationUuid: invitation.uuid,
       });
+
     } catch (err) {
       errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
     }
@@ -881,11 +885,6 @@ export class CompanyController {
     description: 'invitation uuid',
     required: true,
   })
-  @ApiQuery({
-    name: 'type',
-    description: 'user type for signup',
-    required: false,
-  })
   @ApiOperation({
     description: 'Create user after accepted invitation',
     operationId: 'createUserFromInvitation',
@@ -898,10 +897,13 @@ export class CompanyController {
   public async acceptInvitation(
     @Req() req,
     @Res() res: Response,
+    @Body() body: AcceptInvitationReq,
     @Query('invitationUuid') invitationUuid: string,
-    @Query('type') userType: string,
   ): Promise<Response<any, Record<string, any>> | undefined> {
+
     try {
+
+      const userData = body;
       const invitation: any = await this.companyFacade.getInvitationByUuid(
         invitationUuid,
       );
@@ -920,20 +922,10 @@ export class CompanyController {
           .json({ response: 'Invitation was expired.' });
       }
 
-      const company: any = await this.companyFacade.getCompanyByUuid(
-        invitation.companyUuid,
-      );
-
-      const userData = Object.assign({}, invitation, req.body, {
-        companyName: company.companyName,
-      });
-
-      userData.invitationUuid = invitation.uuid;
-
-      const userSign = await this.authService.signUp(userData);
+      const userSign = await this.authService.signUp(userData, invitation);
 
       if (!userSign) return res.status(HttpStatus.BAD_REQUEST).json(userSign);
-		
+
       if (userSign.error)
         return res.status(HttpStatus.BAD_REQUEST).json(userSign);
 

@@ -1,39 +1,63 @@
-import {ApiProperty} from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { OrderDid } from './order_did';
-
+import { IsString, IsEmail, IsOptional, IsNotEmpty } from 'class-validator';
 
 export class SignupReq {
-    @ApiProperty()
-    email: string;
-    @ApiProperty()
-    password: string;
-    @ApiProperty()
-    rePassword: string;
-    @ApiProperty()
-    firstName: string;
-    @ApiProperty()
-    lastName: string;
-    @ApiProperty()
-    companyName: string;
-    @ApiProperty()
-    userPhone: string;
-    @ApiProperty()
-    invitationUuid?: string;
+  @ApiProperty()
+  @IsEmail()
+  email: string;
+
+  @ApiProperty()
+  @IsString()
+  password: string;
+
+  @ApiProperty()
+  @IsString()
+  rePassword: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  firstName: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  lastName: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  companyName: string;
+
+  @ApiProperty()
+  @IsOptional()
+  userPhone: string;
+
+  @ApiProperty()
+  @IsOptional()
+  invitationUuid?: string;
 }
 
 export class CompanyMember {
   @ApiProperty()
   email: string;
+
   @ApiProperty()
   password: string;
+
   @ApiProperty()
   rePassword: string;
+
   @ApiProperty()
   firstName: string;
+
   @ApiProperty()
   lastName: string;
+
   @ApiProperty()
   userPhone: string;
+
   @ApiProperty()
   companyName: string;
 }
@@ -41,10 +65,13 @@ export class CompanyMember {
 export class CompanyMemberUpdate {
   @ApiProperty()
   phone: string;
+
   @ApiProperty()
   firstName: string;
+
   @ApiProperty()
   lastName: string;
+
   @ApiProperty()
   active: boolean;
 }
@@ -52,18 +79,24 @@ export class CompanyMemberUpdate {
 export class CreatePaymentReq {
   @ApiProperty()
   email: string;
+
   @ApiProperty()
   password: string;
+
   @ApiProperty()
   rePassword: string;
+
   @ApiProperty()
   firstName: string;
+
   @ApiProperty()
   lastName: string;
+
   @ApiProperty()
   companyName: string;
+  
   @ApiProperty({
-      type: [OrderDid],
-    })
+    type: [OrderDid],
+  })
   did_numbers?: OrderDid[];
 }
