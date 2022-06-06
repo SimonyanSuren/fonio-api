@@ -23,7 +23,6 @@ export class initial1633936571212 implements MigrationInterface {
         await queryRunner.query(`CREATE TABLE "call_log_table_list" ("id" SERIAL NOT NULL, "table_name" character varying NOT NULL, "created_at" TIMESTAMP NOT NULL, CONSTRAINT "PK_445e9d582217f12a2976b8d800f" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "company" ("comp_id" SERIAL NOT NULL, "user_creator" integer NOT NULL, "comp_name" character varying NOT NULL, "acco_id" integer NOT NULL, "comp_uuid" character varying NOT NULL, "status" boolean NOT NULL, "balance" integer NOT NULL, "created" TIMESTAMP NOT NULL, "identity_uuid" character varying, "user_uuid" character varying NOT NULL, "timezone" character varying, CONSTRAINT "PK_e0bd47c9f81cfdfaf35c374294e" PRIMARY KEY ("comp_id"))`);
         await queryRunner.query(`CREATE TABLE "contacts" ("cont_id" SERIAL NOT NULL, "cont_phone_number" character varying NOT NULL, "cont_first_name" character varying NOT NULL, "cont_last_name" character varying NOT NULL, "cont_created_on" TIMESTAMP NOT NULL, "cont_last_modified" TIMESTAMP NOT NULL, "cont_active" boolean NOT NULL, "modified_by" integer, "comp_id" integer, CONSTRAINT "REL_3c65cde8db4fba1bac42f3b366" UNIQUE ("modified_by"), CONSTRAINT "REL_0afe32d362019ef68591227c43" UNIQUE ("comp_id"), CONSTRAINT "PK_4eaa9e949ebdb036774006b2dde" PRIMARY KEY ("cont_id"))`);
-        await queryRunner.query(`CREATE TABLE "contact" ("cont_id" SERIAL NOT NULL, "cont_phone_number" character varying NOT NULL, "cont_first_name" character varying NOT NULL, "cont_last_name" character varying NOT NULL, "cont_created_on" TIMESTAMP NOT NULL, "cont_last_modified" TIMESTAMP NOT NULL, "cont_active" boolean NOT NULL, "modified_by" integer, "comp_id" integer, CONSTRAINT "REL_7d9cbfd5853e773780df39c020" UNIQUE ("modified_by"), CONSTRAINT "REL_9ecb7cb8aaf561eb619bfe26cb" UNIQUE ("comp_id"), CONSTRAINT "PK_46f1a638bf40fa5236d4c56beb6" PRIMARY KEY ("cont_id"))`);
         await queryRunner.query(`CREATE TABLE "provinces" ("province_uuid" uuid NOT NULL DEFAULT uuid_generate_v4(), "country_uuid" uuid NOT NULL, "short_name" character varying NOT NULL, "full_name" character varying NOT NULL, "updated_on" TIMESTAMP NOT NULL DEFAULT now(), "created_on" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_9e1198910df8563b37614dc21be" PRIMARY KEY ("province_uuid"))`);
         await queryRunner.query(`CREATE TABLE "countries" ("country_uuid" uuid NOT NULL DEFAULT uuid_generate_v4(), "short_name" character varying NOT NULL, "full_name" character varying NOT NULL, "updated_on" TIMESTAMP NOT NULL DEFAULT now(), "created_on" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_bf5975abed7b132cb206b6921fb" PRIMARY KEY ("country_uuid"))`);
         await queryRunner.query(`CREATE TABLE "plan" ("plan_id" SERIAL NOT NULL, "plan_name" character varying, "plan_monthly" double precision, "plan_annually" double precision, "numbers" integer, "minutes" integer, "plan_order" integer, "text" character varying, "plan_status" boolean, "plan_creation" date NOT NULL DEFAULT now(), "updated_on" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_cf8cdd9ac9fbd4f9dd000bb62ca" PRIMARY KEY ("plan_id"))`);
@@ -60,8 +59,6 @@ export class initial1633936571212 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE "call_flow_steps" ADD CONSTRAINT "FK_f98680313deb26cc1ce6839152d" FOREIGN KEY ("reco_id") REFERENCES "recordings"("reco_id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "contacts" ADD CONSTRAINT "FK_3c65cde8db4fba1bac42f3b3661" FOREIGN KEY ("modified_by") REFERENCES "user"("user_id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "contacts" ADD CONSTRAINT "FK_0afe32d362019ef68591227c438" FOREIGN KEY ("comp_id") REFERENCES "company"("comp_id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "contact" ADD CONSTRAINT "FK_7d9cbfd5853e773780df39c0202" FOREIGN KEY ("modified_by") REFERENCES "user"("user_id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "contact" ADD CONSTRAINT "FK_9ecb7cb8aaf561eb619bfe26cbf" FOREIGN KEY ("comp_id") REFERENCES "company"("comp_id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "provinces" ADD CONSTRAINT "FK_d54f29c28fae4da8134f2ac2784" FOREIGN KEY ("country_uuid") REFERENCES "countries"("country_uuid") ON DELETE NO ACTION ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "tokens" ADD CONSTRAINT "FK_8769073e38c365f315426554ca5" FOREIGN KEY ("user_id") REFERENCES "user"("user_id") ON DELETE CASCADE ON UPDATE NO ACTION`);
     }
@@ -69,8 +66,6 @@ export class initial1633936571212 implements MigrationInterface {
     public async down(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`ALTER TABLE "tokens" DROP CONSTRAINT "FK_8769073e38c365f315426554ca5"`);
         await queryRunner.query(`ALTER TABLE "provinces" DROP CONSTRAINT "FK_d54f29c28fae4da8134f2ac2784"`);
-        await queryRunner.query(`ALTER TABLE "contact" DROP CONSTRAINT "FK_9ecb7cb8aaf561eb619bfe26cbf"`);
-        await queryRunner.query(`ALTER TABLE "contact" DROP CONSTRAINT "FK_7d9cbfd5853e773780df39c0202"`);
         await queryRunner.query(`ALTER TABLE "contacts" DROP CONSTRAINT "FK_0afe32d362019ef68591227c438"`);
         await queryRunner.query(`ALTER TABLE "contacts" DROP CONSTRAINT "FK_3c65cde8db4fba1bac42f3b3661"`);
         await queryRunner.query(`ALTER TABLE "call_flow_steps" DROP CONSTRAINT "FK_f98680313deb26cc1ce6839152d"`);
@@ -107,7 +102,6 @@ export class initial1633936571212 implements MigrationInterface {
         await queryRunner.query(`DROP TABLE "plan"`);
         await queryRunner.query(`DROP TABLE "countries"`);
         await queryRunner.query(`DROP TABLE "provinces"`);
-        await queryRunner.query(`DROP TABLE "contact"`);
         await queryRunner.query(`DROP TABLE "contacts"`);
         await queryRunner.query(`DROP TABLE "company"`);
         await queryRunner.query(`DROP TABLE "call_log_table_list"`);

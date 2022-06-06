@@ -29,7 +29,7 @@ export class AcceptInvitationReq {
   @IsString()
   @ApiProperty()
   password: string;
-  
+
   @IsString()
   @ApiProperty()
   rePassword: string;

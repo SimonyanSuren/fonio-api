@@ -122,15 +122,16 @@ export class CompanyController {
         req.user.userId,
         companyUuid,
       );
-      console.log(response);
 
       if (!response.count)
         await HelperClass.throwErrorHelper(
           'company:companyWithThisUuidDoesNotExist',
         );
 
+      const companyId = response.result[0].company_comp_id;
+		
       let contacts = await this.companyFacade.getCompanyContacts(
-        response.result[0].company_comp_id,
+        companyId,
         undefined,
         { userUuid, firstName },
       );
@@ -814,6 +815,7 @@ export class CompanyController {
   @ApiBody({
     required: true,
     type: InvitationReq,
+    description: ' company name required if invitation type true(admin)',
   })
   @ApiResponse({ status: 200, description: 'Invitation successful' })
   public async invite(
@@ -822,7 +824,6 @@ export class CompanyController {
     @Res() res: Response,
   ): Promise<Response<any, Record<string, any>> | undefined> {
     try {
-
       const { email } = body;
 
       const invitationAlraedyExist: any =
@@ -869,7 +870,6 @@ export class CompanyController {
         response: 'Invitation has been sent successfully.',
         invitationUuid: invitation.uuid,
       });
-
     } catch (err) {
       errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
     }
@@ -900,9 +900,7 @@ export class CompanyController {
     @Body() body: AcceptInvitationReq,
     @Query('invitationUuid') invitationUuid: string,
   ): Promise<Response<any, Record<string, any>> | undefined> {
-
     try {
-
       const userData = body;
       const invitation: any = await this.companyFacade.getInvitationByUuid(
         invitationUuid,

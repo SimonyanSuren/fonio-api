@@ -1,21 +1,28 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsEmail, IsString, IsBoolean } from 'class-validator';
 
 export class ContactReq {
-    @ApiProperty()
-    email: string;
+  @IsEmail()
+  @ApiProperty()
+  email: string;
 
-    @ApiProperty()
-    phoneNumber: string;
+  @IsString()
+  @ApiProperty()
+  phoneNumber: string;
 
-    @ApiProperty()
-    firstName: string;
+  @IsString()
+  @ApiProperty()
+  firstName: string;
 
-    @ApiProperty()
-    lastName: string;
+  @IsString()
+  @ApiProperty()
+  lastName: string;
 
-    @ApiProperty()
-    active: boolean;
+  @IsBoolean()
+  @ApiProperty()
+  active: boolean;
 
-    @ApiProperty()
-    favourite: boolean;
+  @IsBoolean()
+  @ApiProperty()
+  favourite: boolean;
 }
