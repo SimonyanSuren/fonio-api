@@ -112,12 +112,14 @@ export class CompanyFacade extends BaseService {
   }
 
   async getAllCompaniesByUserCreator(userId, companyUuid?) {
+	  
     let manager = await this.entityManager;
     let query1 = `SELECT count(*) FROM "public"."company"
                     WHERE "company"."user_creator"=${userId}`;
     if (companyUuid) {
-      query1 += ` AND "company"."comp_uuid"='${companyUuid}'`;
+      query1 += ` or "company"."comp_uuid"='${companyUuid}'`;
     }
+	 
     let count = await manager.query(query1);
 
     let query2 = `SELECT "company"."comp_id" AS "company_comp_id", "company"."user_creator" AS "company_user_creator", 
@@ -129,7 +131,7 @@ export class CompanyFacade extends BaseService {
                     WHERE "company"."user_creator" = ${userId}`;
 
     if (companyUuid) {
-      query2 += ` AND "company"."comp_uuid" = '${companyUuid}'`;
+      query2 += ` or "company"."comp_uuid" = '${companyUuid}'`;
     }
 
     let result = await manager.query(query2);

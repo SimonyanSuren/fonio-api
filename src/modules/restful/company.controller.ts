@@ -201,7 +201,7 @@ export class CompanyController {
   @ApiParam({ name: 'companyUuid', description: 'company uuid' })
   @ApiBody({
     required: true,
-    type: UpdateContactReq,
+    type: ContactReq,
   })
   @ApiResponse({
     status: 200,

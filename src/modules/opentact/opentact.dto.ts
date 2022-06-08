@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsBoolean, IsOptional } from 'class-validator';
 import {components} from './opentact-original.dto'
 
@@ -518,7 +519,9 @@ export abstract class opentactITN {
 };
 
 export abstract class opentactITNSearchResponse {
+	@ApiProperty()
   success: boolean;
+	@ApiProperty()
   payload: opentactITNSearch;
 };
 

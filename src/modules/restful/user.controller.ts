@@ -285,9 +285,11 @@ export class UserController {
     @ApiBody({
         required: true, type: OrderDids,
     })
-    public async orderDidNumber(@Req() req, @Res() res: Response, @Body() body: OrderDids) {
-        try {
+    public async orderDidNumber(@Req() req, @Res() res: Response, @Body() body) {
+        try { 
             let userToken = await this.opentactService.getToken();
+				
+				
             let order = await this.opentactService.buyDidNumbers(userToken.payload.token, body.numbers);
 
             if (order.error) {
