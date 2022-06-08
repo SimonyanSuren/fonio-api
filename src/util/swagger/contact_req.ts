@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { PartialType } from '@nestjs/mapped-types';
 import { IsEmail, IsString, IsBoolean } from 'class-validator';
 
 export class ContactReq {
@@ -26,3 +27,5 @@ export class ContactReq {
   @ApiProperty()
   favourite: boolean;
 }
+
+export class UpdateContactReq extends PartialType(ContactReq) {}

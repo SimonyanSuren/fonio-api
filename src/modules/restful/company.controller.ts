@@ -11,7 +11,7 @@ import {
   Query,
   Param,
   Body,
-  Delete,
+  Delete, 
 } from '@nestjs/common';
 import {
   ApiBody,
@@ -39,6 +39,7 @@ import {
   InvitationReq,
   AcceptInvitationReq,
   ContactReq,
+  UpdateContactReq
 } from '../../util/swagger';
 import { EmailService } from '../email';
 import constants from '../../constants';
@@ -200,7 +201,7 @@ export class CompanyController {
   @ApiParam({ name: 'companyUuid', description: 'company uuid' })
   @ApiBody({
     required: true,
-    type: ContactReq,
+    type: UpdateContactReq,
   })
   @ApiResponse({
     status: 200,
@@ -218,7 +219,7 @@ export class CompanyController {
     @Res() res: Response,
     @Param('companyUuid') companyUuid: string,
     @Param('id') id: string,
-    @Body() body: ContactReq,
+    @Body() body: UpdateContactReq,
   ) {
     try {
       let response = await this.companyFacade.getAllCompaniesByUserCreator(
