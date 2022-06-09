@@ -53,6 +53,9 @@ export class User extends BaseEntity {
     @Column({ name: "sip_username", nullable: true })
     sipUsername?: string;
 
+    @Column({ name: "sip_user_uuid", nullable: true })
+    sipUserUuid?: string;
+
     @Column({name: "user_password"})
     password?: string;
 

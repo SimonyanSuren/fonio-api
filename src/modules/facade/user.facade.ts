@@ -9,8 +9,6 @@ import { EmailService } from '../email';
 import { Config } from '../../util/config';
 import { OpentactService } from '../opentact/';
 import constants from '../../constants';
-;
-
 @EntityRepository()
 @Injectable()
 export class UserFacade {
@@ -167,21 +165,20 @@ export class UserFacade {
   }
 
   async signupUser(user: User) {
-
     try {
-
       const salt = genSaltSync(Config.number('BCRYPT_SALT_ROUNDS', 10));
       user.password = await hashSync(user.password, salt);
       user.salt = salt;
-      const sipPassword = user.password;
-      const sipLogin = `${user.firstName}_${Date.now()}`;
-      user.sipUsername = sipLogin;
+      user.uuid = v4();
       user.emailConfirmed = true; // Email confirmed is not being used now
       user.userIdentityOpenTact = false;
-      user.uuid = v4();
       user.plaintText = true;
       user.invoiceEmail = false;
       user.active = true; // Email confirmed is not being used now;
+
+      const sipLogin = `${user.firstName}_${user.uuid}`;
+      const sipPassword = user.password;
+      user.sipUsername = sipLogin;
 
       let userEntity = await user.save();
       let companyResponse;
@@ -209,13 +206,26 @@ export class UserFacade {
       }
 
       const sipUser = await this.opentactService.createSipUser({
-          login: sipLogin,
-          password: sipPassword,
+        login: sipLogin,
+        password: sipPassword,
       });
+
+      if (sipUser.success) {
+        user.sipUserUuid = sipUser.payload.uuid;
+        this.entityManager
+          .createQueryBuilder()
+          .update(User)
+          .set({
+            sipUserUuid: user.sipUserUuid,
+          })
+          .where('id=:user_id', { user_id: user.id })
+          .execute();
+      }
 
       return {
         user: userEntity,
         company: companyResponse,
+        sipUser,
       };
     } catch (err) {
       console.log(err);

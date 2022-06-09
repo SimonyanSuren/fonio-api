@@ -34,9 +34,6 @@ export class SignupReq {
   @IsOptional()
   userPhone: string;
 
-  @ApiProperty()
-  @IsOptional()
-  invitationUuid?: string;
 }
 
 export class CompanyMember {
