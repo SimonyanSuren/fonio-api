@@ -112,7 +112,6 @@ export class OpentactService extends BaseService {
     features = ['sms', 'voice'],
   } = {}) {
     try {
-      console.log(' \x1b[41m ', arguments, '\u001b[0m');
       const response = await this.axios.post(`/tn/search`, {
         type,
         take,
@@ -129,6 +128,16 @@ export class OpentactService extends BaseService {
       return response.data;
     } catch (e) {
       console.log('TrackingNumber', e);
+      throw e;
+    }
+  }
+
+  async getTnAvailableCountriesTn() {
+    try {
+      const response = await this.axios.get('/tn/search/countries');
+      return response.data;
+    } catch (e) {
+      console.log('TrackingNumberCountries', e);
       throw e;
     }
   }

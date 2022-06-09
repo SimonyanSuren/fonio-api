@@ -1,41 +1,43 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsBoolean, IsOptional } from 'class-validator';
-import {components} from './opentact-original.dto'
+import { components } from './opentact-original.dto';
 
 enum gender {
-  Male, Female, Other
+  Male,
+  Female,
+  Other,
 }
 
 export abstract class opentactCreateSipUserDto {
   @IsString()
-  login: string
+  login: string;
   @IsString()
-  password: string
+  password: string;
   @IsOptional()
   @IsString()
-  first_name?: string
+  first_name?: string;
   @IsOptional()
   @IsString()
-  last_name?: string
+  last_name?: string;
   @IsOptional()
   @IsString()
-  email?: string
+  email?: string;
   @IsOptional()
   @IsString()
-  phone_number?: string
+  phone_number?: string;
   @IsOptional()
   @IsString()
-  avatar?: string
+  avatar?: string;
   @IsOptional()
   @IsBoolean()
-  same_domain_calls_only?: boolean
+  same_domain_calls_only?: boolean;
   @IsOptional()
-  dob?: Date
+  dob?: Date;
   @IsOptional()
-  gender?: gender
+  gender?: gender;
   @IsOptional()
   @IsString()
-  remote_ip: string
+  remote_ip: string;
 }
 
 //TODO:sting or number typing
@@ -50,7 +52,7 @@ export abstract class opentactISMSNewParams {
    * URL override for messaging profile callback url's
    */
   custom_callback_url?: string;
-};
+}
 
 export abstract class opentactIMessagingProfile {
   /**
@@ -73,21 +75,34 @@ export abstract class opentactIMessagingProfile {
   tollfree_weight: number;
   skip_unhealthy_tns: boolean;
   sticky_sender: boolean;
-};
+}
 
 export enum opentactESearchMode {
-  AND = "AND", OR = "OR"
+  AND = 'AND',
+  OR = 'OR',
 }
 
 export enum opentactESIPControlAppMethod {
-  GET = "GET", POST = "POST"
+  GET = 'GET',
+  POST = 'POST',
 }
 
-export enum opentactESearchOrder { "ASC", "DESC" };
+export enum opentactESearchOrder {
+  'ASC',
+  'DESC',
+}
 
-export enum opentactESMSState { "created", "sending", "sent", "failed" };
-export enum opentactESMSIState { "created", "success", "failed" };
-
+export enum opentactESMSState {
+  'created',
+  'sending',
+  'sent',
+  'failed',
+}
+export enum opentactESMSIState {
+  'created',
+  'success',
+  'failed',
+}
 
 export abstract class opentactISMSISearchParams {
   /**
@@ -131,8 +146,8 @@ export abstract class opentactISMSISearchParams {
   from?: string;
   delivered?: boolean;
   readed?: boolean;
-  state?: opentactESMSIState
-};
+  state?: opentactESMSIState;
+}
 
 export abstract class opentactISMSISMSSearchParams {
   /**
@@ -175,7 +190,7 @@ export abstract class opentactISMSISMSSearchParams {
   message?: string;
   delivered?: boolean;
   state?: opentactESMSState | opentactESMSIState;
-};
+}
 
 export abstract class opentactITNOrderItem {
   /** Voice feature */
@@ -193,7 +208,7 @@ export abstract class opentactITNOrderItem {
   profile?: string;
   /** Autorenew tn leases */
   autorenew?: boolean;
-};
+}
 
 export abstract class opentactISIPControlAppCallSearchParams {
   /** how many items to take */
@@ -223,16 +238,16 @@ export abstract class opentactISIPControlAppCallSearchParams {
   from?: string;
   /** Mask supported */
   to?: string;
-  state?: components["schemas"]["ECallState"];
-  sip_control_app?: components["schemas"]["UUID"];
-};
+  state?: components['schemas']['ECallState'];
+  sip_control_app?: components['schemas']['UUID'];
+}
 
 export abstract class opentactITNLeaseSearchParams {
   /** how many items to take */
   take?: number;
   /** how many items to skip */
   skip?: number;
-  mode?:  opentactESearchMode;
+  mode?: opentactESearchMode;
   /**
    * Order items by field's
    *
@@ -249,14 +264,13 @@ export abstract class opentactITNLeaseSearchParams {
   /** Mask supported */
   tn?: string;
   autorenew?: boolean;
-  sip_connection?: components["schemas"]["UUID"];
-  sip_control_app?: components["schemas"]["UUID"];
-};
-
+  sip_connection?: components['schemas']['UUID'];
+  sip_control_app?: components['schemas']['UUID'];
+}
 
 export abstract class opentactITNOrderNewParams {
   items: opentactITNOrderItem;
-};
+}
 
 export abstract class opentactISIPControlAppNewParams {
   /**
@@ -315,8 +329,7 @@ export abstract class opentactISIPControlAppNewParams {
    * Outbound Voice Profile uuid
    */
   outbound_voice_profile?: string;
-};
-
+}
 
 export abstract class opentactIOutboundVoiceProfileUpdateParams {
   /** A user-assigned name to help manage the outbound voice profile. */
@@ -326,8 +339,7 @@ export abstract class opentactIOutboundVoiceProfileUpdateParams {
   product?: number;
   /** TNLease uuid */
   tn_lease?: string | null;
-};
-
+}
 
 export abstract class opentactIOutboundVoiceProfileNewParams {
   /**
@@ -341,7 +353,7 @@ export abstract class opentactIOutboundVoiceProfileNewParams {
   channel_limit?: number;
   max_rate?: number;
   daily_spent_limit?: number;
-};
+}
 
 export abstract class opentactISIPDomainUpdateParams {
   /**
@@ -356,7 +368,7 @@ export abstract class opentactISIPDomainUpdateParams {
    * SIPControlApp uuid
    */
   sip_control_app?: string;
-};
+}
 
 export abstract class opentactISIPControlAppUpdateParams {
   /**
@@ -388,7 +400,7 @@ export abstract class opentactISIPControlAppUpdateParams {
    *
    * in case of POST method selected, full ISIPControlAppCall entity will be sent as body
    */
-  webhook_method?: opentactESIPControlAppMethod
+  webhook_method?: opentactESIPControlAppMethod;
   /**
    * If null, then there is no timeout, then opentact will not activately hagup the cause.
    *
@@ -412,12 +424,12 @@ export abstract class opentactISIPControlAppUpdateParams {
    *
    * in case of POST method selected, full ISIPControlAppCall entity will be sent as body
    */
-  call_flow_method?: opentactESIPControlAppMethod
+  call_flow_method?: opentactESIPControlAppMethod;
   /**
    * Outbound Voice Profile uuid
    */
   outbound_voice_profile?: string;
-};
+}
 
 export abstract class opentactITNLeasesAssignParams {
   /**
@@ -428,12 +440,12 @@ export abstract class opentactITNLeasesAssignParams {
    * List of TNLease uuid's to be removed
    */
   remove?: string[];
-};
+}
 
 export abstract class opentactISIPUserResponse {
   success: boolean;
   payload: opentactISIPUser;
-};
+}
 
 export abstract class opentactISIPUser {
   /**
@@ -493,7 +505,7 @@ export abstract class opentactITNSearchParams {
    * TN Profile name
    */
   profile?: string;
-};
+}
 
 export abstract class opentactITNSearch {
   /**
@@ -509,23 +521,49 @@ export abstract class opentactITNSearch {
    */
   total: number;
   data: opentactITN[];
-};
+}
+
+export abstract class opentactITNSearchResponse {
+  @ApiProperty()
+  success: boolean;
+  @ApiProperty()
+  payload: opentactITNSearch;
+}
+
+export class opentactITNSearchCountries {
+  /** Created on datetime */
+  @ApiProperty()
+  created_on?: string;
+  /** Last modified on datetime */
+  @ApiProperty()
+  modified_on?: string;
+  @ApiProperty()
+  name: string;
+  @ApiProperty()
+  a2: string;
+  @ApiProperty()
+  a3: string;
+  @ApiProperty()
+  n: number;
+  @ApiProperty()
+  country_code?: number;
+  @ApiProperty()
+  national_code?: number;
+}
+
+export class opentactITNSearchCountriesResponse {
+  @ApiProperty()
+  success: boolean;
+  @ApiProperty()
+  payload: opentactITNSearchCountries;
+}
 
 export abstract class opentactITN {
   tn: number;
   class4_did_id?: number;
   registered: boolean;
   deleted_on?: string;
-};
-
-export abstract class opentactITNSearchResponse {
-	@ApiProperty()
-  success: boolean;
-	@ApiProperty()
-  payload: opentactITNSearch;
-};
-
-
+}
 export abstract class opentactITNProfile {
   /**
    * Created on datetime
@@ -631,7 +669,7 @@ export abstract class opentactITNProfile {
   emergency_mrc: number;
   emergency_incoming_per_min_cost: number;
   emergency_outgoing_per_min_cost: number;
-};
+}
 
 export abstract class opentactIProvider {
   /**
@@ -639,7 +677,4 @@ export abstract class opentactIProvider {
    */
   toll_free?: boolean;
   deleted_on?: string;
-};
-
-
-
+}

@@ -10,16 +10,17 @@ const constants = {
     EMAIL_SMTP_PASSWORD: process.env.EMAIL_SMTP_PASSWORD || "LKDJFFH!!!hrm",
 
     OPENTACT_REST_API: process.env.OPENTACT_REST_API || "https://api.stage.opentact.org/rest",
-	 OPENTACT_WSS: process.env.OPENTACT_WSS || "wss://api.opentact.org",
-    OPENTACT_SIP_DOMAIN: process.env.OPENTACT_SIP_DOMAIN || "fonio.sip.stage.opentact.org",
-    OPENTACT_SIP_APP_UUID: process.env.OPENTACT_SIP_APP_UUID || "08b731d5-ab4a-4e01-b4b1-d961df6984e0",
-	 
-    OPENTACT_USER: process.env.OPENTACT_USER || "leon229@yandex.ru",
-    OPENTACT_PASSWORD: process.env.OPENTACT_PASSWORD || "123",
-
+    OPENTACT_SIP_DOMAIN: process.env.OPENTACT_SIP_DOMAIN || "fonio2.sip.stage.opentact.org",
+    OPENTACT_USER: process.env.OPENTACT_USER ,
+    OPENTACT_PASSWORD: process.env.OPENTACT_PASSWORD,
 	 OPENTACT_ADMIN_EMAIL: process.env.OPENTACT_ADMIN_EMAIL,
     OPENTACT_ADMIN_PASSWORD: process.env.OPENTACT_ADMIN_PASSWORD,
+	 OPENTACT_WSS: process.env.OPENTACT_WSS || "wss://api.stage.opentact.org/wss",
+	 // OPENTACT_SIP_APP_UUID: process.env.OPENTACT_SIP_APP_UUID || "08b731d5-ab4a-4e01-b4b1-d961df6984e0",
+	 
+	 
 
+	 
 
     FONIO_URL: process.env.FONIO_URL || "http://148.251.91.143:8083",
     FONIO_DOMAIN: process.env.FONIO_DOMAIN || "https://fonio.app/",

@@ -208,10 +208,10 @@ export class UserFacade {
           .execute();
       }
 
-      //const sipUser = await this.opentactService.createSipUser({
-      //    login: sipLogin,
-      //    password: sipPassword,
-      //});
+      const sipUser = await this.opentactService.createSipUser({
+          login: sipLogin,
+          password: sipPassword,
+      });
 
       return {
         user: userEntity,

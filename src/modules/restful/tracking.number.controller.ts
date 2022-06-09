@@ -17,7 +17,11 @@ import {
 import { Response } from 'express';
 import { AccountNumberFacade } from '../facade';
 import { AccountNumber } from '../../models';
-import { OpentactService, opentactITNSearchResponse } from '../opentact';
+import {
+  OpentactService,
+  opentactITNSearchResponse,
+  opentactITNSearchCountriesResponse,
+} from '../opentact';
 import {
   TrackingNumber,
   TrackingNumberPatch,
@@ -185,6 +189,21 @@ export class TrackingNumberController {
         },
         ...num_type,
       });
+      return res.status(HttpStatus.OK).json(response);
+    } catch (err) {
+      errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Get('search/available_countries')
+  @ApiResponse({
+    status: 200,
+    description: 'tn available countries',
+    type: opentactITNSearchCountriesResponse,
+  })
+  public async getAvailable(@Res() res: Response) {
+    try {
+      const response = await this.opentactService.getTnAvailableCountriesTn();
       return res.status(HttpStatus.OK).json(response);
     } catch (err) {
       errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
