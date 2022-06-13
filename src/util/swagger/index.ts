@@ -4,6 +4,7 @@ export { SignupReq } from './signup';
 export { CompanyMember } from './signup';
 export { CreatePaymentReq } from './signup';
 export { CompanyMemberUpdate } from './signup';
+export { UserPatchByAdmin, UserPatchMethod, UserStatus } from './user';
 export { ChangePassword } from './hash';
 export { CompanyDID } from './company_did';
 export { CompanyId } from './company_id';
@@ -30,5 +31,5 @@ export {
   TrackingNumberPatch,
   TrackingNumberDelete,
   DisableEnable,
-  NumberFeatures
+  NumberFeatures,
 } from './tracking_number_post';

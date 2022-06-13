@@ -19,7 +19,7 @@ import {AdminFacade} from "../facade/admin.facade";
 import {PlanFacade, DidFacade, UserFacade, InvoiceFacade, PaymentFacade} from "../facade";
 import {User} from '../../models/';
 import {AdminUserActivation, ActivationResend, PaymentSettingsRequest} from "../../util/swagger/admin_restful_api";
-import {UserStatus, UserPatchByAdmin} from "../../util/swagger/user";
+import {UserStatus, UserPatchByAdmin} from "../../util/swagger";
 import {DeleteUserByAdmin} from "../../util/swagger/plan_features";
 import {OpentactService} from "../opentact";
 import {EmailService} from "../email";

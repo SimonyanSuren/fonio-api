@@ -7,7 +7,7 @@ import { UserFacade, CompanyFacade, OrderFacade } from '../facade';
 import { ApiOperation, ApiBearerAuth, ApiTags, ApiBody, ApiParam, ApiResponse } from '@nestjs/swagger';
 import { errorResponse } from "../../filters/errorRespone";
 import { HelperClass } from "../../filters/Helper";
-import { UserPatchMethod } from "../../util/swagger/user";
+import { UserPatchMethod } from "../../util/swagger";
 import { MessageCodeError } from '../../util/error';
 import { AccountNumberFacade } from '../facade';
 import { EmailService } from '../email';
@@ -24,7 +24,8 @@ import { UpdatePassword, ChangeUserPassword } from '../../util/swagger';
 import { PasswordHelper } from '../../util/helper';
 import { compare as comparePassword, genSaltSync, hashSync } from "bcrypt";
 import { Config } from '../../util/config';
-import { UserTypes } from "../../models/user.entity";
+import { UserTypes } from '../../models';
+
 
 @Controller("user")
 @ApiTags("User")
@@ -432,6 +433,7 @@ export class UserController {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
         }
     }
+
 
     @ApiBody({
         required: true, type: ChangeUserPassword,

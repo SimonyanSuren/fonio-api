@@ -37,26 +37,31 @@ export class SignupReq {
 }
 
 export class CompanyMember {
-  @ApiProperty()
-  email: string;
-
-  @ApiProperty()
-  password: string;
-
-  @ApiProperty()
-  rePassword: string;
-
-  @ApiProperty()
-  firstName: string;
-
-  @ApiProperty()
-  lastName: string;
-
-  @ApiProperty()
-  userPhone: string;
-
-  @ApiProperty()
-  companyName: string;
+	@ApiProperty()
+	@IsEmail()
+	email: string;
+ 
+	@ApiProperty()
+	@IsString()
+	password: string;
+ 
+	@ApiProperty()
+	@IsString()
+	rePassword: string;
+ 
+	@ApiProperty()
+	@IsString()
+	@IsNotEmpty()
+	firstName: string;
+ 
+	@ApiProperty()
+	@IsString()
+	@IsNotEmpty()
+	lastName: string;
+ 
+	@ApiProperty()
+	@IsOptional()
+	userPhone: string; 
 }
 
 export class CompanyMemberUpdate {

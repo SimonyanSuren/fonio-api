@@ -1,14 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { EntityRepository, EntityManager } from 'typeorm';
+import { Transactional } from 'typeorm-transactional-cls-hooked';
 import * as fs from 'fs';
 import * as jwt from 'jsonwebtoken';
 import { genSaltSync, hashSync } from 'bcrypt';
 import { v4 } from 'uuid';
-import { User, UserTypes, Company, ApiKey, Invitation } from '../../models';
+import { User, UserTypes, Company, ApiKey } from '../../models';
 import { EmailService } from '../email';
 import { Config } from '../../util/config';
 import { OpentactService } from '../opentact/';
 import constants from '../../constants';
+import { PasswordHelper } from '../../util/helper';
+import { errorMessagesConfig } from '../../util/error';
+import { CompanyFacade } from './company.facade';
+
 @EntityRepository()
 @Injectable()
 export class UserFacade {
@@ -16,8 +21,10 @@ export class UserFacade {
     private entityManager: EntityManager,
     private emailService: EmailService,
     private opentactService: OpentactService,
+    @Inject(forwardRef(() => CompanyFacade))
+    private companyFacade: CompanyFacade,
   ) {
-    // super()
+    //  super();
   }
 
   static async getTokenForResetPassword(email) {
@@ -161,11 +168,21 @@ export class UserFacade {
         userLastLogin: new Date(),
       })
       .where('user_id=:id', { id: userID })
+      .returning('user_last_login')
       .execute();
   }
 
-  async signupUser(user: User) {
+  async signupUser(userData: User) {
     try {
+      const user = new User();
+      user.email = userData.email;
+      user.firstName = userData.firstName;
+      user.lastName = userData.lastName;
+      user.companyName = userData.companyName;
+      user.userPhone = userData.userPhone;
+      user.type = UserTypes.COMPANY_ADMIN;
+      user.isAdmin = true;
+      user.password = userData.password;
       const salt = genSaltSync(Config.number('BCRYPT_SALT_ROUNDS', 10));
       user.password = await hashSync(user.password, salt);
       user.salt = salt;
@@ -175,36 +192,9 @@ export class UserFacade {
       user.plaintText = true;
       user.invoiceEmail = false;
       user.active = true; // Email confirmed is not being used now;
-
       const sipLogin = `${user.firstName}_${user.uuid}`;
-      const sipPassword = user.password;
       user.sipUsername = sipLogin;
-
-      let userEntity = await user.save();
-      let companyResponse;
-
-      if (user.type === UserTypes.COMPANY_ADMIN) {
-        let company = new Company();
-        company.companyUuid = v4();
-        company.companyName = user.companyName!;
-        company.userUuid = user.uuid;
-        company.userCreatorID = user.id;
-        company.status = true;
-        company.balance = 0;
-        company.created = new Date();
-        companyResponse = await company.save();
-
-        this.entityManager
-          .createQueryBuilder()
-          .update(User)
-          .set({
-            companyUuid: company.companyUuid,
-            companyID: company.companyID,
-          })
-          .where('id=:user_id', { user_id: user.id })
-          .execute();
-      }
-
+      const sipPassword = userData.password;
       const sipUser = await this.opentactService.createSipUser({
         login: sipLogin,
         password: sipPassword,
@@ -212,20 +202,111 @@ export class UserFacade {
 
       if (sipUser.success) {
         user.sipUserUuid = sipUser.payload.uuid;
-        this.entityManager
-          .createQueryBuilder()
-          .update(User)
-          .set({
-            sipUserUuid: user.sipUserUuid,
-          })
-          .where('id=:user_id', { user_id: user.id })
-          .execute();
       }
+
+      const userEntity = await user.save();
+
+      const company = await this.companyFacade.createCompany(
+        userEntity,
+        { status: false, balance: 0 },
+        false,
+      );
+      //const company = new Company();
+
+      //company.companyName = user.companyName;
+      //company.companyUuid = v4();
+      //company.userUuid = user.uuid;
+      //company.status = true;
+      //company.balance = 0;
+      //company.created = new Date();
+      //company.userCreatorID = userEntity.id;
+      //const companyEntity = await company.save();
+
+      //await this.entityManager
+      //  .createQueryBuilder()
+      //  .update(User)
+      //  .set({
+      //    companyUuid: company.companyUuid,
+      //    companyID: company.companyID,
+      //  })
+      //  .where('id=:user_id', { user_id: userEntity.id })
+      //  .execute();
 
       return {
         user: userEntity,
-        company: companyResponse,
-        sipUser,
+        company: company,
+      };
+    } catch (err) {
+      console.log(err);
+      return { error: err.message };
+    }
+  }
+
+  @Transactional()
+  async createUser(userData, company: Company, role?) {
+    try {
+      const found = await this.findByEmail(userData.email);
+
+      //if (found) {
+      //  throw new Error('user:alreadyExists');
+      //}
+
+      if (userData.password !== userData.rePassword) {
+        throw new Error(
+          errorMessagesConfig['auth:signup:passwordMatch'].errorMessage,
+        );
+      }
+
+      const user = new User();
+      user.email = userData.email;
+      user.firstName = userData.firstName;
+      user.lastName = userData.lastName;
+      user.password = userData.password;
+      user.userPhone = userData?.userPhone;
+      user.type =
+        role === UserTypes.COMPANY_ADMIN
+          ? UserTypes.COMPANY_ADMIN
+          : UserTypes.COMPANY_USER;
+      await PasswordHelper.validatePassword(user.password);
+      const salt = genSaltSync(Config.number('BCRYPT_SALT_ROUNDS', 10));
+      user.password = await hashSync(user.password, salt);
+      user.salt = salt;
+      user.uuid = v4();
+      user.emailConfirmed = true;
+      user.userIdentityOpenTact = false;
+      user.plaintText = true;
+      user.invoiceEmail = false;
+      user.active = true;
+
+      const sipLogin = `${user.firstName}_${user.uuid}`;
+      user.sipUsername = sipLogin;
+      const sipPassword = userData.password;
+      const sipUser = await this.opentactService.createSipUser({
+        login: sipLogin,
+        password: sipPassword,
+      });
+
+      if (sipUser.success) {
+        user.sipUserUuid = sipUser.payload.uuid;
+      }
+
+      user.companyID = company.companyID;
+      user.companyUuid = company.companyUuid;
+      user.companyName = company.companyName;
+
+      const userEntity = await user.save();
+
+      // if (userData.password) {
+      //   const createdTokens = await this.saveToken(
+      //     login,
+      //     userData.password,
+      //     userEntity,
+      //   );
+      // }
+
+      return {
+        user: userEntity,
+        company: company,
       };
     } catch (err) {
       console.log(err);

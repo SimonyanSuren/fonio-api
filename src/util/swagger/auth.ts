@@ -1,8 +1,11 @@
-import {ApiProperty} from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsEmail } from 'class-validator';
 
 export class AuthReq {
-    @ApiProperty()
-    email: string;
-    @ApiProperty()
-    password: string;
+  @IsEmail()
+  @ApiProperty()
+  email: string;
+  @IsString()
+  @ApiProperty()
+  password: string;
 }

@@ -83,7 +83,13 @@ export class AuthService extends BaseService {
     if (!equals && !onSignUp) throw new Error('user:incorrectPassword');
     let isAdmin = user.isAdmin ? user.isAdmin : false;
     let opentactToken = isAdmin ? 'admintoken123456789' : 'usertoken123456789';
-    let company = await this.companyFacade.getCompanyByUuid(user.companyUuid);
+    let company;
+    if (isAdmin) {
+      company = await this.companyFacade.getCompanyByUserCreatorId(user.id);
+    } else {
+      company = await this.companyFacade.getCompanyByUuid(user.companyUuid);
+    }
+
     user.token = await AuthService.generateToken(
       user,
       remoteAddress,
@@ -96,109 +102,65 @@ export class AuthService extends BaseService {
     );
     user.password = undefined;
     user.salt = undefined;
-    await this.userFacade.updateUserLastLoginField(user.id);
+    const userLastLogin = await this.userFacade.updateUserLastLoginField(
+      user.id,
+    );
+    user.userLastLogin = userLastLogin.raw[0].user_last_login;
     return AuthService.response(user, company);
   }
 
-  public async signUp(body, invitation?: Invitation): Promise<SignInResponse> {
-
+  public async signUp(signUpData): Promise<SignInResponse> {
     try {
-		 
-      const email = body.email || invitation?.email;
-      const found = await this.userFacade.findByEmail(email);
+      const found = await this.userFacade.findByEmail(signUpData.email);
 
-      if (found) {
-        throw new Error(errorMessagesConfig['user:alreadyExists'].errorMessage);
-      }
+      //if (found) {
+      //  throw new Error(errorMessagesConfig['user:alreadyExists'].errorMessage);
+      //}
 
-      const user = new User();
-      let company;
-      if (invitation) {
-        user.email = invitation.email;
-        user.firstName = invitation.firstName;
-        user.lastName = invitation.lastName;
-        user.companyName = body?.companyName;
-        user.type = invitation.type;
-        user.isAdmin = invitation.type === UserTypes.COMPANY_ADMIN;
-
-        if (invitation.type === UserTypes.COMPANY_USER) {
-          company = await this.companyFacade.getCompanyByUuid(
-            invitation.companyUuid,
-          );
-
-          user.companyName = company.companyName;
-          user.companyID = company.companyID;
-          user.companyUuid = company.companyUuid;
-        } else {
-          user.companyName = body.companyName;
-        }
-      } else {
-        user.email = body.email;
-        user.firstName = body.firstName;
-        user.lastName = body.lastName;
-        user.companyName = body.companyName;
-        user.userPhone = body.userPhone;
-        user.type = UserTypes.COMPANY_ADMIN;
-        user.isAdmin = true;
-      }
-
-      user.password = body.password;
-      user.rePassword = body.rePassword;
-
-      if (!user) {
+      if (!signUpData) {
         throw new Error(
           errorMessagesConfig['auth:signup:missingInformation'].errorMessage,
         );
       }
-      if (!user.firstName) {
+      if (!signUpData.firstName) {
         throw new Error(
           errorMessagesConfig['auth:signup:missingFirstName'].errorMessage,
         );
       }
-      if (!user.lastName) {
+      if (!signUpData.lastName) {
         throw new Error(
           errorMessagesConfig['auth:signup:missingLastName'].errorMessage,
         );
       }
-      if (!user.email) {
+      if (!signUpData.email) {
         throw new Error(
           errorMessagesConfig['auth:signup:missingEmail'].errorMessage,
         );
       }
-      if (!user.companyName && user.type === UserTypes.COMPANY_ADMIN) {
+      if (!signUpData.companyName) {
         throw new Error(
           errorMessagesConfig['auth:signup:missignCompanyName'].errorMessage,
         );
       }
-      if (!user.password) {
+      if (!signUpData.password) {
         throw new Error(
           errorMessagesConfig['auth:signup:missingPassword'].errorMessage,
         );
       }
-      if (!user.rePassword) {
+      if (!signUpData.rePassword) {
         throw new Error(
           errorMessagesConfig['auth:signup:missinRePassword'].errorMessage,
         );
       }
-      if (user.password !== user.rePassword) {
+      if (signUpData.password !== signUpData.rePassword) {
         throw new Error(
           errorMessagesConfig['auth:signup:passwordMatch'].errorMessage,
         );
       }
 
-      await PasswordHelper.validatePassword(user.password);
+      await PasswordHelper.validatePassword(signUpData.password);
 
-      // user.planID = (body.planID) ? body.planID : null;
-      // if (user.planID) {
-      //     let plan = await this.planFacade.getPlanByPlanId(user.planID);
-      //     if (!plan) await HelperClass.throwErrorHelper('auth:planByThisIdIsNotExist');
-      // }
-
-      const response = await this.userFacade.signupUser(user);
-
-      if (!response.company) {
-        response.company = company;
-      }
+      const response = await this.userFacade.signupUser(signUpData);
 
       /* Don't need email confirmation now
             **
@@ -213,6 +175,53 @@ export class AuthService extends BaseService {
       return { error: err.message };
     }
   }
+
+  //  public async signUpFromInvitation(
+  //    signUpData,
+  //    invitation: Invitation,
+  //  ): Promise<SignInResponse> {
+  //    try {
+  //      const found = await this.userFacade.findByEmail(signUpData.email);
+
+  //      if (found) {
+  //        throw new Error(errorMessagesConfig['user:alreadyExists'].errorMessage);
+  //      }
+
+  //      if (!signUpData) {
+  //        throw new Error(
+  //          errorMessagesConfig['auth:signup:missingInformation'].errorMessage,
+  //        );
+  //      }
+
+  //      if (signUpData.password !== signUpData.rePassword) {
+  //        throw new Error(
+  //          errorMessagesConfig['auth:signup:passwordMatch'].errorMessage,
+  //        );
+  //      }
+
+  //      await PasswordHelper.validatePassword(signUpData.password);
+
+  //      signUpData.email = invitation.email;
+  //      signUpData.firstName = invitation.firstName;
+  //      signUpData.lastName = invitation.lastName;
+  //      signUpData.type = invitation.type;
+  //      signUpData.isAdmin = invitation.type === UserTypes.COMPANY_ADMIN;
+
+  //      const response = await this.userFacade.createUser(signUpData);
+
+  //      /* Don't need email confirmation now
+  //			  **
+  //			  if (response.user) {
+  //					response.user.password = undefined;
+  //					response.user.salt = undefined;
+  //			  }
+  //			  */
+  //      return response;
+  //    } catch (err) {
+  //      console.log(err);
+  //      return { error: err.message };
+  //    }
+  //  }
 
   async generateApiKey(currentUser, remoteAddress: string, userAgent) {
     const user: any = await this.userFacade.findById(currentUser.userId);

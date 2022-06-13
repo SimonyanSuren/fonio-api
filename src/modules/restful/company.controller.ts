@@ -11,7 +11,8 @@ import {
   Query,
   Param,
   Body,
-  Delete, 
+  Delete,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBody,
@@ -24,7 +25,7 @@ import {
 } from '@nestjs/swagger';
 import { Response } from 'express';
 import { Company, User } from '../../models';
-import { CompanyFacade } from '../facade';
+import { CompanyFacade, UserFacade } from '../facade';
 import { AuthService } from '../auth';
 import { HelperClass } from '../../filters/Helper';
 import { errorResponse } from '../../filters/errorRespone';
@@ -39,14 +40,16 @@ import {
   InvitationReq,
   AcceptInvitationReq,
   ContactReq,
-  UpdateContactReq
+  UpdateContactReq,
 } from '../../util/swagger';
 import { EmailService } from '../email';
 import constants from '../../constants';
 import { Config } from '../../util/config';
 import { join } from 'path';
+import { RoleGuard } from '../../util/guard';
+import { Roles } from '../../util/decorator';
 
-const CreateRoles: string[] = ['user', 'company'];
+const CompanyRoles: string[] = ['company_user', 'company_admin'];
 
 @Controller('company')
 @ApiBearerAuth()
@@ -55,6 +58,7 @@ export class CompanyController {
   constructor(
     private companyFacade: CompanyFacade,
     private emailService: EmailService,
+    private userFacade: UserFacade,
     private authService: AuthService,
   ) {}
 
@@ -130,7 +134,7 @@ export class CompanyController {
         );
 
       const companyId = response.result[0].company_comp_id;
-		
+
       let contacts = await this.companyFacade.getCompanyContacts(
         companyId,
         undefined,
@@ -411,7 +415,7 @@ export class CompanyController {
     name: 'role',
     description: 'member role',
     required: true,
-    enum: CreateRoles,
+    enum: CompanyRoles,
   })
   @ApiQuery({ name: 'orderBy', required: false, enum: ['created'] })
   @ApiQuery({ name: 'orderType', required: false, enum: ['asc', 'desc'] })
@@ -435,7 +439,7 @@ export class CompanyController {
     @Query('orderType') orderType: string,
   ) {
     try {
-      if (!CreateRoles.includes(role))
+      if (!CompanyRoles.includes(role))
         await HelperClass.throwErrorHelper('role:invalidMemberRole');
 
       let response = await this.companyFacade.getAllCompaniesByUserCreator(
@@ -525,6 +529,8 @@ export class CompanyController {
   }
 
   @Post(':uuid/create/:role')
+  @UseGuards(RoleGuard)
+  @Roles('admin')
   @ApiParam({
     name: 'uuid',
     description: 'company uuid',
@@ -535,7 +541,7 @@ export class CompanyController {
     name: 'role',
     description: 'member role',
     required: true,
-    enum: CreateRoles,
+    enum: CompanyRoles,
   })
   @ApiBody({
     // name: "user",
@@ -548,53 +554,52 @@ export class CompanyController {
     summary: 'Create member',
   })
   public async createSelfUser(
-    @Req() req,
+	  @Req() req,
     @Res() res: Response,
-    @Param('uuid') uuid: string,
+    @Body() body: CompanyMember,
+    @Param('uuid') companyUuid: string,
     @Param('role') role: string,
   ) {
     try {
-      if (!CreateRoles.includes(role))
+      if (!CompanyRoles.includes(role)) {
         await HelperClass.throwErrorHelper('role:invalidMemberRole');
-      const body = req.body;
-      if (role === 'company' && !body.companyName)
-        await HelperClass.throwErrorHelper('company:companyNameRequired');
-      const user = new User();
-      user.email = body.email;
-      user.firstName = body.firstName;
-      user.lastName = body.lastName;
-      user.password = body.password;
-      user.userPhone = body.userPhone;
-      user.companyName = body.companyName;
-      let response = await this.companyFacade.getAllCompaniesByUserCreator(
-        req.user.userId,
-        uuid,
-      );
-      if (!response.count)
+      }
+
+      const company = await this.companyFacade.getCompanyByUuid(companyUuid);
+
+      if (!company)
         await HelperClass.throwErrorHelper(
           'company:companyWithThisUuidDoesNotExist',
         );
 
-      // user.userLastLogin = body.userLastLogin;
-      await this.companyFacade.createUser(user, uuid, role);
-      const us = await this.companyFacade.getUserListByCompanyUuid(uuid);
-      us.forEach(function (item, i) {
+      const response = await this.userFacade.createUser(body, company!, role);
+
+      if (response.error) {
+        return res.status(HttpStatus.BAD_REQUEST).json(response.error);
+      }
+
+      const users = await this.companyFacade.getUserListByCompanyUuid(
+        companyUuid,
+        'created'
+      );
+
+      users.forEach(function (item, i) {
         item.password = undefined;
         item.salt = undefined;
       });
 
-      if (response.result.notification) {
-        await this.emailService.sendMail('auth:notification', user.email, {
-          FIRST_NAME: user.firstName,
-          LAST_NAME: user.lastName,
-          LOGO: `${
-            process.env.BASE_URL || process.env.FONIO_URL
-          }/public/assets/logo.png`,
-          MESSAGE: `You'r account has been added.`,
-        });
-      }
+      //if (company?.notification&& response.user) {
+      //  await this.emailService.sendMail('auth:notification', response.user.email, {
+      //    FIRST_NAME: response.user.firstName,
+      //    LAST_NAME: response.user.lastName,
+      //    LOGO: `${
+      //      process.env.BASE_URL || process.env.FONIO_URL
+      //    }/public/assets/logo.png`,
+      //    MESSAGE: `You'r account has been added.`,
+      //  });
+      //}
 
-      res.status(HttpStatus.OK).json(us);
+      res.status(HttpStatus.OK).json(users);
     } catch (err) {
       errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
     }
@@ -816,7 +821,7 @@ export class CompanyController {
   @ApiBody({
     required: true,
     type: InvitationReq,
-    description: ' company name required if invitation type true(admin)',
+    description: 'company name required if invitation type true(admin)',
   })
   @ApiResponse({ status: 200, description: 'Invitation successful' })
   public async invite(
@@ -826,6 +831,14 @@ export class CompanyController {
   ): Promise<Response<any, Record<string, any>> | undefined> {
     try {
       const { email } = body;
+
+      const userAlreadyExist = await this.userFacade.findByEmail(email);
+
+      if (userAlreadyExist) {
+        return res
+          .status(HttpStatus.BAD_REQUEST)
+          .json({ response: 'User alraedy exist.' });
+      }
 
       const invitationAlraedyExist: any =
         await this.companyFacade.getInvitationByEmail(email);
@@ -839,32 +852,33 @@ export class CompanyController {
           .json({ response: 'Invitation alraedy exist.' });
       }
 
-      const response = await this.companyFacade.getAllCompaniesByUserCreator(
+      const company = await this.companyFacade.getCompanyByUserCreatorId(
         req.user.userId,
       );
 
-      if (!response.count)
+      if (!company)
         await HelperClass.throwErrorHelper(
           'company:companyWithThisUuidDoesNotExist',
         );
+      const invitationData: any = body;
+      invitationData.companyUuid = company?.companyUuid;
 
-      const invData: any = body;
-      invData.companyUuid = response.result[0].company_comp_uuid;
-
-      const invitation = await this.companyFacade.storeInvitationData(invData);
+      const invitation = await this.companyFacade.storeInvitationData(
+        invitationData,
+      );
 
       if (!invitation)
         return res
           .status(HttpStatus.BAD_REQUEST)
           .json({ response: 'Invitation was not created.' });
 
-      await this.emailService.sendMail('user:invite', invData.email, {
-        FIRST_NAME: invData.firstName,
-        LAST_NAME: invData.lastName,
-        COMPANY_NAME: response.result[0].company_comp_name,
+      await this.emailService.sendMail('user:invite', invitationData.email, {
+        FIRST_NAME: invitationData.firstName,
+        LAST_NAME: invitationData.lastName,
+        COMPANY_NAME: company?.companyName,
         LINK: `${constants.FONIO_DOMAIN}/#/invitation-company-${
-          invData.type ? 'admin' : 'user'
-        }?invitationUuid=${invitation.uuid}&&type=${invitation.type}`,
+          invitationData.type ? 'admin' : 'user'
+        }?invitationUuid=${invitation.uuid}`,
       });
 
       return res.status(HttpStatus.OK).json({
@@ -902,7 +916,6 @@ export class CompanyController {
     @Query('invitationUuid') invitationUuid: string,
   ): Promise<Response<any, Record<string, any>> | undefined> {
     try {
-      const userData = body;
       const invitation: any = await this.companyFacade.getInvitationByUuid(
         invitationUuid,
       );
@@ -921,7 +934,22 @@ export class CompanyController {
           .json({ response: 'Invitation was expired.' });
       }
 
-      const userSign = await this.authService.signUp(userData, invitation);
+      const company = await this.companyFacade.getCompanyByUuid(
+        invitation.companyUuid,
+      );
+
+      if (!company)
+        await HelperClass.throwErrorHelper(
+          'company:companyWithThisUuidDoesNotExist',
+        );
+
+      const { password, rePassword } = body;
+
+      const userSign = await this.userFacade.createUser(
+        { ...body, ...invitation },
+        company!,
+        invitation.type,
+      );
 
       if (!userSign) return res.status(HttpStatus.BAD_REQUEST).json(userSign);
 
@@ -930,15 +958,15 @@ export class CompanyController {
 
       await this.companyFacade.updateInvitationData(invitation);
 
-      if (userSign.user) {
-        await this.emailService.sendMail('auth:success', userSign.user.email, {
-          FIRST_NAME: userSign.user.firstName,
-          LAST_NAME: userSign.user.lastName,
-          LOGO: `${
-            process.env.BASE_URL || process.env.FONIO_URL
-          }/public/assets/logo.png`,
-        });
-      }
+      //if (userSign.user) {
+      //  await this.emailService.sendMail('auth:success', userSign.user.email, {
+      //    FIRST_NAME: userSign.user.firstName,
+      //    LAST_NAME: userSign.user.lastName,
+      //    LOGO: `${
+      //      process.env.BASE_URL || process.env.FONIO_URL
+      //    }/public/assets/logo.png`,
+      //  });
+      //}
 
       let userAgent = req.headers['user-agent'];
       let remoteAddress =

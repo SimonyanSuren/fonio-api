@@ -8,7 +8,7 @@ import {
   Res,
   Patch,
   Get,
-  Body
+  Body,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import {
@@ -27,7 +27,7 @@ import {
   ApiResponse,
   ApiTags,
   ApiQuery,
-  ApiBearerAuth,
+  ApiBearerAuth
 } from '@nestjs/swagger';
 import { errorResponse } from '../../filters/errorRespone';
 // import { Account } from "../../models";
@@ -66,21 +66,28 @@ export class AuthController {
   })
   @ApiResponse({ status: 200, description: 'Sign up successful' })
   @Post('signup')
-  public async signup(@Req() req, @Body() body:SignupReq, @Res() res: Response) {
+  public async signup(
+    @Req() req,
+    @Body() body: SignupReq,
+    @Res() res: Response,
+  ) {
     try {
-		 const signUpData = body
+      const signUpData = body;
       const userSign = await this.authService.signUp(signUpData);
+
       if (!userSign) return res.status(HttpStatus.BAD_REQUEST).json(userSign);
 
       if (userSign.error)
         return res.status(HttpStatus.BAD_REQUEST).json(userSign);
 
       if (userSign.user) {
-          await this.emailService.sendMail("auth:success", userSign.user.email, {
-              FIRST_NAME: userSign.user.firstName,
-              LAST_NAME: userSign.user.lastName,
-              LOGO: `${process.env.BASE_URL||process.env.FONIO_URL}/public/assets/logo.png`
-          });
+        await this.emailService.sendMail('auth:success', userSign.user.email, {
+          FIRST_NAME: userSign.user.firstName,
+          LAST_NAME: userSign.user.lastName,
+          LOGO: `${
+            process.env.BASE_URL || process.env.FONIO_URL
+          }/public/assets/logo.png`,
+        });
       }
 
       let userAgent = req.headers['user-agent'];
@@ -95,14 +102,12 @@ export class AuthController {
         userAgent,
         true,
       );
+
       if (user.user.avatar) {
         user.user.avatar = Config.string('CDN_HOST', '') + user.avatar;
       }
+      /* Don't need email confirmation now */
       return res.status(HttpStatus.OK).json(user);
-      /* */
-
-      /* Don't need email confirmation now
-            res.status(HttpStatus.OK).json(userSign); */
     } catch (err) {
       errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
     }
@@ -112,17 +117,15 @@ export class AuthController {
     required: true,
     type: AuthReq,
   })
-  @ApiResponse({ status: 200, description: 'Login OK' })
+  @ApiResponse({
+    status: 200,
+    description: 'Login OK',
+    isArray: true,
+    type: User,
+  })
   @Post('login')
-  public async login(@Req() req, @Res() res: Response) {
+  public async login(@Body() body: AuthReq, @Req() req, @Res() res: Response) {
     try {
-      const body = req.body;
-      if (!body)
-        await HelperClass.throwErrorHelper('auth:login:missingInformation');
-      if (!body.email)
-        await HelperClass.throwErrorHelper('auth:login:missingEmail');
-      if (!body.password)
-        await HelperClass.throwErrorHelper('auth:login:missingPassword');
       let userAgent = req.headers['user-agent'];
 
       let remoteAddress =
@@ -150,8 +153,9 @@ export class AuthController {
   public async userActivation(@Req() req, @Res() res: Response) {
     try {
       let { uuid } = req.query;
-      let user: User | any =
-        await this.adminFacade.isUserWithTheSameUserUuidExist(uuid);
+      let user: any = await this.adminFacade.isUserWithTheSameUserUuidExist(
+        uuid,
+      );
       if (!user)
         await HelperClass.throwErrorHelper('admin:userIsNotExistByThisUuid');
       // let account: Account | any = await this.adminFacade.isAccountExistByAccountID(user.accountID);

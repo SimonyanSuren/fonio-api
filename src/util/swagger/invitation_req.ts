@@ -1,13 +1,21 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsEmail, IsBoolean, IsNotEmpty } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEmail,
+  IsBoolean,
+  IsNotEmpty,
+} from 'class-validator';
 
 export class InvitationReq {
   @ApiProperty()
-  @IsOptional()
+  @IsNotEmpty()
+  @IsString()
   firstName: string;
 
   @ApiProperty()
-  @IsOptional()
+  @IsNotEmpty()
+  @IsString()
   lastName: string;
 
   @IsEmail()
@@ -20,11 +28,11 @@ export class InvitationReq {
 }
 
 export class AcceptInvitationReq {
-  @IsOptional()
-  @IsString()
-  @IsNotEmpty()
-  @ApiProperty()
-  companyName: string;
+  //  @IsOptional()
+  //  @IsString()
+  //  @IsNotEmpty()
+  //  @ApiProperty()
+  //  companyName: string;
 
   @IsString()
   @ApiProperty()
