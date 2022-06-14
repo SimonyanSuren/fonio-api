@@ -27,7 +27,7 @@ export const errorMessagesConfig: { [messageCode: string]: ErrorMessage } = {
         httpStatus: HttpStatus.BAD_REQUEST,
         errorMessage: 'Unable to create the user without last name.',
         userMessage: 'Bad Request'
-    },
+    }, 
     'auth:signup:missignCompanyName': {
         type: 'BadRequest',
         httpStatus: HttpStatus.BAD_REQUEST,

@@ -80,7 +80,7 @@ export class AuthService extends BaseService {
       credentials.password,
       user.password ? user.password : '',
     );
-    if (!equals && !onSignUp) throw new Error('user:incorrectPassword');
+    if (!equals && !onSignUp) throw new Error('user:incorrectCredentials');
     let isAdmin = user.isAdmin ? user.isAdmin : false;
     let opentactToken = isAdmin ? 'admintoken123456789' : 'usertoken123456789';
     let company;
@@ -113,9 +113,9 @@ export class AuthService extends BaseService {
     try {
       const found = await this.userFacade.findByEmail(signUpData.email);
 
-      //if (found) {
-      //  throw new Error(errorMessagesConfig['user:alreadyExists'].errorMessage);
-      //}
+      if (found) {
+        throw new Error(errorMessagesConfig['user:alreadyExists'].errorMessage);
+      }
 
       if (!signUpData) {
         throw new Error(

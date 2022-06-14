@@ -73,7 +73,7 @@ export class TrackingNumberController {
   }
 
   @Patch()
-  @ApiBearerAuth()
+  @ApiBearerAuth() 
   @ApiBody({
     required: true,
     type: TrackingNumberPatch,

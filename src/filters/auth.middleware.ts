@@ -64,7 +64,7 @@ export class AuthMiddleware implements NestMiddleware {
         ) {
           let token = (req.headers.authorization as string).split(' ')[1];
           const user: any = await JWTHelper.verify(token);
-          user.role = user.is_admin ? 'admin' : 'dev';
+          user.role = user.is_admin ? 'admin' : user.userType;
           req.user = user;
         }
         next();
@@ -95,7 +95,7 @@ export class AuthMiddleware implements NestMiddleware {
             await HelperClass.throwErrorHelper('user:inactivated');
           }
 
-          user.role = user.is_admin ? 'admin' : 'dev';
+          user.role = user.is_admin ? 'admin' : user.userType;
           req.user = user;
 
           next();

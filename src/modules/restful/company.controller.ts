@@ -530,7 +530,7 @@ export class CompanyController {
 
   @Post(':uuid/create/:role')
   @UseGuards(RoleGuard)
-  @Roles('admin')
+  @Roles('admin','company_admin')
   @ApiParam({
     name: 'uuid',
     description: 'company uuid',
@@ -544,7 +544,6 @@ export class CompanyController {
     enum: CompanyRoles,
   })
   @ApiBody({
-    // name: "user",
     required: true,
     type: CompanyMember,
   })
@@ -554,7 +553,6 @@ export class CompanyController {
     summary: 'Create member',
   })
   public async createSelfUser(
-	  @Req() req,
     @Res() res: Response,
     @Body() body: CompanyMember,
     @Param('uuid') companyUuid: string,
