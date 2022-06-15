@@ -1,4 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsArray,
+  IsNumber,
+  IsString,
+  ValidateNested,
+  ValidateIf,
+  Max,
+  Min,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class TrackingNumber {
   @ApiProperty()
@@ -139,6 +149,51 @@ export class NumberFeatures {
   @ApiProperty({ description: 'Default undefined. NXX ratecenter' })
   nxx?: string;
 
-  @ApiProperty({ type: [String], description: 'Default voice and sms' })
+  @ApiProperty({
+    type: [String],
+    description: 'Default voice and sms',
+    default: ['voice', 'sms'],
+  })
   features: string[];
 }
+
+export class TNOrderPriceResponse {
+  @ApiProperty()
+  success: boolean;
+
+  @ApiProperty()
+  payload: {};
+}
+
+export class TNOrderItem {
+  @IsNumber()
+  @ApiProperty()
+  tn: number;
+
+  @IsArray()
+  @ApiProperty({ type: ['String'], default: ['voice', 'sms'] })
+  features: string[];
+}
+
+export class TNOrderPrice {
+  @ApiProperty({ type: TNOrderItem, isArray: true })
+  @ValidateNested({ each: true })
+  @Type(() => TNOrderItem)
+  @IsArray()
+  items: TNOrderItem[];
+
+  @ApiProperty({
+    enum: ['month', 'year'],
+    description: 'select month or year by need',
+  })
+  @IsString()
+  durationUnit: string;
+
+  @ApiProperty()
+  @IsNumber()
+  @Min(1)
+  @Max(36)
+  @ValidateIf((p) => p.durationUnit === 'month')
+  duration: number;
+}
+

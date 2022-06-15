@@ -221,17 +221,18 @@ export class UserFacade {
       //company.created = new Date();
       //company.userCreatorID = userEntity.id;
       //const companyEntity = await company.save();
-
-      //await this.entityManager
-      //  .createQueryBuilder()
-      //  .update(User)
-      //  .set({
-      //    companyUuid: company.companyUuid,
-      //    companyID: company.companyID,
-      //  })
-      //  .where('id=:user_id', { user_id: userEntity.id })
-      //  .execute();
-
+      if (company) {
+        await this.entityManager
+          .createQueryBuilder()
+          .update(User)
+          .set({
+            companyUuid: company.companyUuid,
+            companyID: company.companyID,
+          })
+          .where('id=:user_id', { user_id: userEntity.id })
+          .execute();
+      }
+		
       return {
         user: userEntity,
         company: company,

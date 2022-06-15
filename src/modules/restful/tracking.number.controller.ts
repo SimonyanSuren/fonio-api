@@ -15,7 +15,7 @@ import {
   Body,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { AccountNumberFacade } from '../facade';
+import { AccountNumberFacade, DidFacade } from '../facade';
 import { AccountNumber } from '../../models';
 import {
   OpentactService,
@@ -39,6 +39,12 @@ import {
 import { errorResponse } from '../../filters/errorRespone';
 import { CommonService } from '../services/common.service';
 import { Repositories } from '../db/repositories';
+import { TNOrderPrice } from '../../util/swagger/tracking_number_post';
+
+const enum DurationTypes {
+	year_duration = 'year',
+	month_duration = 'month',
+ }
 
 @Controller('tracking_numbers')
 @ApiTags('Tracking numbers')
@@ -49,6 +55,7 @@ export class TrackingNumberController {
     private accountNumberFacade: AccountNumberFacade,
     private opentactService: OpentactService,
     private commonService: CommonService,
+    private didFacade: DidFacade,
   ) {}
 
   @Post()
@@ -73,7 +80,7 @@ export class TrackingNumberController {
   }
 
   @Patch()
-  @ApiBearerAuth() 
+  @ApiBearerAuth()
   @ApiBody({
     required: true,
     type: TrackingNumberPatch,
@@ -318,6 +325,37 @@ export class TrackingNumberController {
       res.status(HttpStatus.OK).json(response);
     } catch (err) {
       errorResponse(res, err, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Post('price')
+  @ApiResponse({
+    status: 200,
+    description: 'Get tracking number price for order',
+    isArray: false,
+    type: opentactITNSearchResponse,
+  })
+  @ApiBody({ type: TNOrderPrice })
+  public async getTNPrice(@Res() res: Response, @Body() body: TNOrderPrice) {
+    try {
+      const { durationUnit, duration, ...itemsBody } = body;
+		const numbers = itemsBody.items.map(item=> item.tn)
+		console.log(" \x1b[41m ", numbers , " [0m " )
+		const numbersAlreadyBuyed = await this.didFacade.findByNumbers(numbers)
+		console.log(" \x1b[41m ", numbersAlreadyBuyed , " [0m " )
+      const {payload} = await this.opentactService.getOrderPrice(itemsBody);
+      console.log(" \x1b[41m ", payload , " [0m " )
+		let price
+     if(durationUnit===DurationTypes.month_duration) {
+		const {mrc, nrc} = payload
+		 price = (duration*mrc)+nrc
+	  }
+      return res.status(HttpStatus.OK).json({ price, numbers});
+    } catch (err) {
+      console.log(err);
+      throw err;
+
+      //errorResponse(res, err, HttpStatus.BAD_REQUEST);
     }
   }
 }

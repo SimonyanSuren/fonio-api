@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 
+
 export class OrderDid {
     @ApiProperty()
     tn: number;
@@ -15,3 +16,4 @@ export class OrderDids {
       })
     numbers: OrderDid[];
 }
+

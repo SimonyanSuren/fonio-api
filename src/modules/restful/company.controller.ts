@@ -816,6 +816,8 @@ export class CompanyController {
   }
 
   @Post('invite')
+  @UseGuards(RoleGuard)
+  @Roles('admin','company_admin')
   @ApiBody({
     required: true,
     type: InvitationReq,

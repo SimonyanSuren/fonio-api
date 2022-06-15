@@ -312,7 +312,7 @@ export class AccountNumberFacade {
                     trackingNumber: (await this.addTrackingNumber(object))?.raw,
                     did: did.raw
                 }
-            }
+            } 
         } catch (e) {
             return { error: e.message };
         }

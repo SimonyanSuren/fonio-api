@@ -494,7 +494,7 @@ export class OpentactService extends BaseService {
       .catch((err) => {
         console.log(err);
         return { error: err.response.data };
-      });
+      }); 
   }
 
   async getDidOrderByUuid(token, uuid) {
