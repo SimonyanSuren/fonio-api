@@ -5,7 +5,7 @@ import {EmailOptions} from './email_options';
 export const EmailTemplate: { [messageCode: string]: EmailOptions } = {
     'auth:success': {
         subject: "HI {FIRST_NAME} {LAST_NAME}",
-        template: `<hrml>
+        template: `<html>
             <head></head>
             <body>
             <style>
@@ -167,7 +167,7 @@ export const EmailTemplate: { [messageCode: string]: EmailOptions } = {
                 </div>
             </div>
             </body>
-        </hrml>`
+        </html>`
     },
     'auth:signup': {
         subject: "HI {FIRST_NAME} {LAST_NAME}",
@@ -696,6 +696,9 @@ export const EmailTemplate: { [messageCode: string]: EmailOptions } = {
 
                         <!-- START CENTERED WHITE CONTAINER -->
                         <table role="presentation" class="main">
+								<td style="vertical-align: top;">
+								<img style="display:block;padding: 20px" width="125px" height="35px"  src="{LOGO}" alt="Logo" title="Logo" >
+								</td>
 
                         <!-- START MAIN CONTENT AREA -->
                         <tr>
@@ -720,7 +723,7 @@ export const EmailTemplate: { [messageCode: string]: EmailOptions } = {
                                         </tr>
                                     </tbody>
                                     </table>
-                                    <p class="font-weight-bold">Thanks (fonio team)</p>
+                                    <p class="font-weight-bold">Thanks(Fonio team)</p>
                                 </td>
                                 </tr>
                             </table>

@@ -876,6 +876,7 @@ export class CompanyController {
         FIRST_NAME: invitationData.firstName,
         LAST_NAME: invitationData.lastName,
         COMPANY_NAME: company?.companyName,
+		  LOGO: `${process.env.BASE_URL || process.env.FONIO_URL}/public/assets/logo_mail.png`,
         LINK: `${constants.FONIO_DOMAIN}/#/invitation-company-${
           invitationData.type ? 'admin' : 'user'
         }?invitationUuid=${invitation.uuid}`,
@@ -958,15 +959,15 @@ export class CompanyController {
 
       await this.companyFacade.updateInvitationData(invitation);
 
-      //if (userSign.user) {
-      //  await this.emailService.sendMail('auth:success', userSign.user.email, {
-      //    FIRST_NAME: userSign.user.firstName,
-      //    LAST_NAME: userSign.user.lastName,
-      //    LOGO: `${
-      //      process.env.BASE_URL || process.env.FONIO_URL
-      //    }/public/assets/logo.png`,
-      //  });
-      //}
+      if (userSign.user) {
+        await this.emailService.sendMail('auth:success', userSign.user.email, {
+          FIRST_NAME: userSign.user.firstName,
+          LAST_NAME: userSign.user.lastName,
+          LOGO: `${
+            process.env.BASE_URL || process.env.FONIO_URL
+          }/public/assets/logo_mail.png`,
+        });
+      }
 
       let userAgent = req.headers['user-agent'];
       let remoteAddress =

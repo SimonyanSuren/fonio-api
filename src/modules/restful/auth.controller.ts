@@ -86,7 +86,7 @@ export class AuthController {
           LAST_NAME: userSign.user.lastName,
           LOGO: `${
             process.env.BASE_URL || process.env.FONIO_URL
-          }/public/assets/logo.png`,
+          }/public/assets/logo_mail.png`,
         });
       }
 
