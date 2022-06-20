@@ -18,8 +18,8 @@ export class MessageCodeError extends Error {
         this.name = this.constructor.name;
         this.httpStatus = errorMessageConfig.httpStatus;
         this.messageCode = messageCode;
-        this.errorMessage = errorMessageConfig.errorMessage;
-        this.message = errorMessageConfig.userMessage;
+        this.errorMessage = errorMessageConfig.userMessage;
+        this.message = errorMessageConfig.errorMessage;
     }
 
     private getMessageFromMessageCode(messageCode: string): ErrorMessage {

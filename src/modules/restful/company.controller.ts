@@ -12,7 +12,7 @@ import {
   Param,
   Body,
   Delete,
-  UseGuards,
+  UseGuards
 } from '@nestjs/common';
 import {
   ApiBody,
@@ -48,6 +48,8 @@ import { Config } from '../../util/config';
 import { join } from 'path';
 import { RoleGuard } from '../../util/guard';
 import { Roles } from '../../util/decorator';
+import { MessageCodeError } from '../../util/error';
+import { classToPlain } from 'class-transformer';
 
 const CompanyRoles: string[] = ['company_user', 'company_admin'];
 
@@ -452,12 +454,13 @@ export class CompanyController {
           'company:companyWithThisUuidDoesNotExist',
         );
 
-      const members: User[] = await this.companyFacade.getUserListByCompanyUuid(
-        uuid,
-        orderBy,
-        orderType,
-        role,
-      );
+      const members: User[] =
+        await this.companyFacade.getUserListByCompUuidByRole(
+          uuid,
+          orderBy,
+          orderType,
+          role,
+        );
 
       members.forEach(function (item, i) {
         item.password = undefined;
@@ -565,21 +568,13 @@ export class CompanyController {
           'company:companyWithThisUuidDoesNotExist',
         );
 
-      const response = await this.userFacade.createUser(body, company!, role);
-
-      if (response.error) {
-        return res.status(HttpStatus.BAD_REQUEST).json(response.error);
-      }
-
-      const users = await this.companyFacade.getUserListByCompanyUuid(
-        companyUuid,
-        'created',
+      const userResponse = await this.userFacade.createUser(
+        body,
+        company!,
+        role,
       );
-
-      users.forEach(function (item, i) {
-        item.password = undefined;
-        item.salt = undefined;
-      });
+      const serializedUser = classToPlain(userResponse);
+      console.log(' \x1b[41m ', userResponse, ' [0m ');
 
       //if (company?.notification&& response.user) {
       //  await this.emailService.sendMail('auth:notification', response.user.email, {
@@ -592,7 +587,7 @@ export class CompanyController {
       //  });
       //}
 
-      res.status(HttpStatus.OK).json(users);
+      res.status(HttpStatus.OK).json(classToPlain(serializedUser));
     } catch (err) {
       errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
     }
@@ -950,9 +945,6 @@ export class CompanyController {
       );
 
       if (!userSign) return res.status(HttpStatus.BAD_REQUEST).json(userSign);
-
-      if (userSign.error)
-        return res.status(HttpStatus.BAD_REQUEST).json(userSign);
 
       await this.companyFacade.updateInvitationData(invitation);
 

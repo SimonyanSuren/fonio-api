@@ -11,6 +11,7 @@ import {
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail } from 'class-validator';
+import { Exclude } from 'class-transformer';
 import { Payment } from './payment.entity';
 import { Did } from './did.entity';
 import { AccountBlacklist } from './account_blacklist.entity';
@@ -66,10 +67,12 @@ export class User extends BaseEntity {
   @Column({ name: 'sip_user_uuid', nullable: true })
   sipUserUuid?: string;
 
-  @Column({ name: 'user_password' })
+  @Column({ name: 'user_password', select:false })
+  @Exclude()
   password?: string;
 
-  @Column({ name: 'user_salt' })
+  @Column({ name: 'user_salt' , select:false})
+  @Exclude()
   salt?: string;
 
   @Column({ name: 'user_avatar', nullable: true })
@@ -186,4 +189,5 @@ export class User extends BaseEntity {
     us.id = id;
     return us;
   }
+
 }

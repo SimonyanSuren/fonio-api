@@ -11,7 +11,7 @@ import { Config } from '../../util/config';
 import { OpentactService } from '../opentact/';
 import constants from '../../constants';
 import { PasswordHelper } from '../../util/helper';
-import { errorMessagesConfig } from '../../util/error';
+import {  MessageCodeError } from '../../util/error';
 import { CompanyFacade } from './company.facade';
 
 @EntityRepository()
@@ -89,6 +89,7 @@ export class UserFacade {
       .createQueryBuilder(User, 'user')
       .where('user.email = :email ')
       .setParameters({ email: email })
+      .addSelect('user.password')
       .getOne();
   }
 
@@ -232,9 +233,9 @@ export class UserFacade {
           .where('id=:user_id', { user_id: userEntity.id })
           .execute();
       }
-		
+
       return {
-        user: userEntity,
+        user:  userEntity,
         company: company,
       };
     } catch (err) {
@@ -245,74 +246,67 @@ export class UserFacade {
 
   @Transactional()
   async createUser(userData, company: Company, role?) {
-    try {
-      const found = await this.findByEmail(userData.email);
+    const found = await this.findByEmail(userData.email);
 
-      if (found) {
-        throw new Error('user:alreadyExists');
-      }
-
-      if (userData.password !== userData.rePassword) {
-        throw new Error(
-          errorMessagesConfig['auth:signup:passwordMatch'].errorMessage,
-        );
-      }
-
-      const user = new User();
-      user.email = userData.email;
-      user.firstName = userData.firstName;
-      user.lastName = userData.lastName;
-      user.password = userData.password;
-      user.userPhone = userData?.userPhone;
-      user.type =
-        role === UserTypes.COMPANY_ADMIN
-          ? UserTypes.COMPANY_ADMIN
-          : UserTypes.COMPANY_USER;
-      await PasswordHelper.validatePassword(user.password);
-      const salt = genSaltSync(Config.number('BCRYPT_SALT_ROUNDS', 10));
-      user.password = await hashSync(user.password, salt);
-      user.salt = salt;
-      user.uuid = v4();
-      user.emailConfirmed = true;
-      user.userIdentityOpenTact = false;
-      user.plaintText = true;
-      user.invoiceEmail = false;
-      user.active = true;
-
-      const sipLogin = `${user.firstName}_${user.uuid}`;
-      user.sipUsername = sipLogin;
-      const sipPassword = userData.password;
-      const sipUser = await this.opentactService.createSipUser({
-        login: sipLogin,
-        password: sipPassword,
-      });
-
-      if (sipUser.success) {
-        user.sipUserUuid = sipUser.payload.uuid;
-      }
-
-      user.companyID = company.companyID;
-      user.companyUuid = company.companyUuid;
-      user.companyName = company.companyName;
-
-      const userEntity = await user.save();
-
-      // if (userData.password) {
-      //   const createdTokens = await this.saveToken(
-      //     login,
-      //     userData.password,
-      //     userEntity,
-      //   );
-      // }
-
-      return {
-        user: userEntity,
-        company: company,
-      };
-    } catch (err) {
-      console.log(err);
-      return { error: err.message };
+    if (found) {
+      throw new MessageCodeError('user:alreadyExists');
     }
+
+    if (userData.password !== userData.rePassword) {
+      throw new MessageCodeError('auth:signup:passwordMatch');
+    }
+
+    const user = new User();
+    user.email = userData.email;
+    user.firstName = userData.firstName;
+    user.lastName = userData.lastName;
+    user.password = userData.password;
+    user.userPhone = userData?.userPhone;
+    user.type =
+      role === UserTypes.COMPANY_ADMIN
+        ? UserTypes.COMPANY_ADMIN
+        : UserTypes.COMPANY_USER;
+    await PasswordHelper.validatePassword(user.password);
+    const salt = genSaltSync(Config.number('BCRYPT_SALT_ROUNDS', 10));
+    user.password = await hashSync(user.password, salt);
+    user.salt = salt;
+    user.uuid = v4();
+    user.emailConfirmed = true;
+    user.userIdentityOpenTact = false;
+    user.plaintText = true;
+    user.invoiceEmail = false;
+    user.active = true;
+
+    const sipLogin = `${user.firstName}_${user.uuid}`;
+    user.sipUsername = sipLogin;
+    const sipPassword = userData.password;
+    const sipUser = await this.opentactService.createSipUser({
+      login: sipLogin,
+      password: sipPassword,
+    });
+
+    if (sipUser.success) {
+      user.sipUserUuid = sipUser.payload.uuid;
+    }
+
+    user.companyID = company.companyID;
+    user.companyUuid = company.companyUuid;
+    user.companyName = company.companyName;
+
+    const userEntity = await user.save();
+
+    // if (userData.password) {
+    //   const createdTokens = await this.saveToken(
+    //     login,
+    //     userData.password,
+    //     userEntity,
+    //   );
+    // }
+
+    return {
+      user: userEntity,
+      company: company,
+    };
   }
 
   async uploadedImageLinkToUserTable(link, userUuid) {

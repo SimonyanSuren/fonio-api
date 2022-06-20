@@ -68,7 +68,7 @@ export class CompanyFacade extends BaseService {
     return await this.userFacade.findByEmail(email);
   }
 
-  async getUserListByCompanyUuid(companyUuid, orderBy?, orderType?, role?){
+  async getUserListByCompUuidByRole(companyUuid, orderBy?, orderType?, role?){
     let by;
     if (orderBy === 'created') by = 'creation';
 
