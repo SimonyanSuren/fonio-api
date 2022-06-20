@@ -248,9 +248,9 @@ export class UserFacade {
     try {
       const found = await this.findByEmail(userData.email);
 
-      //if (found) {
-      //  throw new Error('user:alreadyExists');
-      //}
+      if (found) {
+        throw new Error('user:alreadyExists');
+      }
 
       if (userData.password !== userData.rePassword) {
         throw new Error(

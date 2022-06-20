@@ -446,28 +446,23 @@ export class CompanyController {
         req.user.userId,
         uuid,
       );
+
       if (!response.count)
         await HelperClass.throwErrorHelper(
           'company:companyWithThisUuidDoesNotExist',
         );
 
-      let members: any;
-      if (role === 'user') {
-        members = await this.companyFacade.getUserListByCompanyUuid(
-          uuid,
-          orderBy,
-          orderType,
-        );
-        members.forEach(function (item, i) {
-          item.password = undefined;
-          item.salt = undefined;
-        });
-      }
-      //else if (role === 'company') {
-      //  members = await this.companyFacade.getCompanyListByParentCompanyUuid(
-      //    uuid,
-      //  );
-      //}
+      const members: User[] = await this.companyFacade.getUserListByCompanyUuid(
+        uuid,
+        orderBy,
+        orderType,
+        role,
+      );
+
+      members.forEach(function (item, i) {
+        item.password = undefined;
+        item.salt = undefined;
+      });
 
       res.status(HttpStatus.OK).json(members);
     } catch (err) {
@@ -530,7 +525,7 @@ export class CompanyController {
 
   @Post(':uuid/create/:role')
   @UseGuards(RoleGuard)
-  @Roles('admin','company_admin')
+  @Roles('admin', 'company_admin')
   @ApiParam({
     name: 'uuid',
     description: 'company uuid',
@@ -578,7 +573,7 @@ export class CompanyController {
 
       const users = await this.companyFacade.getUserListByCompanyUuid(
         companyUuid,
-        'created'
+        'created',
       );
 
       users.forEach(function (item, i) {
@@ -817,7 +812,7 @@ export class CompanyController {
 
   @Post('invite')
   @UseGuards(RoleGuard)
-  @Roles('admin','company_admin')
+  @Roles('admin', 'company_admin')
   @ApiBody({
     required: true,
     type: InvitationReq,
@@ -876,7 +871,9 @@ export class CompanyController {
         FIRST_NAME: invitationData.firstName,
         LAST_NAME: invitationData.lastName,
         COMPANY_NAME: company?.companyName,
-		  LOGO: `${process.env.BASE_URL || process.env.FONIO_URL}/public/assets/logo_mail.png`,
+        LOGO: `${
+          process.env.BASE_URL || process.env.FONIO_URL
+        }/public/assets/logo_mail.png`,
         LINK: `${constants.FONIO_DOMAIN}/#/invitation-company-${
           invitationData.type ? 'admin' : 'user'
         }?invitationUuid=${invitation.uuid}`,

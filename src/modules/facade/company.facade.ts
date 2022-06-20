@@ -68,14 +68,16 @@ export class CompanyFacade extends BaseService {
     return await this.userFacade.findByEmail(email);
   }
 
-  async getUserListByCompanyUuid(companyUuid, orderBy?, orderType?) {
+  async getUserListByCompanyUuid(companyUuid, orderBy?, orderType?, role?){
     let by;
     if (orderBy === 'created') by = 'creation';
 
     let request = this.entityManager
       .createQueryBuilder(User, 'u')
       .where('u.companyUuid=:companyUuid', { companyUuid: companyUuid });
-
+    if (role) {
+      request.andWhere('u.type=:type', { type: role });
+    }
     if (by) {
       request.orderBy(`u.${by}`, orderType === 'asc' ? 'ASC' : 'DESC');
     }
