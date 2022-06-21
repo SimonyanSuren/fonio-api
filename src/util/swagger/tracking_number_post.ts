@@ -7,6 +7,9 @@ import {
   ValidateIf,
   Max,
   Min,
+  IsPositive,
+  IsIn,
+  IsPhoneNumber,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -158,17 +161,17 @@ export class NumberFeatures {
 }
 
 export class TNOrderPriceResponse {
-  @ApiProperty()
-  success: boolean;
-
-  @ApiProperty()
-  payload: {};
+  @ApiProperty({
+    description: 'price for corresponding number',
+    example: { '00000000000': 10, sumOfPrices: 10 },
+  })
+  pricesResult: {};
 }
 
 export class TNOrderItem {
-  @IsNumber()
+  @IsPhoneNumber('US')
   @ApiProperty()
-  tn: number;
+  tn: string;
 
   @IsArray()
   @ApiProperty({ type: ['String'], default: ['voice', 'sms'] })
@@ -186,14 +189,20 @@ export class TNOrderPrice {
     enum: ['month', 'year'],
     description: 'select month or year by need',
   })
+  @IsIn(['month', 'year'])
   @IsString()
   durationUnit: string;
 
   @ApiProperty()
-  @IsNumber()
+  @IsNumber({ maxDecimalPlaces: 0 })
+  @IsPositive()
   @Min(1)
   @Max(36)
   @ValidateIf((p) => p.durationUnit === 'month')
   duration: number;
 }
 
+export enum DurationTypes {
+  year_duration = 'year',
+  month_duration = 'month',
+}

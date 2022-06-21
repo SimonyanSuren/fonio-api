@@ -12,7 +12,7 @@ import {
   Param,
   Body,
   Delete,
-  UseGuards
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBody,
@@ -51,7 +51,11 @@ import { Roles } from '../../util/decorator';
 import { MessageCodeError } from '../../util/error';
 import { classToPlain } from 'class-transformer';
 
-const CompanyRoles: string[] = ['company_user', 'company_admin'];
+const CompanyRoles: string[] = [
+  'company_user',
+  'company_admin',
+  'company_all_users',
+];
 
 @Controller('company')
 @ApiBearerAuth()
@@ -454,6 +458,10 @@ export class CompanyController {
           'company:companyWithThisUuidDoesNotExist',
         );
 
+      if (role === CompanyRoles[2]) {
+        role = '';
+      }
+		
       const members: User[] =
         await this.companyFacade.getUserListByCompUuidByRole(
           uuid,
@@ -462,12 +470,12 @@ export class CompanyController {
           role,
         );
 
-      members.forEach(function (item, i) {
-        item.password = undefined;
-        item.salt = undefined;
-      });
+      //members.forEach(function (item, i) {
+      //  item.password = undefined;
+      //  item.salt = undefined;
+      //});
 
-      res.status(HttpStatus.OK).json(members);
+      res.status(HttpStatus.OK).json({ count: members.length, members });
     } catch (err) {
       errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
     }
@@ -573,8 +581,8 @@ export class CompanyController {
         company!,
         role,
       );
+
       const serializedUser = classToPlain(userResponse);
-      console.log(' \x1b[41m ', userResponse, ' [0m ');
 
       //if (company?.notification&& response.user) {
       //  await this.emailService.sendMail('auth:notification', response.user.email, {

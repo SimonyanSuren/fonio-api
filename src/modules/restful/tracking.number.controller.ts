@@ -39,12 +39,7 @@ import {
 import { errorResponse } from '../../filters/errorRespone';
 import { CommonService } from '../services/common.service';
 import { Repositories } from '../db/repositories';
-import { TNOrderPrice } from '../../util/swagger/tracking_number_post';
-
-const enum DurationTypes {
-	year_duration = 'year',
-	month_duration = 'month',
- }
+import { TNOrderPrice, TNOrderPriceResponse } from '../../util/swagger/tracking_number_post';
 
 @Controller('tracking_numbers')
 @ApiTags('Tracking numbers')
@@ -54,8 +49,7 @@ export class TrackingNumberController {
     private readonly Repositories: Repositories,
     private accountNumberFacade: AccountNumberFacade,
     private opentactService: OpentactService,
-    private commonService: CommonService,
-    private didFacade: DidFacade,
+    private commonService: CommonService
   ) {}
 
   @Post()
@@ -329,33 +323,29 @@ export class TrackingNumberController {
   }
 
   @Post('price')
+  @ApiBearerAuth()
   @ApiResponse({
     status: 200,
-    description: 'Get tracking number price for order',
+    description: 'Get tracking numbers price for order',
     isArray: false,
-    type: opentactITNSearchResponse,
+    type: TNOrderPriceResponse,
   })
-  @ApiBody({ type: TNOrderPrice })
+  @ApiBody({
+    type: TNOrderPrice,
+    description: 'Duration unit must be month or yaer',
+  })
   public async getTNPrice(@Res() res: Response, @Body() body: TNOrderPrice) {
     try {
       const { durationUnit, duration, ...itemsBody } = body;
-		const numbers = itemsBody.items.map(item=> item.tn)
-		console.log(" \x1b[41m ", numbers , " [0m " )
-		const numbersAlreadyBuyed = await this.didFacade.findByNumbers(numbers)
-		console.log(" \x1b[41m ", numbersAlreadyBuyed , " [0m " )
-      const {payload} = await this.opentactService.getOrderPrice(itemsBody);
-      console.log(" \x1b[41m ", payload , " [0m " )
-		let price
-     if(durationUnit===DurationTypes.month_duration) {
-		const {mrc, nrc} = payload
-		 price = (duration*mrc)+nrc
-	  }
-      return res.status(HttpStatus.OK).json({ price, numbers});
-    } catch (err) {
-      console.log(err);
-      throw err;
+      const pricesResult = await this.accountNumberFacade.countTrackingNumberPrice(
+        itemsBody.items,
+        durationUnit,
+        duration,
+      );
 
-      //errorResponse(res, err, HttpStatus.BAD_REQUEST);
+      return res.status(HttpStatus.OK).json({pricesResult});
+    } catch (err) {
+      errorResponse(res, err, HttpStatus.BAD_REQUEST);
     }
   }
 }

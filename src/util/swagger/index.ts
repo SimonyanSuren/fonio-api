@@ -32,4 +32,5 @@ export {
   TrackingNumberDelete,
   DisableEnable,
   NumberFeatures,
+  DurationTypes
 } from './tracking_number_post';
