@@ -26,15 +26,15 @@ const constants = {
     FONIO_DOMAIN: process.env.FONIO_DOMAIN || "https://fonio.app/",
 
     //PAYMENTS
-    PAYMENT_SUCCESS_URL: process.env.PAYMENT_SUCCESS_URL || 'http://148.251.91.143:8083/u/b/numbers/create/finish',
-    PAYMENT_CANCEL_URL: process.env.PAYMENT_CANCEL_URL || 'http://148.251.91.143:8083/u/b/numbers/create/finish',
+    PAYMENT_SUCCESS_URL: process.env.PAYMENT_SUCCESS_URL || 'https://fonio.app',
+    PAYMENT_CANCEL_URL: process.env.PAYMENT_CANCEL_URL || 'https://fonio.app',
+	 
     //STRIPE
     STRIPE_SANDBOX: process.env.STRIPE_SANDBOX || false,
     STRIPE_SECRET:
-        process.env.STRIPE_SECRET || "sk_test_51HsOzPB7TfyNN01C5U28mPM2LH81f2sLqXHqYaQEPAS0znwpRmpLnadGfTL67qSA0QjtoeMY9djNRDUDRz815HjF00qXb9Oeme",
+        process.env.STRIPE_SECRET ,
     STRIPE_WEBHOOK_SECRET:
-        process.env.STRIPE_WEBHOOK_SECRET ||
-        "whsec_u7fSz7LSYFYtckjRrGAIerPsPEI1zKBv",
+        process.env.STRIPE_WEBHOOK_SECRET ,
 
     //PAYPAL
     PAYPAL_SANDBOX: process.env.PAYPAL_SANDBOX || false,

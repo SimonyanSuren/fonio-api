@@ -1,6 +1,7 @@
 import { AccountNumber, Plan, Did, CallFlow } from '../../models';
 import { Injectable } from '@nestjs/common';
 import { EntityRepository, EntityManager } from 'typeorm';
+import { Transactional } from 'typeorm-transactional-cls-hooked';
 import { OpentactService } from '../opentact';
 import { DidFacade } from './did.facade';
 import { HelperClass } from '../../filters/Helper';
@@ -569,20 +570,20 @@ export class AccountNumberFacade {
     };
   }
 
+  @Transactional()
   async addDidNumbers(
-    userID,
-    companyID,
+    userId,
+    companyId,
     didStatus,
     didNumbers,
     company,
-    planID,
+    planId,
   ) {
     try {
-      for (let num of didNumbers) {
-        let didNumber = num.tn;
+      for (let didNumber of didNumbers) {
         let did = await this.didFacade.addDidAfterBuying(
-          userID,
-          companyID,
+          userId,
+          companyId,
           didStatus,
           didNumber,
         );
@@ -592,13 +593,13 @@ export class AccountNumberFacade {
           alwaysSwap: true,
           trackEachVisitor: true,
           companyUuid: company.companyUuid,
-          planID: planID,
+          planID: planId,
         };
 
         let object = await this.getObjectForSavingTrackingNumber(
           accountNumber,
-          userID,
-          companyID,
+          userId,
+          companyId,
           didNumber,
           company.companyName,
           did.raw[0].did_id,
@@ -608,23 +609,23 @@ export class AccountNumberFacade {
           did: did.raw,
         };
       }
-    } catch (e) {
-      return { error: e.message };
+    } catch (err) {
+      return { error: err.message };
     }
   }
 
   getObjectForSavingTrackingNumber(
     accountNumber,
-    userID,
-    companyID,
+    userId,
+    companyId,
     didNumber,
     companyName,
     did_id,
   ) {
     return {
       didID: did_id,
-      userID,
-      companyID,
+      userId,
+      companyId,
       planID: accountNumber.planID,
       recordCalls: accountNumber.recordCalls,
       recordCallsBoolean: accountNumber.recordCallsBoolean,
@@ -675,9 +676,9 @@ export class AccountNumberFacade {
       .into(AccountNumber)
       .values({
         did: Did.withId(object.didID),
-        userID: object.userID,
+        userID: object.userId,
         // accountID: object.accountID,
-        companyID: object.companyID,
+        companyID: object.companyId,
         planID: object.planID,
         recordCalls: object.recordCalls,
         recordCallsBoolean: object.recordCallsBoolean,
@@ -845,13 +846,13 @@ export class AccountNumberFacade {
       pricingTable[0];
 
     const numbers = trackingNumbers.map((item) => item.tn);
-    let didsAlreadyBuyed: any = await this.didFacade.findByNumbers(numbers);
-    didsAlreadyBuyed = didsAlreadyBuyed.map((did) => did.number);
-    let pricesResult = {};
+    let didsAlreadyBought: any = await this.didFacade.findByNumbers(numbers);
+    didsAlreadyBought = didsAlreadyBought.map((did) => did.number);
+    let pricesResult:any = {}
     let price = 0;
 
     for (const number of numbers) {
-      if (didsAlreadyBuyed.includes(number)) {
+      if (didsAlreadyBought.includes(number)) {
         price +=
           durationUnit === DurationTypes.month_duration
             ? duration * tf_number_monthly_mrc
@@ -866,7 +867,7 @@ export class AccountNumberFacade {
       price = 0;
     }
 
-    pricesResult['sumOfPrices'] = Object.values(pricesResult).reduce(
+    pricesResult.amount = Object.values(pricesResult).reduce(
       (sum: number, price: number) => {
         return sum + price;
       },

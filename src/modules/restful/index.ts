@@ -52,7 +52,7 @@ import { CommonService } from '../services/common.service';
 import { PermissionsService } from '../services/permissions.service';
 import { Repositories} from '../db/repositories';
 // import { LogController } from './log.controller';
-// import { VoiceMail } from './voicemail';
+ import { VoiceMail } from './voicemail';
 
 
 @Module({
@@ -94,7 +94,7 @@ import { Repositories} from '../db/repositories';
         // SmsController,
         CallerDetailsController,
         // LogController,
-        // VoiceMail,
+         VoiceMail,
         // GoogleController
     ],
     imports: [

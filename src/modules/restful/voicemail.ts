@@ -22,7 +22,7 @@ import {
     ApiQuery
 } from '@nestjs/swagger';
 import { errorResponse } from '../../filters/errorRespone';
-import { Response } from "express";
+import { Response, Express } from "express";
 import {  } from "../facade";
 import { diskStorage } from 'multer';
 import { HelperClass } from "../../filters/Helper";
@@ -44,19 +44,20 @@ export class VoiceMail {
     @UseInterceptors(FileInterceptor('file', {
         storage: diskStorage({
             destination: (req: any, file, cb) => {
-                if (!existsSync(constants.PATH_TO_VOICEMAIL_FOLDER)){
+                if (!existsSync( constants.PATH_TO_VOICEMAIL_FOLDER)){
                     mkdirSync(constants.PATH_TO_VOICEMAIL_FOLDER);
                 }
-                return cb(null, `${constants.PATH_TO_VOICEMAIL_FOLDER}`);
+                 cb(null, `${constants.PATH_TO_VOICEMAIL_FOLDER}`);
             },
             filename: (req: any, file, cb) => {
-                return cb(null, `${req.user.userUuid.replaceAll('-', 'f') + Date.now()}.wav`);
+					console.log(" \x1b[41m ", req.user.userUuid , " [0m " )
+					cb(null, `${req.user.userUuid +'_'+ new Date().toISOString().split('T')[0]}.wav`);
             }
         }),
         fileFilter: async (req, file: any, cb) => {
             let prefix = file.mimetype.substring(0, 5);
             if (prefix !== 'audio' || !file.mimetype.includes('wav')) {
-                return cb(null, false);
+                return cb(null, false); 
             }
             return cb(null, file);
         },
@@ -91,15 +92,16 @@ export class VoiceMail {
         summary: "Send UserVoiceMailFile "
     })
     public async sendVoiceMailForUser(@Req() req, @Res() res: Response, 
-        @UploadedFile() file,
+        @UploadedFile() file:Express.Multer.File,
         // @Param('type') type: string,
         @Query('email') email: string,
         // @Query('from') from: string,
         // @Query('to') to: string,
     ) {
         try {
+			console.log(" \x1b[41m ", req.file, " [0m " )
             // if (!voicemail_types.includes(type)) await HelperClass.throwErrorHelper('send:wrongSendVoicemailType');
-            if (!req.file) await HelperClass.throwErrorHelper('upload:fileFormatWrong');
+            if (!req.file){ await HelperClass.throwErrorHelper('upload:fileFormatWrong')};
 
             let link = `${process.env.CURRENT_SERVER}/public/voicemail/${file.filename}`;
 
@@ -114,7 +116,7 @@ export class VoiceMail {
             // } else if (type === 'email') {
                 if (!email) await HelperClass.throwErrorHelper('email:emailAddressIsMissing');
                 await this.emailService.sendMail("mail:voicemail", email, {
-                    FIRST_NAME: req.user.userFirstName,
+                    FIRST_NAME: req.user.userFirstName, 
                     LAST_NAME: req.user.userLastName,
                     LOGO: `${process.env.BASE_URL||process.env.FONIO_URL}/public/assets/logo.png`,
                     AUDIO_LINK: link,
@@ -124,8 +126,8 @@ export class VoiceMail {
 
             return res.status(202).json({ response: 'Successful voicemail uploading and sending' });
         } catch (err) {
-            if (existsSync(`${constants.PATH_TO_VOICEMAIL_FOLDER}/${file.filename}`)){
-                unlinkSync(`${constants.PATH_TO_VOICEMAIL_FOLDER}/${file.filename}`);
+            if (existsSync(`${constants.PATH_TO_VOICEMAIL_FOLDER}/${file?.filename}`)){
+                unlinkSync(`${constants.PATH_TO_VOICEMAIL_FOLDER}/${file?.filename}`);
             }
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
         }

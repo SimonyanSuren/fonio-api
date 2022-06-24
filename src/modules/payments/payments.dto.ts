@@ -1,29 +1,51 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { PaymentSystems } from '../../models/payment.entity';
 import { PlanNumberTypes } from '../../models/plan.constant.entity';
-import { CreatePaymentReq } from '../../util/swagger';
 import { OrderDid } from '../../util/swagger/order_did';
-import { IsNumber, IsString, IsEnum, IsBoolean, IsArray } from 'class-validator';
+import { IsMonthOrYear } from '../../util/validator/customDidNumberDuration.validator';
+import {
+  IsNumber,
+  IsString,
+  IsEnum,
+  IsBoolean,
+  IsArray,
+  IsUUID,
+  IsIn,
+  IsPositive,
+  Min,
+  Max,
+} from 'class-validator';
 
 export abstract class CreatePayment {
-  @ApiProperty()
-  amount?: number;
-  @ApiProperty()
+  @ApiProperty({ enum: PaymentSystems, default: PaymentSystems.STRIPE })
+  @IsEnum(PaymentSystems)
   paymentType: PaymentSystems;
   @ApiProperty()
+  @IsUUID()
   orderUuid: string;
-  @ApiProperty()
-  tempUuid: string;
-  @ApiProperty()
-  register: CreatePaymentReq;
-  @ApiProperty()
+  @ApiProperty({ enum: PlanNumberTypes, default: PlanNumberTypes.TOLL_FREE })
+  @IsEnum(PlanNumberTypes)
   numberType: PlanNumberTypes;
   @ApiProperty()
+  @IsNumber()
   planID: number;
-  @ApiProperty()
+  @ApiProperty({
+    enum: ['month', 'year'],
+    description: 'select month or year by need',
+  })
+  @IsIn(['month', 'year'])
+  @IsString()
+  durationUnit: string;
+
+  @ApiProperty({ example: 1 })
+  @IsNumber({ maxDecimalPlaces: 0 })
+  @IsPositive()
+  @Min(1)
+  @Max(12)
+  @IsMonthOrYear('durationUnit', {
+    message: 'duration must not be greater than 1, if duration unit is year',
+  })
   duration: number;
-  @ApiProperty()
-  is_month: boolean;
 }
 
 export abstract class BuyDidNumbers {

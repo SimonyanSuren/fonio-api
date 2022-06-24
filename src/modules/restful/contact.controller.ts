@@ -27,7 +27,7 @@ import { Contact } from '../../models';
 import { ContactFacade } from '../facade';
 import { ContactReq } from '../../util/swagger';
 import { errorResponse } from '../../filters/errorRespone';
-import { ValidationPipe } from '../../util/validatior';
+import { ValidationPipe } from '../../util/validator';
 
 @Controller('contacts')
 @ApiTags('Contacts')

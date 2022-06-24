@@ -92,19 +92,18 @@ export class UserController {
     summary: 'Get user list of company',
   })
   public async getUserListByCompId(
-    @Req() req,
     @Param('id') id: number,
     @Res() res: Response,
   ) {
     try {
       let uuid;
-      const user_company = await this.companyFacade.getCompanyById(
-        req.user.userid,
-        id,
+      const company = await this.companyFacade.getCompanyById(
+        id
       );
-      if (!user_company.company) {
+      if (!company) {
         await HelperClass.throwErrorHelper('company:notFound');
-      } else uuid = user_company.company.companyUuid;
+      } 
+		 uuid = company?.companyUuid;
 
       let users: any = await this.userFacade.getUserListByCompUuid(uuid);
       return res.status(HttpStatus.OK).json({
@@ -453,189 +452,189 @@ export class UserController {
     }
   }
 
-  @Post('order_did_number')
-  @ApiOperation({ description: 'Order number' })
-  @ApiResponse({ status: 200, description: 'id' })
-  @ApiBody({
-    required: true,
-    type: OrderDids,
-  })
-  public async orderDidNumber(@Req() req, @Res() res: Response, @Body() body) {
-    try {
-      let userToken = await this.opentactService.getToken();
+//  @Post('order_did_number')
+//  @ApiOperation({ description: 'Order number' })
+//  @ApiResponse({ status: 200, description: 'id' })
+//  @ApiBody({
+//    required: true,
+//    type: OrderDids,
+//  })
+//  public async orderDidNumber(@Req() req, @Res() res: Response, @Body() body:OrderDids) {
+//    try {
+//      let userToken = await this.opentactService.getToken();
 
-      let order = await this.opentactService.buyDidNumbers(
-        userToken.payload.token,
-        body.numbers,
-      );
+//      let order = await this.opentactService.buyDidNumbers(
+//        userToken.payload.token,
+//        body.numbers,
+//      );
 
-      if (order.error) {
-        return res.status(order.error.status).json(order);
-      }
-console.log(" \x1b[41m ", order.payload.state , " [0m " )
-      let new_order = await this.orderFacade.saveOrder(
-        order.payload,
-        req.user.userUuid,
-      );
-      return res.status(201).json(new_order);
-    } catch (err) {
-      return res.status(HttpStatus.BAD_REQUEST).json({ message: err.message });
-    }
-  } 
+//      if (order.error) {
+//        return res.status(order.error.status).json(order);
+//      }
+//console.log(" \x1b[41m ", order.payload.state , " [0m " )
+//      let new_order = await this.orderFacade.saveOrder(
+//        order.payload,
+//        req.user.userUuid,
+//      );
+//      return res.status(201).json(new_order);
+//    } catch (err) {
+//      return res.status(HttpStatus.BAD_REQUEST).json({ message: err.message });
+//    }
+//  } 
 
-  @Post('buy_did_number')
-  @ApiOperation({ description: 'Buy number' })
-  @ApiResponse({ status: 200, description: 'id' })
-  @ApiBody({
-    required: true,
-    type: BuyDidNumbers,
-  })
-  public async buyDidNumber(
-    @Req() req,
-    @Res() res: Response,
-    @Body() body//: BuyDidNumbers,
-  ) {
-    try {
-      const {
-        paymentType,
-        amount,
-        orderUuid,
-        additionalNumbers,
-        planID,
-        ...rest
-      } = body;
+//  @Post('buy_did_number')
+//  @ApiOperation({ description: 'Buy number' })
+//  @ApiResponse({ status: 200, description: 'id' })
+//  @ApiBody({
+//    required: true,
+//    type: BuyDidNumbers,
+//  })
+//  public async buyDidNumber(
+//    @Req() req,
+//    @Res() res: Response,
+//    @Body() body: BuyDidNumbers,
+//  ) {
+//    try {
+//      const {
+//        paymentType,
+//        amount,
+//        orderUuid,
+//        additionalNumbers,
+//        planID,
+//        ...rest
+//      } = body;
 
-      let userID = req.user?.userId,
-        companyID = req.user?.companyId,
-        numbers = additionalNumbers,
-        didNumbers,
-        userNumbers,
-        company,
-        buy_failed,
-        buy_state,
-        order_uuid = orderUuid;
+//      let userID = req.user?.userId,
+//        companyID = req.user?.companyId,
+//        numbers = additionalNumbers,
+//        didNumbers,
+//        userNumbers,
+//        company,
+//        buy_failed,
+//        buy_state,
+//        order_uuid = orderUuid;
 
-      let order = await this.orderFacade.getUserOrder(
-        orderUuid,
-        req.user.userUuid,
-      );
-		console.log(" \x1b[41m ", req.user.userUuid , " [0m " )
-      if (!order)
-        return res
-          .status(HttpStatus.BAD_REQUEST)
-          .json({
-            message: 'Order does not exist',
-            status: 'not exist',
-            success: false,
-            failed: true,
-          });
-      if (order.done)
-        return res
-          .status(HttpStatus.BAD_REQUEST)
-          .json({
-            message: 'Order is already done',
-            status: 'done',
-            success: false,
-            failed: true,
-          });
+//      let order = await this.orderFacade.getUserOrder(
+//        orderUuid,
+//        req.user.userUuid,
+//      );
+//		console.log(" \x1b[41m ", order , " [0m " )
+//      if (!order)
+//        return res
+//          .status(HttpStatus.BAD_REQUEST)
+//          .json({
+//            message: 'Order does not exist',
+//            status: 'not exist',
+//            success: false,
+//            failed: true,
+//          });
+//      if (order.done)
+//        return res
+//          .status(HttpStatus.BAD_REQUEST)
+//          .json({
+//            message: 'Order is already done',
+//            status: 'done',
+//            success: false,
+//            failed: true,
+//          });
+ 
+//      let userToken = await this.opentactAuth.getToken();
+//console.log(" \x1b[41m ", userToken , " [0m " )
+//      didNumbers = await this.opentactService.getDidOrderByUuid(
+//        userToken.payload.token,
+//        order_uuid,
+//      );
+//console.log(" \x1b[41m ", didNumbers.payload.request, didNumbers, didNumbers.payload.tn_items , " [0m " )
+//      if (didNumbers.error) {
+//        return res.status(didNumbers.error.status).json(didNumbers);
+//      }
 
-      let userToken = await this.opentactAuth.getToken();
-console.log(" \x1b[41m ", userToken , " [0m " )
-      didNumbers = await this.opentactService.getDidOrderByUuid(
-        userToken.payload.token,
-        order_uuid,
-      );
-console.log(" \x1b[41m ", didNumbers , " [0m " )
-      if (didNumbers.error) {
-        return res.status(didNumbers.error.status).json(didNumbers);
-      }
+//      buy_failed = didNumbers.payload.failed; 
+//      buy_state = didNumbers.payload.state;
+//      if (didNumbers.payload.failed || didNumbers.payload.state === 'failed') {
+//        await this.orderFacade.getUserOrder(orderUuid, req.user.userUuid);
+//        return res
+//          .status(HttpStatus.BAD_REQUEST)
+//          .json({
+//            message: 'Buying number is failed.',
+//            status: 'failed',
+//            success: false,
+//            failed: true,
+//          });
+//      } 
+//      if (
+//        !didNumbers.payload.success &&
+//        didNumbers.payload.state !== 'success'
+//      ) {
+//        return res
+//          .status(HttpStatus.BAD_REQUEST) 
+//          .json({
+//            message: 'Order is not fulfilled yet. Please wait.',
+//            status: 'waiting',
+//            success: false,
+//            failed: false,
+//          });
+//      }
 
-      buy_failed = didNumbers.payload.failed;
-      buy_state = didNumbers.payload.state;
-      if (didNumbers.payload.failed || didNumbers.payload.state === 'failed') {
-        await this.orderFacade.getUserOrder(orderUuid, req.user.userUuid);
-        return res
-          .status(HttpStatus.BAD_REQUEST)
-          .json({
-            message: 'Buying number is failed.',
-            status: 'failed',
-            success: false,
-            failed: true,
-          });
-      } 
-      if (
-        !didNumbers.payload.success &&
-        didNumbers.payload.state !== 'success'
-      ) {
-        return res
-          .status(HttpStatus.BAD_REQUEST) 
-          .json({
-            message: 'Order is not fulfilled yet. Please wait.',
-            status: 'waiting',
-            success: false,
-            failed: false,
-          });
-      }
+//      let tnArray = didNumbers.payload.request?.items || numbers;
+//console.log(" \x1b[41m ", tnArray , " [0m " )
+//      let response = await this.paymentsService.createPayment({
+//        paymentType,
+//        amount,
+//        companyID,
+//        planID,
+//        numberQuantity: tnArray.length,
+//        ...rest,
+//      });
+//      if (response.error) {
+//        return res
+//          .status(HttpStatus.BAD_REQUEST) 
+//          .send({
+//            message:
+//              response.error === '404'
+//                ? `Payment responde with status ${response.error}`
+//                : response.error,
+//          }); 
+//      }
 
-      let tnArray = didNumbers.payload.request?.items || numbers;
+//      company = await this.userFacade.getCompanyByUserId(userID);
 
-      let response = await this.paymentsService.createPayment({
-        paymentType,
-        amount,
-        companyID,
-        planID,
-        numberQuantity: tnArray.length,
-        ...rest,
-      });
-      if (response.error) {
-        return res
-          .status(HttpStatus.BAD_REQUEST)
-          .send({
-            message:
-              response.error === '404'
-                ? `Payment responde with status ${response.error}`
-                : response.error,
-          });
-      }
+//      await this.paymentsService.storePaymentData(response.paymentID, {
+//        ...rest,
+//        paymentType,
+//        amount,
+//        planID,
+//        userID,
+//        companyID,
+//        numbers: tnArray,
+//      });
 
-      company = await this.userFacade.getCompanyByUserId(userID);
+//      if (tnArray) {
+//        userNumbers = await this.accountNumberFacade.addDidNumbers(
+//          userID,
+//          companyID,
+//          true,
+//          tnArray,
+//          company,
+//          planID,
+//        );
+//        if (userNumbers.error) {
+//          return res.status(HttpStatus.BAD_REQUEST).json(userNumbers.error);
+//        }
+//      }
 
-      await this.paymentsService.storePaymentData(response.paymentID, {
-        ...rest,
-        paymentType,
-        amount,
-        planID,
-        userID,
-        companyID,
-        numbers: tnArray,
-      });
-
-      if (tnArray) {
-        userNumbers = await this.accountNumberFacade.addDidNumbers(
-          userID,
-          companyID,
-          true,
-          tnArray,
-          company,
-          planID,
-        );
-        if (userNumbers.error) {
-          return res.status(HttpStatus.BAD_REQUEST).json(userNumbers.error);
-        }
-      }
-
-      return res
-        .status(HttpStatus.OK)
-        .json({
-          ...response,
-          ...{ numbers: userNumbers },
-          ...{ userID, companyID, planID, companyUuid: company.companyUuid },
-          ...{ buy_failed, buy_state, order_uuid },
-        });
-    } catch (err) {
-      throw new Error(err.message);
-    }
-  }
+//      return res
+//        .status(HttpStatus.OK)
+//        .json({
+//          ...response,
+//          ...{ numbers: userNumbers },
+//          ...{ userID, companyID, planID, companyUuid: company.companyUuid },
+//          ...{ buy_failed, buy_state, order_uuid },
+//        });
+//    } catch (err) {
+//      throw new Error(err.message);
+//    }
+//  }
 
   @Post('sms')
   @ApiOperation({ description: 'Send sms' })

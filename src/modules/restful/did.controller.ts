@@ -159,4 +159,29 @@ export class DidController {
             errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
         }
     }
+
+	// @Get(':did_number/release')
+	// @ApiOperation({
+	//	description: 'set did number release',
+	//	operationId: 'releaseDidNumber'
+	// })	 
+	// @ApiParam({ name: "did_number", description: "did id", required: true, type: Number })
+	// @ApiQuery({ name: 'release_on', required: true })
+   // @ApiResponse({ status: 200, description: "Release did number success" })
+	// public async releaseDidNumber(
+	//	@Req() req,
+	//	@Res() res: Response,
+	//	@Param() didNumber:number,
+	//	@Query('release_on')releaseOn,
+	// ) {
+	//	try {
+		 
+	//		const did = await this.didFacade.findByNumber(didNumber);
+
+	//		console.log(" \x1b[41m ", did , " [0m " )
+	//	  res.status(HttpStatus.OK).json(response);
+	//	} catch (err) {
+	//	  errorResponse(res, err, HttpStatus.BAD_REQUEST);
+	//	}
+	// }
 }

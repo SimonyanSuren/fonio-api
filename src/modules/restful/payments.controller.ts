@@ -1,170 +1,274 @@
-import { Controller, HttpStatus, Req, Res, Post, Get, Body, Headers, Param } from '@nestjs/common';
-import { ApiResponse, ApiBearerAuth, ApiTags, ApiBody, ApiOperation, ApiParam } from '@nestjs/swagger';
+import {
+  Controller,
+  HttpStatus,
+  Req,
+  Res,
+  Post,
+  Get,
+  Body,
+  Headers,
+  Param,
+} from '@nestjs/common';
+import {
+  ApiResponse,
+  ApiBearerAuth,
+  ApiTags,
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+} from '@nestjs/swagger';
 import { Response } from 'express';
-import { PaymentsService, CreatePayment } from "../payments";
-import { PaymentOrder } from '../../util/swagger';
-import { EmailService } from '../email';
 import { OpentactService } from '../opentact';
-import { AccountNumberFacade, OrderFacade } from '../facade';
 import { OpentactAuth } from '../opentact';
+import { PaymentSystems } from '../../models/payment.entity';
+import { AccountNumberFacade, OrderFacade } from '../facade';
+import { PaymentsService, CreatePayment } from '../payments';
+import { PaymentOrder } from '../../util/swagger';
 import { OrderDids } from '../../util/swagger/order_did';
+import { errorResponse } from '../../filters/errorRespone';
+import { EmailService } from '../email';
 
 @Controller('payments')
 @ApiBearerAuth()
-@ApiTags("Payments")
+@ApiTags('Payments')
 export class PaymentsController {
-    constructor(private paymentsService: PaymentsService,
-        private opentactAuth: OpentactAuth,
-        private orderFacade: OrderFacade,
-        private opentactService: OpentactService,
-        private emailService: EmailService,
-        private accountNumberFacade: AccountNumberFacade,
-    ) { }
+  constructor(
+    private paymentsService: PaymentsService,
+    private opentactAuth: OpentactAuth,
+    private orderFacade: OrderFacade,
+    private opentactService: OpentactService,
+    private emailService: EmailService,
+    private accountNumberFacade: AccountNumberFacade,
+  ) {}
 
-    @Post('order_did/:tempUuid')
-    @ApiParam({ name: 'tempUuid', description: 'This is temporary uuid that has been used to connect the Callify socket' })
-    @ApiBody({
-        type: OrderDids
-    })
-    @ApiOperation({ description: "order did number to create payments for Paypal and Stripe", })
-    @ApiResponse({ status: 200, description: "order_did" })
-    public async OrderDids(@Req() req, @Res() res: Response,
-        @Param('tempUuid') tempUuid: string,
-        @Body() body: OrderDids,
-    ) {
-        try {
-            if (!tempUuid.match(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i)) {
-                return res.status(HttpStatus.BAD_REQUEST).json({ message: 'invalid uuid format' });
-            }
+  @Post('order_did')
+  @ApiBody({
+    type: OrderDids,
+    required: true,
+  })
+  @ApiOperation({
+    description: 'Order did number to create payments for Paypal and Stripe',
+  })
+  @ApiResponse({ status: 200, description: 'Get order uuid' })
+  public async OrderDids(
+    @Req() req,
+    @Res() res: Response,
+    @Body() body: OrderDids,
+  ) {
+    try {
+      const userUuid = req.user.userUuid;
+      let userToken = await this.opentactService.getToken();
+      const order = await this.opentactService.buyDidNumbers(
+        userToken.payload.token,
+        body.numbers,
+      );
 
-            let userToken = await this.opentactService.getToken();
-            let order = await this.opentactService.buyDidNumbers(userToken.payload.token, body.numbers);
+      if (order.error) {
+        return res.status(order.error.status).json(order);
+      }
 
-            if (order.error) {
-                return res.status(order.error.status).json(order);
-            }
+      const newOrder = await this.orderFacade.saveOrder(
+        order.payload,
+        userUuid,
+      );
 
-            let new_order = await this.orderFacade.saveOrder(order.payload, tempUuid);
-            return res.status(201).json(new_order);
-        } catch (err) {
-            return res.status(HttpStatus.BAD_REQUEST).json({ message: err.message })
-        }
+      return res.status(201).json(newOrder);
+    } catch (err) {
+      errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
     }
+  }
 
-    @Post('create_payments')
-    @ApiOperation({ description: "create payments for Paypal and Stripe", })
-    @ApiResponse({ status: 200, description: "id" })
-    public async createPayment(@Req() req, @Res() res: Response, @Body() body: CreatePayment) {
-        try {
+  @Post('buy_did_number')
+  @ApiOperation({ description: 'Buy DID number through Paypal and Stripe' })
+  @ApiResponse({
+    status: 200,
+    description: 'Get payment page url and payment id',
+  })
+  public async createPayment(
+    @Req() req,
+    @Res() res: Response,
+    @Body() body: CreatePayment,
+  ) {
+    try {
+      const { userId, userUuid, userEmail, companyId } = req.user;
+      const { paymentType, orderUuid, planID, ...rest } = body;
 
-            const { register, orderUuid, tempUuid, planID, ...rest } = body;
+      let didNumbers, order, tnArray;
 
-            let userID,
-                companyID,
-                didNumbers,
-                userNumbers,
-                company,
-                buy_failed,
-                buy_state,
-                order_uuid = orderUuid,
-                numbers = register.did_numbers;
+      order = await this.orderFacade.getUserOrder(orderUuid, userUuid);
 
-            let order = await this.orderFacade.getUserOrder(orderUuid, tempUuid);
-            if (!order) return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Order does not exist', status: 'not exist', success: false, failed: true });
-            if (order.done) return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Order is already done', status: 'done', success: false, failed: true });
+      if (!order) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          message: 'Order does not exist',
+          status: 'not exist',
+          success: false,
+          failed: true,
+        });
+      }
 
-            let userToken = await this.opentactAuth.getToken();
-            
-            didNumbers = await this.opentactService.getDidOrderByUuid(userToken.payload.token, orderUuid);
-            
-            if (didNumbers.error) {
-                return res.status(didNumbers.error.status).json(didNumbers);
-            }
+      if (order.done) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          message: 'Order is already done',
+          status: 'done',
+          success: false,
+          failed: true,
+        });
+      }
 
-            buy_failed = didNumbers.payload.failed;
-            buy_state = didNumbers.payload.state;
-            if (didNumbers.payload.failed || didNumbers.payload.state === 'failed') {
-                await this.orderFacade.getUserOrder(orderUuid, req.user.userUuid);
-                return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Buying number is failed.', status: 'failed', success: false, failed: true })
-            }
-            if (!didNumbers.payload.success && didNumbers.payload.state !== 'success') {
-                return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Order is not fulfilled yet. Please wait.', status: 'waiting', success: false, failed: false })
-            }
+      let userToken = await this.opentactAuth.getToken();
 
-            let tnArray = didNumbers.payload.request?.items||numbers;
+      didNumbers = await this.opentactService.getDidOrderByUuid(
+        userToken.payload.token,
+        orderUuid,
+      );
 
-            let response = await this.paymentsService.createPayment({ ...rest, companyID, planID, numberQuantity: tnArray.length });
-            if (response.error) {
-                return res.status(HttpStatus.BAD_REQUEST).send({ message: (response.error === '404') ? `Payment responde with status ${response.error}`: response.error });
-            }
-            
-            const result = await this.paymentsService.createUser(register);
-            if (result.user.error) {
-                return res.status(HttpStatus.BAD_REQUEST).json(result);
-            }
-            if (result.user['user']) {
-                userID = result.user['user'].id;
+      if (didNumbers.error) {
+        return res.status(didNumbers.error.status).json(didNumbers);
+      }
 
-                this.emailService.sendMail("auth:signup", result.user['user'].email, {
-                    FIRST_NAME: result.user['user'].firstName,
-                    LAST_NAME: result.user['user'].lastName,
-                    BUTTON: `${process.env.BASE_URL||process.env.FONIO_URL}/auth/activate?uuid=${result.user['user'].uuid}`,
-                    LINK: `${process.env.BASE_URL||process.env.FONIO_URL}/auth/activate?uuid=${result.user['user'].uuid}`,
-                    LOGO: `${process.env.BASE_URL||process.env.FONIO_URL}/public/assets/logo.png`
-                });
-            }
-            if (result.user['company']) {
-                company = result.user['company'];
-                companyID = company.companyId;
-            }
+      if (didNumbers.payload.success && didNumbers.payload.failed) {
+        let failedDidNumbers = didNumbers.payload.tn_items
+          .filter((tn) => tn.state === 'failed')
+          .map((tn) => tn.reason);
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          message: `Buying number is failed. ${failedDidNumbers}`,
+          status: 'failed',
+          success: false,
+          failed: true,
+        });
+      }
 
-            await this.paymentsService.storePaymentData(response.paymentID, { ...rest, userID, planID, companyID, numbers: tnArray });
+      if (didNumbers.payload.failed || didNumbers.payload.state === 'failed') {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          message: `Buying number is failed.`,
+          status: 'failed',
+          success: false,
+          failed: true,
+        });
+      }
 
-            if (tnArray) {
-                userNumbers = await this.accountNumberFacade.addDidNumbers(userID, companyID, true, tnArray, company, planID);
-                if (userNumbers.error) {
-                    return res.status(HttpStatus.BAD_REQUEST).json(userNumbers.error);
-                }
-            }
-            return res.status(HttpStatus.OK).json({ ...response, ...{numbers: userNumbers}, ...{userID, companyID, planID, companyUuid: company.companyUuid}, ...{ buy_failed, buy_state, order_uuid } });
-        } catch (err) {
-            throw new Error(err.message)
-        }
+      if (
+        !didNumbers.payload.success &&
+        didNumbers.payload.state !== 'success'
+      ) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          message: 'Order is not fulfilled yet. Please wait.',
+          status: 'waiting',
+          success: false,
+          failed: false,
+        });
+      }
+
+      tnArray = didNumbers.payload.request.items;
+
+      const { amount } =
+        await this.accountNumberFacade.countTrackingNumberPrice(
+          tnArray,
+          rest.durationUnit,
+          rest.duration,
+        );
+
+      const payment = await this.paymentsService.createPayment({
+        paymentType,
+        amount,
+        planID,
+        numberQuantity: tnArray.length,
+        tnArray,
+        ...rest,
+        userUuid,
+        userEmail,
+      });
+
+      if (payment.error) {
+        return res.status(HttpStatus.BAD_REQUEST).send({
+          message:
+            payment.error === '404'
+              ? `Payment responde with status ${payment.error}`
+              : payment.error,
+        });
+      }
+
+      await this.paymentsService.storePaymentData(payment.id, {
+        userId,
+        planID,
+        companyId,
+        amount,
+        paymentType,
+        numbers: tnArray,
+        ...rest,
+      });
+
+      return res.status(HttpStatus.OK).json({
+        paymentId: payment.id,
+        paymentUrl: payment.url,
+      });
+    } catch (err) {
+      errorResponse(res, err.message, HttpStatus.BAD_REQUEST);
     }
+  }
 
-    @Get('payment_approval_url/:service/:orderId')
-    @ApiOperation({ description: "get payment approval url" })
-    @ApiResponse({ status: 200, description: "returns the payment ,approval url" })
-    @ApiParam({ name: "orderId", description: "payment order id" })
-    @ApiParam({ name: "service", description: "payment service name. expects 'paypal' or 'stripe'" })
-    public async getPaymentApprovalUrl(@Req() req, @Res() res: Response, 
-        @Param('orderId') orderId: string,
-        @Param('service') service: string
-    ) {
-        let url = await this.paymentsService.approvalUrl(service, orderId);
-        return res.status(HttpStatus.OK).json(url);
-    }
+  @Get('payment_approval_url/:service/:orderId')
+  @ApiOperation({ description: 'get payment approval url' })
+  @ApiResponse({
+    status: 200,
+    description: 'returns the payment ,approval url',
+  })
+  @ApiParam({ name: 'orderId', description: 'payment order id' })
+  @ApiParam({
+    name: 'service',
+    description: "payment service name. expects 'paypal' or 'stripe'",
+  })
+  public async getPaymentApprovalUrl(
+    @Req() req,
+    @Res() res: Response,
+    @Param('orderId') orderId: string,
+    @Param('service') service: string,
+  ) {
+    let url = await this.paymentsService.approvalUrl(service, orderId);
+    return res.status(HttpStatus.OK).json(url);
+  }
 
-    @Post('execute_paypal_payments')
-    @ApiOperation({ description: "execute payments for Paypal", })
-    @ApiResponse({ status: 200, description: "returns succes: true/false" })
-    @ApiBody({
-        required: true,
-        type:PaymentOrder
-        // name: "paymeny/ orderID"
-    })
-    public async executePaypalPayment(@Req() req, @Res() res: Response, @Body() body: PaymentOrder) {
-        let response = await this.paymentsService.executePayment({ body, type: 'paypal' });
-        return res.status(HttpStatus.OK).json(response);
-    }
+  @Post('execute_paypal_payments')
+  @ApiOperation({ description: 'execute payments for Paypal' })
+  @ApiResponse({ status: 200, description: 'returns succes: true/false' })
+  @ApiBody({
+    required: true,
+    type: PaymentOrder,
+    // name: "paymeny/ orderID"
+  })
+  public async executePaypalPayment(
+    @Req() req,
+    @Res() res: Response,
+    @Body() body: PaymentOrder,
+  ) {
+    let response = await this.paymentsService.executePayment({
+      body,
+      type: 'paypal',
+    });
+    return res.status(HttpStatus.OK).json(response);
+  }
 
-    @Post('execute_stripe_payments')
-    @ApiOperation({ description: "execute payments for Stripe", })
-    @ApiResponse({ status: 200, description: "returns succes: true/false" })
-    public async executeStripePayment(@Headers('stripe-signature') signature, @Req() req, @Res() res: Response) {
-        let response = await this.paymentsService.executePayment({ sig: signature, body: req.rawBody, type: 'stripe' });
-        return res.status(HttpStatus.OK).json(response);
+  @Post('execute_stripe_payments')
+  @ApiOperation({ description: 'Webhook for stripe events' })
+  @ApiResponse({
+    status: 200,
+    description:
+      'return response with 2xx status code for success verification or 4xx for failed. Fullfill payment for Did numbers.',
+  })
+  public async executeStripePayment(
+    @Headers('stripe-signature') signature,
+    @Req() req,
+    @Res() res: Response,
+  ) {
+    let response = await this.paymentsService.executePayment({
+      sig: signature,
+      body: req.rawBody,
+      type: PaymentSystems.STRIPE,
+    });
+    console.log(' \x1b[41m ', response, ' [0m ');
+    if (response?.success) {
+      return res.status(HttpStatus.OK).json(response);
     }
+    return res.status(HttpStatus.BAD_REQUEST).json(response);
+  }
 }
-
-

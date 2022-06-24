@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { MessageCodeError } from '../../util/error';
-
 import { EntityRepository, EntityManager } from 'typeorm';
+import { Transactional } from 'typeorm-transactional-cls-hooked';
+import { MessageCodeError } from '../../util/error';
 import { Did } from '../../models/';
-import moment = require('moment');
 
 @EntityRepository()
 @Injectable()
@@ -19,7 +18,7 @@ export class DidFacade {
       .getOne();
   }
 
-  async findByNumbers(numbers:string[]) {
+  async findByNumbers(numbers: string[]) {
     let manager = await this.entityManager;
     return manager
       .createQueryBuilder(Did, 'did')
@@ -63,12 +62,13 @@ export class DidFacade {
       .execute();
   }
 
-  async addDidAfterBuying(userID, companyID, didStatus, didNumber) {
+  @Transactional()
+  async addDidAfterBuying(userId, companyId, didStatus, didNumber) {
     let did = new Did();
     did.number = didNumber;
     did.status = didStatus;
-    did.companyID = companyID;
-    did.userID = userID;
+    did.companyID = companyId;
+    did.userID = userId;
 
     return await this.entityManager
       .createQueryBuilder()
@@ -150,7 +150,7 @@ export class DidFacade {
       .set({
         expireOn: date,
       })
-      .where('did.number IN (:numbers) ', { numbers })
+      .where('did_number IN (:...numbers) ', { numbers })
       .returning('*')
       .execute();
   }

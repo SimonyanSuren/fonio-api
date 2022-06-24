@@ -62,7 +62,7 @@ export class Payment {
     transition?: string;
 
     @Column("text", { array: true, nullable: true })
-    numbers?: string[];
+    didNumbers?: string[];
 
     @UpdateDateColumn({ name: "updated_on", type: "timestamp" })
     updatedOn?: Date;
@@ -76,8 +76,8 @@ export class Payment {
     duration: number;
 
     @ApiProperty()
-    @Column({ name: "is_month" })
-    isMonth: boolean;
+    @Column({ name: "duration_unit" })
+    durationUnit: string;
 
     @ApiProperty({ type: () => Invoice })
     @OneToOne(type => Invoice)

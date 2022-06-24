@@ -13,7 +13,7 @@ import { CallFlowPost, CallFlowStatus } from "../../util/swagger/call_flow";
 import { HelperClass } from "../../filters/Helper";
 import { CallFlow } from "../../models/call_flow.entity";
 import { CallFlowStepFacade, AccountNumberFacade, RecordingFacade, DidFacade } from '../facade/';
-import { ValidationPipe } from '../../util/validatior/';
+import { ValidationPipe } from '../../util/validator';
 import { CallFlowReq } from '../../util/swagger/';
 import { OpentactService } from '../opentact';
 import * as lodash from 'lodash';

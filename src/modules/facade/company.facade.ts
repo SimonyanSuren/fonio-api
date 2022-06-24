@@ -28,6 +28,13 @@ export class CompanyFacade extends BaseService {
       .getOne();
   }
 
+  async getCompanyById(id) {
+    return await this.entityManager
+      .createQueryBuilder(Company, 'c')
+      .where('c.companyID=:id', { id: id })
+      .getOne();
+  }
+
   async getCompanyByUserCreatorId(userCreatorId) {
     return await this.entityManager
       .createQueryBuilder(Company, 'c')
@@ -35,27 +42,27 @@ export class CompanyFacade extends BaseService {
       .getOne();
   }
 
-  async getCompanyById(userCreatorId, id) {
-    const company = await this.entityManager
-      .createQueryBuilder(Company, 'c')
-      .where('c.companyID=:id', { id: id })
-      .andWhere('c.userCreatorID=:userCreatotId', {
-        userCreatotId: userCreatorId,
-      })
-      .getOne();
+  //  async getCompanyById(userCreatorId, id) {
+  //    const company = await this.entityManager
+  //      .createQueryBuilder(Company, 'c')
+  //      .where('c.companyID=:id', { id: id })
+  //      .andWhere('c.userCreatorID=:userCreatotId', {
+  //        userCreatotId: userCreatorId,
+  //      })
+  //      .getOne();
 
-    const user = await this.entityManager
-      .createQueryBuilder(User, 'u')
-      .where('u.id=:id', { id: userCreatorId })
-      .getOne();
+  //    const user = await this.entityManager
+  //      .createQueryBuilder(User, 'u')
+  //      .where('u.id=:id', { id: userCreatorId })
+  //      .getOne();
 
-    if (user) {
-      user.password = undefined;
-      user.salt = undefined;
-    }
+  //    if (user) {
+  //      user.password = undefined;
+  //      user.salt = undefined;
+  //    }
 
-    return { company, user };
-  }
+  //    return { company, user };
+  //  }
 
   async getCompanyByName(companyName) {
     return this.entityManager
@@ -68,7 +75,7 @@ export class CompanyFacade extends BaseService {
     return await this.userFacade.findByEmail(email);
   }
 
-  async getUserListByCompUuidByRole(companyUuid, orderBy?, orderType?, role?){
+  async getUserListByCompUuidByRole(companyUuid, orderBy?, orderType?, role?) {
     let by;
     if (orderBy === 'created') by = 'creation';
 

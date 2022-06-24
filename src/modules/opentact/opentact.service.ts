@@ -934,4 +934,18 @@ export class OpentactService extends BaseService {
 
     return response.data;
   }
+
+  async getBearerToken(token) {
+  
+const data ={name:'Bearer token', ttl:30000}
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
+    const response = await this.axios.post('/token', data, config);
+  
+    return response.data;
+  }
 }

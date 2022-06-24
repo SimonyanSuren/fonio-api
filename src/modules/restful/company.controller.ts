@@ -461,7 +461,7 @@ export class CompanyController {
       if (role === CompanyRoles[2]) {
         role = '';
       }
-		
+
       const members: User[] =
         await this.companyFacade.getUserListByCompUuidByRole(
           uuid,
@@ -547,7 +547,7 @@ export class CompanyController {
     name: 'role',
     description: 'member role',
     required: true,
-    enum: CompanyRoles,
+    enum: CompanyRoles.slice(0,2),
   })
   @ApiBody({
     required: true,
@@ -565,7 +565,7 @@ export class CompanyController {
     @Param('role') role: string,
   ) {
     try {
-      if (!CompanyRoles.includes(role)) {
+      if (!CompanyRoles.slice(0,2).includes(role)) {
         await HelperClass.throwErrorHelper('role:invalidMemberRole');
       }
 

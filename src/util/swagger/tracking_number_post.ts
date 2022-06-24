@@ -163,9 +163,9 @@ export class NumberFeatures {
 export class TNOrderPriceResponse {
   @ApiProperty({
     description: 'price for corresponding number',
-    example: { '00000000000': 10, sumOfPrices: 10 },
+    example: { '12345678910': 10, sumOfPrices: 10 },
   })
-  pricesResult: {};
+  pricesResult: {};   
 }
 
 export class TNOrderItem {
@@ -193,7 +193,7 @@ export class TNOrderPrice {
   @IsString()
   durationUnit: string;
 
-  @ApiProperty()
+  @ApiProperty({example:1})
   @IsNumber({ maxDecimalPlaces: 0 })
   @IsPositive()
   @Min(1)
