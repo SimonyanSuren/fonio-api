@@ -604,11 +604,10 @@ export class AccountNumberFacade {
           company.companyName,
           did.raw[0].did_id,
         );
-        return {
-          trackingNumber: (await this.addTrackingNumber(object))?.raw,
-          did: did.raw,
-        };
+       
+       await this.addTrackingNumber(object)     
       }
+	
     } catch (err) {
       return { error: err.message };
     }

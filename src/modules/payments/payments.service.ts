@@ -86,7 +86,7 @@ export class PaymentsService extends BaseService {
             name: `Did numbers ${tnArray.map((tn) => tn.tn)}.\n
 				       For ${duration} ${durationUnit}`,
           },
-          unit_amount: amount * 100/numberQuantity,
+          unit_amount: (amount * 100) / numberQuantity,
         },
         quantity: numberQuantity,
         description: 'Buy did numbers from Fonio',
@@ -237,10 +237,8 @@ export class PaymentsService extends BaseService {
 
       const months = durationUnit === 'year' ? duration * 12 : duration;
       await this.updateDidExpiration(didNumbers, months);
-
-      if (purchasedNumbers) {
-        return true;
-      }
+      return true;
+		
     } catch (err) {
       console.log(err);
       return false;

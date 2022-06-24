@@ -28,6 +28,7 @@ export abstract class CreatePayment {
   numberType: PlanNumberTypes;
   @ApiProperty()
   @IsNumber()
+  @IsPositive()
   planID: number;
   @ApiProperty({
     enum: ['month', 'year'],
