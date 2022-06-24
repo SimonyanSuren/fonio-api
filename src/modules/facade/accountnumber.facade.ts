@@ -873,7 +873,7 @@ export class AccountNumberFacade {
       },
       0,
     );
-
+console.log(" \x1b[41m ", pricesResult , " [0m " )
     return pricesResult;
   }
 }

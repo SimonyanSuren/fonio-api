@@ -86,7 +86,7 @@ export class PaymentsService extends BaseService {
             name: `Did numbers ${tnArray.map((tn) => tn.tn)}.\n
 				       For ${duration} ${durationUnit}`,
           },
-          unit_amount: amount * 100,
+          unit_amount: amount * 100/numberQuantity,
         },
         quantity: numberQuantity,
         description: 'Buy did numbers from Fonio',
